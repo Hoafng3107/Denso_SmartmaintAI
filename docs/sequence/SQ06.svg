@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1995" height="2862" viewBox="0 0 1995 2862" role="img" aria-label="Người gửi nhận phản hồi và hoàn thiện đề xuất"><defs><marker id="block" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#526579"/></marker><marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10" fill="none" stroke="#526579" stroke-width="1.4"/></marker></defs><rect width="100%" height="100%" fill="white"/><text font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="28" y="51.52">SQ06 · Người gửi nhận phản hồi và hoàn thiện đề xuất</tspan></text>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="97.44">Đầu vào: Đề xuất ở Cần bổ sung; người gửi mở thông báo hoặc Đề xuất của tôi.</tspan></text>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="148.44">Kết quả: Có revision được người gửi xác nhận, đã đối chiếu lại và gửi duyệt; giữ mọi vòng phản hồi.</tspan></text>
+<text font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="188.76">Thời gian: trên → dưới  |  Liền: yêu cầu/thao tác  |  Đứt: trả kết quả  |  alt: chọn nhánh  ·  opt: tùy điều kiện  ·  loop: lặp  ·  break: dừng  ·  ref: xem trang liên quan</tspan></text>
+<text font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="1425" y="249.42000000000002">ĐẶC TẢ GIAO DIỆN</tspan><tspan x="1425" y="272.82">Thông tin hiển thị · nút bấm · thông báo</tspan></text>
+<rect x="24" y="840" width="1369" height="360" rx="0" fill="none" stroke="#8d9aa9"/>
+<rect x="24" y="1222" width="1369" height="377" rx="0" fill="none" stroke="#8d9aa9"/>
+<rect x="24" y="1839" width="1369" height="793" rx="0" fill="none" stroke="#8d9aa9"/>
+<path d="M24 2046L1393 2046" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="33" y="2103" width="1360" height="314" rx="0" fill="none" stroke="#8d9aa9"/>
+<path d="M33 2260L1393 2260" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="33" y="2439" width="1360" height="157" rx="0" fill="none" stroke="#8d9aa9"/>
+<rect x="15" y="220" width="210" height="102" rx="0" fill="#e8f5f0" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="120" y="266.04">«actor»</tspan><tspan x="120" y="286.84000000000003">Người gửi đề xuất</tspan></text>
+<path d="M120 322L120 2797" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="300" y="220" width="210" height="102" rx="0" fill="#eaf1fb" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="405" y="266.04">«boundary»</tspan><tspan x="405" y="286.84000000000003">Giao diện web</tspan></text>
+<path d="M405 322L405 2797" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="585" y="220" width="210" height="102" rx="0" fill="#f1f3f6" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="690" y="266.04">«control»</tspan><tspan x="690" y="286.84000000000003">Nghiệp vụ / phân quyền</tspan></text>
+<path d="M690 322L690 2797" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="870" y="220" width="210" height="102" rx="0" fill="#f1f3f6" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="975" y="255.64">«entity»</tspan><tspan x="975" y="276.44">Dữ liệu nghiệp vụ</tspan><tspan x="975" y="297.24">&amp; nhật ký</tspan></text>
+<path d="M975 322L975 2797" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="1155" y="220" width="210" height="102" rx="0" fill="#f1f3f6" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="1260" y="266.04">«control»</tspan><tspan x="1260" y="286.84000000000003">Thông báo trong web</tspan></text>
+<path d="M1260 322L1260 2797" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="31" y="845" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="866.1">loop</tspan></text>
+<rect x="109" y="844" width="1274" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="870.1">[Người gửi xử lý từng nhận xét]</tspan></text>
+<rect x="31" y="1227" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="1248.1">opt</tspan></text>
+<rect x="109" y="1226" width="1274" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="1252.1">[Đề xuất từ ca cần chuyên gia cùng hoàn thiện]</tspan></text>
+<rect x="31" y="1844" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="1865.1">alt</tspan></text>
+<rect x="109" y="1843" width="1274" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="1869.1">[Nội dung chưa hoàn thiện]</tspan></text>
+<rect x="31" y="2051" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="2072.1">else</tspan></text>
+<rect x="109" y="2050" width="1274" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="2076.1">[Đã hoàn thiện]</tspan></text>
+<rect x="40" y="2108" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="72" y="2129.1">alt</tspan></text>
+<rect x="118" y="2107" width="1265" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="118" y="2133.1">[Nguồn là tri thức chuyên gia]</tspan></text>
+<rect x="40" y="2265" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="72" y="2286.1">else</tspan></text>
+<rect x="118" y="2264" width="1265" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="118" y="2290.1">[Nguồn là case sửa chữa]</tspan></text>
+<rect x="40" y="2444" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="72" y="2465.1">opt</tspan></text>
+<rect x="118" y="2443" width="1265" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="118" y="2469.1">[Người gửi vẫn chọn gửi đề xuất sau đối chiếu]</tspan></text>
+<rect x="24" y="374" width="1369" height="42" rx="0" fill="#eaf1f8" stroke="#ccd8e5"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="36" y="400.78">1. Đọc phản hồi đúng phiên bản</tspan></text>
+<path d="M1260 460L405 460" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#open)"/>
+<rect x="417" y="432" width="831" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="446.6">SQ06.01 Hiện thông báo yêu cầu bổ sung trong phiên người gửi</tspan></text>
+<path d="M120 528L405 528" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="132" y="500" width="261" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="514.6">SQ06.02 Mở phản hồi</tspan></text>
+<path d="M405 615L690 615" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="417" y="568" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="582.35">SQ06.03 Đọc đề xuất, revision</tspan><tspan x="547.5" y="601.85">mới nhất và lịch sử</tspan></text>
+<path d="M690 683L975 683" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="702" y="636" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="650.35">SQ06.04 Kiểm tra quyền sửa và</tspan><tspan x="832.5" y="669.85">trạng thái Cần bổ sung</tspan></text>
+<path d="M975 751L690 751" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="702" y="704" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="718.35">SQ06.05 Bản đã gửi, phản hồi và</tspan><tspan x="832.5" y="737.85">bản đang sửa nếu có</tspan></text>
+<path d="M690 819L405 819" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="772" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="786.35">SQ06.06 Các mục cần sửa và thay</tspan><tspan x="547.5" y="805.85">đổi được đề nghị</tspan></text>
+<path d="M120 963L405 963" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="132" y="897" width="261" height="57" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="911.1">SQ06.07 Sửa mục liên quan; chấp</tspan><tspan x="262.5" y="930.6">nhận / chỉnh lại đề nghị; ghi</tspan><tspan x="262.5" y="950.1">giải thích</tspan></text>
+<path d="M405 1029L690 1029" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="417" y="982" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="996.35">SQ06.08 Lưu nội dung và kết quả</tspan><tspan x="547.5" y="1015.85">phản hồi từng mục</tspan></text>
+<path d="M690 1097L975 1097" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="702" y="1050" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="1064.35">SQ06.09 Lưu revision; giữ tác</tspan><tspan x="832.5" y="1083.85">giả và người đề nghị sửa</tspan></text>
+<path d="M690 1165L405 1165" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="1118" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="1132.35">SQ06.10 Đã lưu; các nhận xét còn</tspan><tspan x="547.5" y="1151.85">chưa giải quyết</tspan></text>
+<path d="M120 1345L405 1345" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="132" y="1279" width="261" height="57" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="1293.1">SQ06.11 Bổ sung nội dung chuyên</tspan><tspan x="262.5" y="1312.6">gia cung cấp và khai báo đóng</tspan><tspan x="262.5" y="1332.1">góp</tspan></text>
+<path d="M405 1411L690 1411" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="417" y="1364" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="1378.35">SQ06.12 Lưu người đóng góp thực</tspan><tspan x="547.5" y="1397.85">tế và người nhập nội dung</tspan></text>
+<path d="M690 1498L975 1498" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="702" y="1432" width="261" height="57" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="1446.1">SQ06.13 Bổ sung dấu vết; cập</tspan><tspan x="832.5" y="1465.6">nhật điều kiện người duyệt độc</tspan><tspan x="832.5" y="1485.1">lập</tspan></text>
+<path d="M690 1564L405 1564" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="1517" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="1531.35">SQ06.14 Danh sách người đóng góp</tspan><tspan x="547.5" y="1550.85">đã cập nhật</tspan></text>
+<rect x="24" y="1645" width="1369" height="42" rx="0" fill="#eaf1f8" stroke="#ccd8e5"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="36" y="1671.78">2. Kiểm tra lại trước khi gửi lại</tspan></text>
+<path d="M120 1731L405 1731" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="132" y="1703" width="261" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="1717.6">SQ06.15 Nhấn Đối chiếu lại</tspan></text>
+<path d="M405 1818L690 1818" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="417" y="1771" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="1785.35">SQ06.16 Kiểm tra trường bắt buộc</tspan><tspan x="547.5" y="1804.85">và revision</tspan></text>
+<path d="M690 1943L405 1943" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="1896" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="1910.35">SQ06.17 Trả danh sách mục còn</tspan><tspan x="547.5" y="1929.85">thiếu</tspan></text>
+<path d="M405 2011L120 2011" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="132" y="1964" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="1978.35">SQ06.18 Giữ bản đang sửa; đi đến</tspan><tspan x="262.5" y="1997.85">từng mục cần bổ sung</tspan></text>
+<rect x="45" y="2160" width="1325" height="66" rx="0" fill="#edf5f0" stroke="#719485"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="2198.1">ref SQ03 · Đối chiếu lại và xác nhận tạo mới/cập nhật hoặc hủy nếu trùng</tspan></text>
+<rect x="45" y="2317" width="1325" height="66" rx="0" fill="#edf5f0" stroke="#719485"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="2355.1">ref SQ13 · Chỉ đối chiếu và sửa đề xuất tri thức; giữ báo cáo ca đã hoàn tất</tspan></text>
+<rect x="45" y="2496" width="1325" height="66" rx="0" fill="#edf5f0" stroke="#719485"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="2534.1">ref SQ04 · Gửi revision mới, giữ proposalId và số vòng bổ sung</tspan></text>
+<rect x="45" y="2654" width="1325" height="48" rx="0" fill="#fffbe8" stroke="#d4c77b"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="2683.1">Nếu phát hiện dữ kiện thực tế của báo cáo sai: tạo bản đính chính có lý do và người xác nhận theo SQ12; không âm thầm ghi nội dung đề xuất ngược vào báo cáo.</tspan></text>
+<rect x="1425" y="432" width="540" height="176" rx="7" fill="#f7f9fc" stroke="#cbd5e1"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="1440" y="463.78">UI-12 · Chi tiết yêu cầu bổ sung</tspan></text>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="1440" y="495.35">Hiện người nhận xét, ngày giờ, lần xét duyệt, từng mục cần sửa và</tspan><tspan x="1440" y="514.85">lý do.</tspan><tspan x="1440" y="534.35">Bên cạnh có bản đã gửi, bản đang sửa và phần người duyệt đề nghị</tspan><tspan x="1440" y="553.85">thay đổi.</tspan><tspan x="1440" y="573.35">Nút “Sửa đề xuất”, “Xem nguồn”, “Lưu và thoát”.</tspan><tspan x="1440" y="592.85">Báo cáo ca gốc vẫn chỉ đọc; không thay đổi theo nội dung đề xuất.</tspan></text>
+<rect x="1425" y="1703" width="540" height="196" rx="7" fill="#f7f9fc" stroke="#cbd5e1"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="1440" y="1734.78">UI-13 · Gửi lại sau bổ sung</tspan></text>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="1440" y="1766.6">Hiện danh sách nhận xét đã xử lý/chưa xử lý và so sánh với lần</tspan><tspan x="1440" y="1786.1">gửi trước.</tspan><tspan x="1440" y="1805.6">Nút “Đối chiếu lại”, sau đó “Gửi lại kiểm duyệt”.</tspan><tspan x="1440" y="1825.1">Thông báo khi thiếu: “Còn mục cần bổ sung hoặc chưa có giải</tspan><tspan x="1440" y="1844.6">thích”.</tspan><tspan x="1440" y="1864.1">Tác giả phải xác nhận nội dung chuyên môn do người duyệt đề nghị;</tspan><tspan x="1440" y="1883.6">không tự xuất bản sau khi nhận sửa.</tspan></text>
+<text font-family="Arial,sans-serif" font-size="12" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="2838.08">Nguồn: denso-maintenance-workflows-BPMN.drawio  |  BPMN: k-return, k-revise, r-revise  |  Xem 00 · Bản đồ để chọn tình huống.</tspan></text></svg>

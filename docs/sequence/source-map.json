@@ -1,0 +1,1760 @@
+{
+  "source": "denso-maintenance-workflows-BPMN.drawio",
+  "sha256": "be7da2cd1c8ad6458d3603cb0fc68704c9c7483bb3a544bb10e6dc1eb044c3c4",
+  "pages": [
+    {
+      "id": "knowledge-flow",
+      "name": "01 · Ghi nhận tri thức chuyên gia",
+      "nodes": [
+        {
+          "id": "k-start",
+          "label": "",
+          "sequences": [
+            "SQ02"
+          ]
+        },
+        {
+          "id": "k-input",
+          "label": "Nhập hoặc dán\ntri thức / ghi chú /\nbiên bản cuộc họp",
+          "sequences": [
+            "SQ02"
+          ]
+        },
+        {
+          "id": "k-check",
+          "label": "Kiểm tra, sửa, bổ sung\nbiểu mẫu; xác nhận\nnội dung và tác giả",
+          "sequences": [
+            "SQ02"
+          ]
+        },
+        {
+          "id": "k-ready",
+          "label": "X",
+          "sequences": [
+            "SQ02"
+          ]
+        },
+        {
+          "id": "k-read",
+          "label": "Đọc bản liên quan;\nđối chiếu điều kiện,\nphạm vi và khác biệt",
+          "sequences": [
+            "SQ03",
+            "SQ14"
+          ]
+        },
+        {
+          "id": "k-classify",
+          "label": "X",
+          "sequences": [
+            "SQ03"
+          ]
+        },
+        {
+          "id": "k-update",
+          "label": "Đề xuất cập nhật\nGắn ID, phiên bản gốc\nvà phần thay đổi",
+          "sequences": [
+            "SQ03"
+          ]
+        },
+        {
+          "id": "k-new",
+          "label": "Đề xuất tri thức mới\nNêu khác biệt nếu\ncó nội dung gần trùng",
+          "sequences": [
+            "SQ03"
+          ]
+        },
+        {
+          "id": "k-merge",
+          "label": "X",
+          "sequences": [
+            "SQ03"
+          ]
+        },
+        {
+          "id": "k-submit",
+          "label": "Xác nhận nội dung\nGửi kiểm duyệt",
+          "sequences": [
+            "SQ04"
+          ]
+        },
+        {
+          "id": "k-revise",
+          "label": "Đọc phản hồi; sửa\nhoặc xác nhận thay đổi\ntrong bản đề xuất",
+          "sequences": [
+            "SQ06"
+          ]
+        },
+        {
+          "id": "k-structure",
+          "label": "AI cấu trúc thành\nbiểu mẫu; đánh dấu\nthông tin còn thiếu",
+          "sequences": [
+            "SQ02"
+          ]
+        },
+        {
+          "id": "k-compare",
+          "label": "AI đối chiếu kho\nđã duyệt; dẫn nguồn,\nchỉ rõ giống / khác",
+          "sequences": [
+            "SQ03"
+          ]
+        },
+        {
+          "id": "k-archive",
+          "label": "Không tạo bản trùng\nGiữ / lưu trữ nháp;\nliên kết bản đã có",
+          "sequences": [
+            "SQ03"
+          ]
+        },
+        {
+          "id": "k-covered",
+          "label": "",
+          "sequences": [
+            "SQ03"
+          ]
+        },
+        {
+          "id": "k-queue",
+          "label": "Lưu CHỜ DUYỆT\nGiao người duyệt\nkhác tác giả",
+          "sequences": [
+            "SQ04"
+          ]
+        },
+        {
+          "id": "k-return",
+          "label": "Thông báo yêu cầu sửa\nGhi phản hồi và\nlịch sử xét duyệt",
+          "sequences": [
+            "SQ06"
+          ]
+        },
+        {
+          "id": "k-publish",
+          "label": "Xuất bản phiên bản\nđã duyệt; cập nhật RAG\nThông báo tác giả",
+          "sequences": [
+            "SQ07"
+          ]
+        },
+        {
+          "id": "k-end",
+          "label": "",
+          "sequences": [
+            "SQ07"
+          ]
+        },
+        {
+          "id": "k-reject-notify",
+          "label": "Thông báo từ chối\nGiữ đề xuất và\nlịch sử phản hồi",
+          "sequences": [
+            "SQ07"
+          ]
+        },
+        {
+          "id": "k-rejected",
+          "label": "",
+          "sequences": [
+            "SQ07"
+          ]
+        },
+        {
+          "id": "k-review",
+          "label": "Đánh giá nội dung,\nnguồn, an toàn, phạm vi\nvà trùng lặp",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "k-decision",
+          "label": "X",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "k-feedback",
+          "label": "Yêu cầu bổ sung\nNêu rõ mục cần sửa\nvà lý do",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "k-reject",
+          "label": "Từ chối đề xuất\nGhi lý do cụ thể",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "-SpsiOeKhrRzImmBTtOj-4",
+          "label": "Nhấn hủy bản đề xuất bị trùng",
+          "sequences": [
+            "SQ03"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow-0",
+          "from": "k-start",
+          "to": "k-input",
+          "label": ""
+        },
+        {
+          "id": "flow-1",
+          "from": "k-input",
+          "to": "k-structure",
+          "label": ""
+        },
+        {
+          "id": "flow-2",
+          "from": "k-structure",
+          "to": "k-check",
+          "label": ""
+        },
+        {
+          "id": "flow-3",
+          "from": "k-check",
+          "to": "k-ready",
+          "label": ""
+        },
+        {
+          "id": "flow-4",
+          "from": "k-ready",
+          "to": "k-check",
+          "label": "Cần bổ sung"
+        },
+        {
+          "id": "flow-5",
+          "from": "k-ready",
+          "to": "k-compare",
+          "label": "Đủ"
+        },
+        {
+          "id": "flow-6",
+          "from": "k-compare",
+          "to": "k-read",
+          "label": ""
+        },
+        {
+          "id": "flow-7",
+          "from": "k-read",
+          "to": "k-classify",
+          "label": ""
+        },
+        {
+          "id": "flow-8",
+          "from": "k-classify",
+          "to": "k-update",
+          "label": "Bổ sung / sửa"
+        },
+        {
+          "id": "flow-9",
+          "from": "k-classify",
+          "to": "k-new",
+          "label": "Nội dung mới"
+        },
+        {
+          "id": "flow-10",
+          "from": "-SpsiOeKhrRzImmBTtOj-4",
+          "to": "k-archive",
+          "label": ""
+        },
+        {
+          "id": "flow-11",
+          "from": "k-archive",
+          "to": "k-covered",
+          "label": ""
+        },
+        {
+          "id": "flow-12",
+          "from": "k-update",
+          "to": "k-merge",
+          "label": ""
+        },
+        {
+          "id": "flow-13",
+          "from": "k-new",
+          "to": "k-merge",
+          "label": ""
+        },
+        {
+          "id": "flow-14",
+          "from": "k-merge",
+          "to": "k-submit",
+          "label": ""
+        },
+        {
+          "id": "flow-15",
+          "from": "k-submit",
+          "to": "k-queue",
+          "label": ""
+        },
+        {
+          "id": "flow-16",
+          "from": "k-queue",
+          "to": "k-review",
+          "label": ""
+        },
+        {
+          "id": "flow-17",
+          "from": "k-review",
+          "to": "k-decision",
+          "label": ""
+        },
+        {
+          "id": "flow-18",
+          "from": "k-decision",
+          "to": "k-feedback",
+          "label": "Yêu cầu sửa"
+        },
+        {
+          "id": "flow-19",
+          "from": "k-feedback",
+          "to": "k-return",
+          "label": ""
+        },
+        {
+          "id": "flow-20",
+          "from": "k-return",
+          "to": "k-revise",
+          "label": ""
+        },
+        {
+          "id": "flow-21",
+          "from": "k-revise",
+          "to": "k-check",
+          "label": "Kiểm tra lại và đối chiếu lại sau sửa"
+        },
+        {
+          "id": "flow-22",
+          "from": "k-decision",
+          "to": "k-publish",
+          "label": "Phê duyệt"
+        },
+        {
+          "id": "flow-23",
+          "from": "k-publish",
+          "to": "k-end",
+          "label": ""
+        },
+        {
+          "id": "flow-24",
+          "from": "k-decision",
+          "to": "k-reject",
+          "label": "Từ chối"
+        },
+        {
+          "id": "flow-25",
+          "from": "k-reject",
+          "to": "k-reject-notify",
+          "label": ""
+        },
+        {
+          "id": "flow-26",
+          "from": "k-reject-notify",
+          "to": "k-rejected",
+          "label": ""
+        },
+        {
+          "id": "flow-27",
+          "from": "k-classify",
+          "to": "-SpsiOeKhrRzImmBTtOj-4",
+          "label": "Trùng; không có điểm mới"
+        }
+      ]
+    },
+    {
+      "id": "repair-flow",
+      "name": "02 · Hồ sơ BM/PM — luồng tổng quan",
+      "nodes": [
+        {
+          "id": "r-start",
+          "label": "",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "r-open",
+          "label": "Mở / tiếp tục hồ sơ\nĐiền sẵn dữ liệu BM/PM\n[03 · HozenDX]",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "r-entry-state",
+          "label": "X",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "r-inspect",
+          "label": "Xác nhận dấu hiệu,\nđiều kiện và điểm thay đổi\nBổ sung phần chưa biết",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "r-abnormal",
+          "label": "X",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "r-retrieve",
+          "label": "RAG tìm case / tri thức\nđã duyệt theo bối cảnh\nNguồn khác được phân loại",
+          "sequences": [
+            "SQ09"
+          ]
+        },
+        {
+          "id": "r-insight",
+          "label": "Nguồn + giống/khác\nDữ kiện thiếu; gợi ý\nkiểm tra tiếp theo",
+          "sequences": [
+            "SQ09"
+          ]
+        },
+        {
+          "id": "r-assess",
+          "label": "Đọc nguồn và tự đánh giá\nChọn hướng tham khảo\ntrong thẩm quyền",
+          "sequences": [
+            "SQ09",
+            "SQ14"
+          ]
+        },
+        {
+          "id": "r-work-round",
+          "label": "Xử lý / phối hợp và\nghi nhận trong đợt\n[04 · Nhật ký]",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-round-result",
+          "label": "X",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-round-summary",
+          "label": "AI tóm tắt đợt từ\nnhật ký: đã thử, kết quả,\ngiả thuyết và việc còn lại",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-handover-check",
+          "label": "Kiểm tra tóm tắt đợt\nChọn tiếp tục điều tra\nhoặc lưu bàn giao",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-next",
+          "label": "X",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-open-save",
+          "label": "Lưu bàn giao và đợt\nGiữ caseId, lịch sử,\nngười nhận và việc còn lại",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-wait",
+          "label": "",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-report",
+          "label": "AI soạn tổng kết;\nngười tham gia xác nhận\n[05 · Báo cáo]",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "r-report-ready",
+          "label": "X",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "r-doc-wait-end",
+          "label": "",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "r-diff",
+          "label": "Đối chiếu báo cáo đã\nxác nhận với kho; gợi ý\nliên kết / cập nhật / mới",
+          "sequences": [
+            "SQ13"
+          ]
+        },
+        {
+          "id": "r-proposal",
+          "label": "Đọc bài học và khác biệt\nChọn giá trị tái dùng\nGiữ bằng chứng nguồn",
+          "sequences": [
+            "SQ13"
+          ]
+        },
+        {
+          "id": "r-useful",
+          "label": "X",
+          "sequences": [
+            "SQ13"
+          ]
+        },
+        {
+          "id": "r-only-history",
+          "label": "Chỉ giữ lịch sử hồ sơ\nvà nguồn đã tham khảo\nKhông tạo bản trùng",
+          "sequences": [
+            "SQ13"
+          ]
+        },
+        {
+          "id": "r-history-end",
+          "label": "",
+          "sequences": [
+            "SQ13"
+          ]
+        },
+        {
+          "id": "r-submit",
+          "label": "Xác nhận và gửi\nMới / Cập nhật / Liên kết\nGắn báo cáo và tác giả",
+          "sequences": [
+            "SQ04"
+          ]
+        },
+        {
+          "id": "r-review",
+          "label": "Người duyệt độc lập\nĐánh giá bằng chứng,\nphạm vi, an toàn, trùng",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "r-decision",
+          "label": "X",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "r-feedback",
+          "label": "Yêu cầu bổ sung\nChỉ rõ mục và lý do\nThông báo người gửi",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "r-revise",
+          "label": "Sửa đề xuất tri thức\nPhối hợp chuyên gia\nKhông sửa ngầm báo cáo",
+          "sequences": [
+            "SQ06"
+          ]
+        },
+        {
+          "id": "r-publish",
+          "label": "Duyệt liên kết / xuất bản\nphiên bản; cập nhật RAG\nThông báo khi sẵn sàng",
+          "sequences": [
+            "SQ07"
+          ]
+        },
+        {
+          "id": "r-published",
+          "label": "",
+          "sequences": [
+            "SQ07"
+          ]
+        },
+        {
+          "id": "r-reject",
+          "label": "Từ chối kèm lý do\nThông báo người gửi\nGiữ lịch sử hồ sơ",
+          "sequences": [
+            "SQ05"
+          ]
+        },
+        {
+          "id": "r-rejected",
+          "label": "",
+          "sequences": [
+            "SQ07"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow-0",
+          "from": "r-start",
+          "to": "r-open",
+          "label": ""
+        },
+        {
+          "id": "flow-1",
+          "from": "r-open",
+          "to": "r-entry-state",
+          "label": ""
+        },
+        {
+          "id": "flow-2",
+          "from": "r-entry-state",
+          "to": "r-inspect",
+          "label": "Còn công việc"
+        },
+        {
+          "id": "flow-3",
+          "from": "r-entry-state",
+          "to": "r-report",
+          "label": "Chỉ chờ báo cáo"
+        },
+        {
+          "id": "flow-4",
+          "from": "r-inspect",
+          "to": "r-abnormal",
+          "label": ""
+        },
+        {
+          "id": "flow-5",
+          "from": "r-abnormal",
+          "to": "r-retrieve",
+          "label": "Có"
+        },
+        {
+          "id": "flow-6",
+          "from": "r-retrieve",
+          "to": "r-insight",
+          "label": ""
+        },
+        {
+          "id": "flow-7",
+          "from": "r-insight",
+          "to": "r-assess",
+          "label": ""
+        },
+        {
+          "id": "flow-8",
+          "from": "r-assess",
+          "to": "r-work-round",
+          "label": ""
+        },
+        {
+          "id": "flow-9",
+          "from": "r-abnormal",
+          "to": "r-work-round",
+          "label": "PM không bất thường"
+        },
+        {
+          "id": "flow-10",
+          "from": "r-work-round",
+          "to": "r-round-result",
+          "label": ""
+        },
+        {
+          "id": "flow-11",
+          "from": "r-round-result",
+          "to": "r-report",
+          "label": "Đủ điều kiện kết thúc công việc"
+        },
+        {
+          "id": "flow-12",
+          "from": "r-round-result",
+          "to": "r-round-summary",
+          "label": "Còn việc / cần dừng đợt"
+        },
+        {
+          "id": "flow-13",
+          "from": "r-round-summary",
+          "to": "r-handover-check",
+          "label": ""
+        },
+        {
+          "id": "flow-14",
+          "from": "r-handover-check",
+          "to": "r-next",
+          "label": ""
+        },
+        {
+          "id": "flow-15",
+          "from": "r-next",
+          "to": "r-inspect",
+          "label": "Tiếp tục điều tra; bắt đầu đợt kế tiếp"
+        },
+        {
+          "id": "flow-16",
+          "from": "r-next",
+          "to": "r-open-save",
+          "label": "Bàn giao / chờ"
+        },
+        {
+          "id": "flow-17",
+          "from": "r-open-save",
+          "to": "r-wait",
+          "label": ""
+        },
+        {
+          "id": "flow-18",
+          "from": "r-report",
+          "to": "r-report-ready",
+          "label": ""
+        },
+        {
+          "id": "flow-19",
+          "from": "r-report-ready",
+          "to": "r-diff",
+          "label": "Đã xác nhận"
+        },
+        {
+          "id": "flow-20",
+          "from": "r-report-ready",
+          "to": "r-doc-wait-end",
+          "label": "Còn chờ / cần sửa"
+        },
+        {
+          "id": "flow-21",
+          "from": "r-diff",
+          "to": "r-proposal",
+          "label": ""
+        },
+        {
+          "id": "flow-22",
+          "from": "r-proposal",
+          "to": "r-useful",
+          "label": ""
+        },
+        {
+          "id": "flow-23",
+          "from": "r-useful",
+          "to": "r-only-history",
+          "label": "Không"
+        },
+        {
+          "id": "flow-24",
+          "from": "r-only-history",
+          "to": "r-history-end",
+          "label": ""
+        },
+        {
+          "id": "flow-25",
+          "from": "r-useful",
+          "to": "r-submit",
+          "label": "Có"
+        },
+        {
+          "id": "flow-26",
+          "from": "r-submit",
+          "to": "r-review",
+          "label": ""
+        },
+        {
+          "id": "flow-27",
+          "from": "r-review",
+          "to": "r-decision",
+          "label": ""
+        },
+        {
+          "id": "flow-28",
+          "from": "r-decision",
+          "to": "r-feedback",
+          "label": "Cần bổ sung"
+        },
+        {
+          "id": "flow-29",
+          "from": "r-feedback",
+          "to": "r-revise",
+          "label": ""
+        },
+        {
+          "id": "flow-30",
+          "from": "r-revise",
+          "to": "r-diff",
+          "label": "Đối chiếu lại đề xuất"
+        },
+        {
+          "id": "flow-31",
+          "from": "r-decision",
+          "to": "r-publish",
+          "label": "Duyệt"
+        },
+        {
+          "id": "flow-32",
+          "from": "r-publish",
+          "to": "r-published",
+          "label": ""
+        },
+        {
+          "id": "flow-33",
+          "from": "r-decision",
+          "to": "r-reject",
+          "label": "Từ chối"
+        },
+        {
+          "id": "flow-34",
+          "from": "r-reject",
+          "to": "r-rejected",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "work-entry",
+      "name": "03 · Mở / tiếp tục hồ sơ và điền sẵn BM/PM",
+      "nodes": [
+        {
+          "id": "e-start",
+          "label": "",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-select",
+          "label": "Chọn sự cố / việc PM\nhoặc quét / nhập mã máy\nhoặc mở hồ sơ đang chờ",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-fetch",
+          "label": "Lấy thông tin theo quyền\nMáy, lịch sử BM/PM,\nhồ sơ thay đổi, tài liệu",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-hozen",
+          "label": "Trả dữ liệu được cấp\nLý lịch, chế độ PM,\nSOP/DAS, linh kiện…",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-source",
+          "label": "X",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-fallback",
+          "label": "Hiện thiếu/lỗi/độ cũ\nDùng bản đã có nếu phù hợp\nhoặc yêu cầu xác minh",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-fallback-valid",
+          "label": "X",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-confirm",
+          "label": "Xác nhận đúng máy\nNguồn/thời gian dữ liệu\nTách quan sát hiện trường",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-existing",
+          "label": "X",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-resume",
+          "label": "Giữ caseId và lịch sử\nMở đúng bước đang chờ\nChỉ tạo đợt khi làm tiếp",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-type",
+          "label": "X",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-pm-plan",
+          "label": "X",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-pm-import",
+          "label": "Điền công việc, lịch,\nchecklist được cung cấp\nGiữ ID/phiên bản nguồn",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-pm-template",
+          "label": "Chọn checklist đã cấu hình\ntừ chế độ/tiêu chuẩn PM\nKhông tự sinh việc đã làm",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-bm",
+          "label": "Xác nhận sự cố\nDấu hiệu ban đầu; thời gian\nKhông ép kết luận nguyên nhân",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-check-context",
+          "label": "Kiểm tra phần điền sẵn\nBổ sung model sản phẩm,\nđiều kiện và 5M1E liên quan",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-persist",
+          "label": "Tạo / mở đúng hồ sơ\nGắn máy, loại việc, chủ ca\nLưu ảnh chụp nguồn",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-end",
+          "label": "",
+          "sequences": [
+            "SQ08"
+          ]
+        },
+        {
+          "id": "e-unavailable",
+          "label": "",
+          "sequences": [
+            "SQ08"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow-0",
+          "from": "e-start",
+          "to": "e-select",
+          "label": ""
+        },
+        {
+          "id": "flow-1",
+          "from": "e-select",
+          "to": "e-fetch",
+          "label": ""
+        },
+        {
+          "id": "flow-2",
+          "from": "e-fetch",
+          "to": "e-hozen",
+          "label": ""
+        },
+        {
+          "id": "flow-3",
+          "from": "e-hozen",
+          "to": "e-source",
+          "label": ""
+        },
+        {
+          "id": "flow-4",
+          "from": "e-source",
+          "to": "e-confirm",
+          "label": "Có / xác minh được"
+        },
+        {
+          "id": "flow-5",
+          "from": "e-source",
+          "to": "e-fallback",
+          "label": "Thiếu / lỗi"
+        },
+        {
+          "id": "flow-6",
+          "from": "e-fallback",
+          "to": "e-fallback-valid",
+          "label": ""
+        },
+        {
+          "id": "flow-7",
+          "from": "e-fallback-valid",
+          "to": "e-confirm",
+          "label": "Có; người dùng xác nhận"
+        },
+        {
+          "id": "flow-8",
+          "from": "e-fallback-valid",
+          "to": "e-unavailable",
+          "label": "Chưa xác minh được"
+        },
+        {
+          "id": "flow-9",
+          "from": "e-confirm",
+          "to": "e-existing",
+          "label": ""
+        },
+        {
+          "id": "flow-10",
+          "from": "e-existing",
+          "to": "e-resume",
+          "label": "Có"
+        },
+        {
+          "id": "flow-11",
+          "from": "e-resume",
+          "to": "e-check-context",
+          "label": ""
+        },
+        {
+          "id": "flow-12",
+          "from": "e-existing",
+          "to": "e-type",
+          "label": "Không"
+        },
+        {
+          "id": "flow-13",
+          "from": "e-type",
+          "to": "e-bm",
+          "label": "BM"
+        },
+        {
+          "id": "flow-14",
+          "from": "e-type",
+          "to": "e-pm-plan",
+          "label": "PM"
+        },
+        {
+          "id": "flow-15",
+          "from": "e-pm-plan",
+          "to": "e-pm-import",
+          "label": "Có"
+        },
+        {
+          "id": "flow-16",
+          "from": "e-pm-plan",
+          "to": "e-pm-template",
+          "label": "Không"
+        },
+        {
+          "id": "flow-17",
+          "from": "e-pm-import",
+          "to": "e-check-context",
+          "label": ""
+        },
+        {
+          "id": "flow-18",
+          "from": "e-pm-template",
+          "to": "e-check-context",
+          "label": ""
+        },
+        {
+          "id": "flow-19",
+          "from": "e-bm",
+          "to": "e-check-context",
+          "label": ""
+        },
+        {
+          "id": "flow-20",
+          "from": "e-check-context",
+          "to": "e-persist",
+          "label": ""
+        },
+        {
+          "id": "flow-21",
+          "from": "e-persist",
+          "to": "e-end",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "id": "work-round",
+      "name": "04 · Đợt xử lý, phối hợp chuyên gia và ghi nhanh",
+      "nodes": [
+        {
+          "id": "w-start",
+          "label": "",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-open-round",
+          "label": "Tạo / tiếp tục roundId\nĐọc bối cảnh, nguồn,\nchecklist và bàn giao",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-route",
+          "label": "X",
+          "sequences": [
+            "SQ09"
+          ]
+        },
+        {
+          "id": "r-measure",
+          "label": "Bổ sung kiểm tra / số đo\nGhi dấu hiệu và 5M1E\nTra cứu lại khi bối cảnh đổi",
+          "sequences": [
+            "SQ09"
+          ]
+        },
+        {
+          "id": "r-call",
+          "label": "Yêu cầu chuyên gia\nNêu vấn đề cần xác minh\nKiểm tra bản bàn giao",
+          "sequences": [
+            "SQ10"
+          ]
+        },
+        {
+          "id": "r-handover",
+          "label": "AI tóm tắt dữ kiện đã có\nNgười bảo trì xác nhận\nGửi yêu cầu trong web",
+          "sequences": [
+            "SQ10"
+          ]
+        },
+        {
+          "id": "w-expert-available",
+          "label": "X",
+          "sequences": [
+            "SQ10"
+          ]
+        },
+        {
+          "id": "r-join",
+          "label": "Nhận hỗ trợ; ghi lúc\nbắt đầu tham gia, công đoạn\nvà vai trò của chuyên gia",
+          "sequences": [
+            "SQ10"
+          ]
+        },
+        {
+          "id": "r-investigate",
+          "label": "Điều tra / giải thích\nGiả thuyết, bằng chứng\nvà lý do đổi hướng",
+          "sequences": [
+            "SQ10"
+          ]
+        },
+        {
+          "id": "r-action-merge",
+          "label": "X",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-plan",
+          "label": "Chốt phương án, người làm\nXác nhận an toàn theo\nquy trình đã phê duyệt",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-act",
+          "label": "Thực hiện / hỗ trợ\nGhi theo các mốc quan trọng\nKhông phải ghi từng động tác",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-note",
+          "label": "Ghi nhanh: loại + nội dung\nngười thực hiện + kết quả\nLý do quyết định khi cần",
+          "sequences": [
+            "SQ16"
+          ]
+        },
+        {
+          "id": "w-save-event",
+          "label": "Lưu eventId, tác giả nhập,\nngười thực hiện, thời điểm\nvà revision; không ghi đè",
+          "sequences": [
+            "SQ16"
+          ]
+        },
+        {
+          "id": "w-confirm-now",
+          "label": "X",
+          "sequences": [
+            "SQ16"
+          ]
+        },
+        {
+          "id": "w-expert-check",
+          "label": "Bổ sung / xác nhận theo\nnhóm đóng góp của mình\nCó thể xác nhận cuối đợt",
+          "sequences": [
+            "SQ16"
+          ]
+        },
+        {
+          "id": "w-more",
+          "label": "X",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "r-verify",
+          "label": "Kiểm tra kết quả thực tế\nGhi đạt/chưa đạt/chưa rõ\nvà căn cứ kiểm tra",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-outcome",
+          "label": "X",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-result",
+          "label": "Lưu kết quả đợt, máy\nvà tiến độ công việc riêng\nGiữ cả bước chưa hiệu quả",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-end",
+          "label": "",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-stop",
+          "label": "X",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-exception",
+          "label": "Chỉ kết thúc chưa khắc phục\nkhi có quyết định đúng quyền\nGhi lý do và nơi tiếp nhận",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-exception-approved",
+          "label": "X",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-pm-abnormal",
+          "label": "PM phát hiện bất thường\nGắn hạng mục, giữ hồ sơ\nChuyển sang điều tra",
+          "sequences": [
+            "SQ11"
+          ]
+        },
+        {
+          "id": "w-preview",
+          "label": "Khi người dùng chọn:\nAI cập nhật nháp tổng kết\ntừ nhật ký; chưa xác nhận",
+          "sequences": [
+            "SQ12"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow-0",
+          "from": "w-start",
+          "to": "w-open-round",
+          "label": ""
+        },
+        {
+          "id": "flow-1",
+          "from": "w-open-round",
+          "to": "r-route",
+          "label": ""
+        },
+        {
+          "id": "flow-2",
+          "from": "r-route",
+          "to": "r-measure",
+          "label": "Cần dữ kiện"
+        },
+        {
+          "id": "flow-3",
+          "from": "r-measure",
+          "to": "r-route",
+          "label": "Đã lưu và tra cứu lại"
+        },
+        {
+          "id": "flow-4",
+          "from": "r-route",
+          "to": "r-call",
+          "label": "Cần chuyên gia"
+        },
+        {
+          "id": "flow-5",
+          "from": "r-call",
+          "to": "r-handover",
+          "label": ""
+        },
+        {
+          "id": "flow-6",
+          "from": "r-handover",
+          "to": "w-expert-available",
+          "label": ""
+        },
+        {
+          "id": "flow-7",
+          "from": "w-expert-available",
+          "to": "r-join",
+          "label": "Có"
+        },
+        {
+          "id": "flow-8",
+          "from": "w-expert-available",
+          "to": "w-stop",
+          "label": "Chưa có; giữ yêu cầu chờ"
+        },
+        {
+          "id": "flow-9",
+          "from": "r-join",
+          "to": "r-investigate",
+          "label": ""
+        },
+        {
+          "id": "flow-10",
+          "from": "r-investigate",
+          "to": "r-action-merge",
+          "label": ""
+        },
+        {
+          "id": "flow-11",
+          "from": "r-route",
+          "to": "r-action-merge",
+          "label": "Tự xử lý / PM đủ điều kiện"
+        },
+        {
+          "id": "flow-12",
+          "from": "r-action-merge",
+          "to": "r-plan",
+          "label": "Có"
+        },
+        {
+          "id": "flow-13",
+          "from": "r-plan",
+          "to": "r-act",
+          "label": ""
+        },
+        {
+          "id": "flow-14",
+          "from": "r-act",
+          "to": "w-note",
+          "label": ""
+        },
+        {
+          "id": "flow-15",
+          "from": "w-note",
+          "to": "w-save-event",
+          "label": ""
+        },
+        {
+          "id": "flow-16",
+          "from": "w-save-event",
+          "to": "w-confirm-now",
+          "label": ""
+        },
+        {
+          "id": "flow-17",
+          "from": "w-confirm-now",
+          "to": "w-expert-check",
+          "label": "Có"
+        },
+        {
+          "id": "flow-18",
+          "from": "w-expert-check",
+          "to": "w-more",
+          "label": ""
+        },
+        {
+          "id": "flow-19",
+          "from": "w-confirm-now",
+          "to": "w-more",
+          "label": "Không / để xác nhận cuối đợt"
+        },
+        {
+          "id": "flow-20",
+          "from": "w-more",
+          "to": "r-plan",
+          "label": "Còn; chọn bước tiếp"
+        },
+        {
+          "id": "flow-21",
+          "from": "w-more",
+          "to": "r-verify",
+          "label": "Kết thúc kiểm tra đợt"
+        },
+        {
+          "id": "flow-22",
+          "from": "r-verify",
+          "to": "w-outcome",
+          "label": ""
+        },
+        {
+          "id": "flow-23",
+          "from": "w-outcome",
+          "to": "w-result",
+          "label": "Đạt hoặc còn việc / cần chờ"
+        },
+        {
+          "id": "flow-24",
+          "from": "w-outcome",
+          "to": "w-exception",
+          "label": "Đề nghị kết thúc chưa khắc phục"
+        },
+        {
+          "id": "flow-25",
+          "from": "w-exception",
+          "to": "w-exception-approved",
+          "label": ""
+        },
+        {
+          "id": "flow-26",
+          "from": "w-exception-approved",
+          "to": "w-result",
+          "label": "Được phép; ghi đúng kết quả"
+        },
+        {
+          "id": "flow-27",
+          "from": "w-exception-approved",
+          "to": "w-stop",
+          "label": "Chưa được phép; giữ mở"
+        },
+        {
+          "id": "flow-28",
+          "from": "r-action-merge",
+          "to": "w-stop",
+          "label": "Chưa đủ điều kiện"
+        },
+        {
+          "id": "flow-29",
+          "from": "w-stop",
+          "to": "r-route",
+          "label": "Điều tra / gọi hỗ trợ"
+        },
+        {
+          "id": "flow-30",
+          "from": "w-stop",
+          "to": "w-result",
+          "label": "Dừng đợt; còn việc"
+        },
+        {
+          "id": "flow-31",
+          "from": "w-outcome",
+          "to": "w-pm-abnormal",
+          "label": "Phát hiện bất thường PM"
+        },
+        {
+          "id": "flow-32",
+          "from": "w-pm-abnormal",
+          "to": "r-route",
+          "label": "Bổ sung bối cảnh, tra cứu / gọi chuyên gia"
+        },
+        {
+          "id": "flow-33",
+          "from": "w-result",
+          "to": "w-end",
+          "label": ""
+        },
+        {
+          "id": "flow-34",
+          "from": "w-more",
+          "to": "w-preview",
+          "label": "Xem nháp trong lúc làm"
+        },
+        {
+          "id": "flow-35",
+          "from": "w-preview",
+          "to": "w-more",
+          "label": "Tiếp tục cùng đợt; không chốt báo cáo"
+        }
+      ]
+    },
+    {
+      "id": "work-report",
+      "name": "05 · AI tổng kết, xác nhận đóng góp và lưu báo cáo",
+      "nodes": [
+        {
+          "id": "f-start",
+          "label": "",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-collect",
+          "label": "Lấy mọi đợt, nhật ký,\nPM, nguồn, người tham gia\nvà quyết định kết thúc",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-ai-draft",
+          "label": "AI soạn nháp từ dữ kiện\nGắn căn cứ tới ghi nhận\nKhông tự điền dữ kiện thiếu",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-ai-ok",
+          "label": "X",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-fallback",
+          "label": "Giữ nhật ký và nháp cũ\nĐiền mẫu từ dữ kiện đã có\nCho sửa tay / thử lại",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-review",
+          "label": "Người bảo trì đọc, sửa\nxác nhận tổng kết thực tế\nKết quả / nguyên nhân riêng",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-purpose",
+          "label": "X",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-preview-end",
+          "label": "",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-contributions",
+          "label": "X",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-confirm",
+          "label": "Đọc nhóm đóng góp\nđúng phiên bản của mình\nXác nhận hoặc yêu cầu sửa",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-confirm-result",
+          "label": "X",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-edit",
+          "label": "Sửa phần có căn cứ\nGiữ trước/sau; chỉ yêu cầu\nxác nhận lại phần bị ảnh hưởng",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-wait",
+          "label": "Giữ báo cáo Chờ xác nhận\nNhật ký đã lưu; máy và\ntiến độ công việc độc lập",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-wait-end",
+          "label": "",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-check",
+          "label": "Kiểm tra điều kiện chốt\nNguồn, revision, xác nhận\nvà kết quả thực tế",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-valid",
+          "label": "X",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-history",
+          "label": "Lưu báo cáo đã xác nhận\nvào lịch sử máy; giữ\ncác đợt và đóng góp",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-sync",
+          "label": "Nếu có API/quyền ghi:\nđồng bộ lịch sử sang HozenDX\nLỗi: giữ hàng chờ, thử lại",
+          "sequences": [
+            "SQ12"
+          ]
+        },
+        {
+          "id": "f-end",
+          "label": "",
+          "sequences": [
+            "SQ12"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow-0",
+          "from": "f-start",
+          "to": "f-collect",
+          "label": ""
+        },
+        {
+          "id": "flow-1",
+          "from": "f-collect",
+          "to": "f-ai-draft",
+          "label": ""
+        },
+        {
+          "id": "flow-2",
+          "from": "f-ai-draft",
+          "to": "f-ai-ok",
+          "label": ""
+        },
+        {
+          "id": "flow-3",
+          "from": "f-ai-ok",
+          "to": "f-review",
+          "label": "Có"
+        },
+        {
+          "id": "flow-4",
+          "from": "f-ai-ok",
+          "to": "f-fallback",
+          "label": "Lỗi / chưa đủ cấu trúc"
+        },
+        {
+          "id": "flow-5",
+          "from": "f-fallback",
+          "to": "f-review",
+          "label": "Dùng mẫu từ dữ kiện"
+        },
+        {
+          "id": "flow-6",
+          "from": "f-review",
+          "to": "f-purpose",
+          "label": ""
+        },
+        {
+          "id": "flow-7",
+          "from": "f-purpose",
+          "to": "f-preview-end",
+          "label": "Xem nháp"
+        },
+        {
+          "id": "flow-8",
+          "from": "f-purpose",
+          "to": "f-contributions",
+          "label": "Chốt"
+        },
+        {
+          "id": "flow-9",
+          "from": "f-contributions",
+          "to": "f-confirm",
+          "label": "Còn"
+        },
+        {
+          "id": "flow-10",
+          "from": "f-contributions",
+          "to": "f-check",
+          "label": "Không / đã xác nhận đúng nội dung"
+        },
+        {
+          "id": "flow-11",
+          "from": "f-confirm",
+          "to": "f-confirm-result",
+          "label": ""
+        },
+        {
+          "id": "flow-12",
+          "from": "f-confirm-result",
+          "to": "f-edit",
+          "label": "Cần sửa"
+        },
+        {
+          "id": "flow-13",
+          "from": "f-edit",
+          "to": "f-review",
+          "label": "Cập nhật bản tổng kết"
+        },
+        {
+          "id": "flow-14",
+          "from": "f-confirm-result",
+          "to": "f-wait",
+          "label": "Chưa xác nhận / lưu chờ"
+        },
+        {
+          "id": "flow-15",
+          "from": "f-wait",
+          "to": "f-wait-end",
+          "label": ""
+        },
+        {
+          "id": "flow-16",
+          "from": "f-confirm-result",
+          "to": "f-check",
+          "label": "Xác nhận đúng"
+        },
+        {
+          "id": "flow-17",
+          "from": "f-check",
+          "to": "f-valid",
+          "label": ""
+        },
+        {
+          "id": "flow-18",
+          "from": "f-valid",
+          "to": "f-review",
+          "label": "Thiếu / bản đã đổi"
+        },
+        {
+          "id": "flow-19",
+          "from": "f-valid",
+          "to": "f-history",
+          "label": "Đủ"
+        },
+        {
+          "id": "flow-20",
+          "from": "f-history",
+          "to": "f-sync",
+          "label": ""
+        },
+        {
+          "id": "flow-21",
+          "from": "f-sync",
+          "to": "f-end",
+          "label": ""
+        }
+      ]
+    }
+  ]
+}

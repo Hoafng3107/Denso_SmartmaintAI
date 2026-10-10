@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1710" height="3600" viewBox="0 0 1710 3600" role="img" aria-label="Đăng nhập và vào đúng không gian làm việc"><defs><marker id="block" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#526579"/></marker><marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10" fill="none" stroke="#526579" stroke-width="1.4"/></marker></defs><rect width="100%" height="100%" fill="white"/><text font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="28" y="51.52">SQ01 · Đăng nhập và vào đúng không gian làm việc</tspan></text>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="97.44">Đầu vào: Người dùng mở web trên laptop, tablet hoặc điện thoại; đây là phần mở rộng UI của điều kiện “sau đăng nhập” trong BPMN.</tspan></text>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="148.44">Kết quả: Có phiên làm việc gắn nhân viên và quyền được cấp; hiển thị dashboard phù hợp.</tspan></text>
+<text font-family="Arial,sans-serif" font-size="14" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="188.76">Thời gian: trên → dưới  |  Liền: yêu cầu/thao tác  |  Đứt: trả kết quả  |  alt: chọn nhánh  ·  opt: tùy điều kiện  ·  loop: lặp  ·  break: dừng  ·  ref: xem trang liên quan</tspan></text>
+<text font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="1140" y="249.42000000000002">ĐẶC TẢ GIAO DIỆN</tspan><tspan x="1140" y="272.82">Thông tin hiển thị · nút bấm · thông báo</tspan></text>
+<rect x="24" y="588" width="1084" height="1710" rx="0" fill="none" stroke="#8d9aa9"/>
+<path d="M24 888L1108 888" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="33" y="713" width="1075" height="139" rx="0" fill="none" stroke="#8d9aa9"/>
+<rect x="33" y="1149" width="1075" height="1113" rx="0" fill="none" stroke="#8d9aa9"/>
+<path d="M33 1534L1108 1534" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<path d="M33 1919L1108 1919" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="42" y="1359" width="1066" height="139" rx="0" fill="none" stroke="#8d9aa9"/>
+<rect x="42" y="1744" width="1066" height="139" rx="0" fill="none" stroke="#8d9aa9"/>
+<rect x="24" y="2643" width="1084" height="707" rx="0" fill="none" stroke="#8d9aa9"/>
+<path d="M24 2986L1108 2986" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<path d="M24 3193L1108 3193" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="15" y="220" width="210" height="102" rx="0" fill="#eaf1fb" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="120" y="266.04">«actor»</tspan><tspan x="120" y="286.84000000000003">Người dùng</tspan></text>
+<path d="M120 322L120 3535" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="300" y="220" width="210" height="102" rx="0" fill="#eaf1fb" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="405" y="266.04">«boundary»</tspan><tspan x="405" y="286.84000000000003">Giao diện web</tspan></text>
+<path d="M405 322L405 3535" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="585" y="220" width="210" height="102" rx="0" fill="#f1f3f6" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="690" y="266.04">«control»</tspan><tspan x="690" y="286.84000000000003">Nghiệp vụ / phân quyền</tspan></text>
+<path d="M690 322L690 3535" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="870" y="220" width="210" height="102" rx="0" fill="#f1f3f6" stroke="#687d94"/>
+<text font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="975" y="255.64">«entity»</tspan><tspan x="975" y="276.44">Dữ liệu nghiệp vụ</tspan><tspan x="975" y="297.24">&amp; nhật ký</tspan></text>
+<path d="M975 322L975 3535" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5"/>
+<rect x="31" y="593" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="614.1">alt</tspan></text>
+<rect x="109" y="592" width="989" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="618.1">[Thiếu thông tin]</tspan></text>
+<rect x="31" y="893" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="914.1">else</tspan></text>
+<rect x="109" y="892" width="989" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="918.1">[Đã điền đủ]</tspan></text>
+<rect x="40" y="718" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="72" y="739.1">break</tspan></text>
+<rect x="118" y="717" width="980" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="118" y="743.1">[Dừng lần tương tác hiện tại]</tspan></text>
+<rect x="40" y="1154" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="72" y="1175.1">alt</tspan></text>
+<rect x="118" y="1153" width="980" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="118" y="1179.1">[Không xác thực được]</tspan></text>
+<rect x="40" y="1539" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="72" y="1560.1">else</tspan></text>
+<rect x="118" y="1538" width="980" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="118" y="1564.1">[Tài khoản không được phép truy cập]</tspan></text>
+<rect x="40" y="1924" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="72" y="1945.1">else</tspan></text>
+<rect x="118" y="1923" width="980" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="118" y="1949.1">[Hợp lệ]</tspan></text>
+<rect x="49" y="1364" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="81" y="1385.1">break</tspan></text>
+<rect x="127" y="1363" width="971" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="127" y="1389.1">[Dừng lần tương tác hiện tại]</tspan></text>
+<rect x="49" y="1749" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="81" y="1770.1">break</tspan></text>
+<rect x="127" y="1748" width="971" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="127" y="1774.1">[Dừng lần tương tác hiện tại]</tspan></text>
+<rect x="31" y="2648" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="2669.1">alt</tspan></text>
+<rect x="109" y="2647" width="989" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="2673.1">[Đủ quyền]</tspan></text>
+<rect x="31" y="2991" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="3012.1">else</tspan></text>
+<rect x="109" y="2990" width="989" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="3016.1">[Không đủ quyền]</tspan></text>
+<rect x="31" y="3198" width="64" height="32" rx="0" fill="#eef2f6" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="middle"><tspan x="63" y="3219.1">else</tspan></text>
+<rect x="109" y="3197" width="989" height="42" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="109" y="3223.1">[Phiên hết hạn]</tspan></text>
+<rect x="24" y="374" width="1084" height="42" rx="0" fill="#eaf1f8" stroke="#ccd8e5"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="36" y="400.78">1. Đăng nhập bằng tài khoản cá nhân</tspan></text>
+<path d="M120 479L405 479" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="132" y="432" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="446.35">SQ01.01 Nhập mã nhân viên, mật</tspan><tspan x="262.5" y="465.85">khẩu; nhấn Đăng nhập</tspan></text>
+<path d="M405 547H470V567H405" fill="none" stroke="#526579" marker-end="url(#block)"/>
+<rect x="417" y="500" width="248" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="417" y="514.35">SQ01.02 Kiểm tra các ô bắt</tspan><tspan x="417" y="533.85">buộc</tspan></text>
+<path d="M405 692L120 692" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="132" y="645" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="659.35">SQ01.03 Hiện lỗi tại ô; giữ mã</tspan><tspan x="262.5" y="678.85">nhân viên; dừng lần đăng nhập</tspan></text>
+<rect x="45" y="770" width="1040" height="48" rx="0" fill="#fffbe8" stroke="#d4c77b"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="799.1">Ở lại cổng đăng nhập; lần thử tiếp theo bắt đầu lại SQ01.</tspan></text>
+<path d="M405 992L690 992" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="417" y="945" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="959.35">SQ01.04 Yêu cầu xác thực tài</tspan><tspan x="547.5" y="978.85">khoản</tspan></text>
+<path d="M690 1060L975 1060" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="702" y="1013" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="1027.35">SQ01.05 Tra tài khoản, trạng</tspan><tspan x="832.5" y="1046.85">thái và quyền được cấp</tspan></text>
+<path d="M975 1128L690 1128" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="702" y="1081" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="1095.35">SQ01.06 Kết quả đối chiếu; danh</tspan><tspan x="832.5" y="1114.85">sách quyền</tspan></text>
+<path d="M690 1234L405 1234" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="1206" width="261" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="1220.6">SQ01.07 Từ chối đăng nhập</tspan></text>
+<path d="M405 1340L120 1340" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="132" y="1274" width="261" height="57" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="1288.1">SQ01.08 Mã nhân viên hoặc mật</tspan><tspan x="262.5" y="1307.6">khẩu không đúng. Vui lòng thử</tspan><tspan x="262.5" y="1327.1">lại.</tspan></text>
+<rect x="45" y="1416" width="1040" height="48" rx="0" fill="#fffbe8" stroke="#d4c77b"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="1445.1">Không mở dashboard khi xác thực thất bại.</tspan></text>
+<path d="M690 1619L405 1619" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="1591" width="261" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="1605.6">SQ01.09 Không tạo phiên</tspan></text>
+<path d="M405 1725L120 1725" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="132" y="1659" width="261" height="57" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="1673.1">SQ01.10 Tài khoản chưa được cấp</tspan><tspan x="262.5" y="1692.6">quyền truy cập. Liên hệ người</tspan><tspan x="262.5" y="1712.1">phụ trách.</tspan></text>
+<rect x="45" y="1801" width="1040" height="48" rx="0" fill="#fffbe8" stroke="#d4c77b"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="1830.1">Kết thúc lần đăng nhập; không truy cập dữ liệu nghiệp vụ.</tspan></text>
+<path d="M690 2023L975 2023" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="702" y="1976" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="1990.35">SQ01.11 Ghi phiên, employeeId,</tspan><tspan x="832.5" y="2009.85">quyền và thời điểm</tspan></text>
+<path d="M975 2072L690 2072" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="702" y="2044" width="261" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="2058.6">SQ01.12 Phiên đã tạo</tspan></text>
+<path d="M690 2159L405 2159" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="2112" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="2126.35">SQ01.13 Tên nhân viên, phạm vi</tspan><tspan x="547.5" y="2145.85">máy, quyền, phiên</tspan></text>
+<path d="M405 2227L120 2227" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="132" y="2180" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="2194.35">SQ01.14 Mở dashboard và menu</tspan><tspan x="262.5" y="2213.85">theo quyền</tspan></text>
+<rect x="24" y="2344" width="1084" height="42" rx="0" fill="#eaf1f8" stroke="#ccd8e5"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="36" y="2370.78">2. Điều hướng trong phiên hợp lệ</tspan></text>
+<path d="M120 2449L405 2449" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="132" y="2402" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="2416.35">SQ01.15 Mở một module hoặc liên</tspan><tspan x="262.5" y="2435.85">kết từ thông báo</tspan></text>
+<path d="M405 2517L690 2517" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="417" y="2470" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="2484.35">SQ01.16 Yêu cầu nội dung kèm</tspan><tspan x="547.5" y="2503.85">phiên và ID đối tượng</tspan></text>
+<path d="M690 2604H755V2624H690" fill="none" stroke="#526579" marker-end="url(#block)"/>
+<rect x="702" y="2538" width="248" height="57" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="702" y="2552.1">SQ01.17 Kiểm tra quyền vai</tspan><tspan x="702" y="2571.6">trò, phạm vi và quyền trên</tspan><tspan x="702" y="2591.1">đối tượng</tspan></text>
+<path d="M690 2747L975 2747" stroke="#526579" stroke-width="1.4" fill="none" marker-end="url(#block)"/>
+<rect x="702" y="2700" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="2714.35">SQ01.18 Đọc dữ liệu trong phạm</tspan><tspan x="832.5" y="2733.85">vi được phép</tspan></text>
+<path d="M975 2796L690 2796" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="702" y="2768" width="261" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="832.5" y="2782.6">SQ01.19 Dữ liệu hiện tại</tspan></text>
+<path d="M690 2883L405 2883" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="2836" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="2850.35">SQ01.20 Nội dung và các hành</tspan><tspan x="547.5" y="2869.85">động được phép</tspan></text>
+<path d="M405 2951L120 2951" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="132" y="2904" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="2918.35">SQ01.21 Hiện danh sách, bộ lọc,</tspan><tspan x="262.5" y="2937.85">số việc chờ và nút phù hợp</tspan></text>
+<path d="M690 3071L405 3071" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="417" y="3043" width="261" height="19" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="547.5" y="3057.6">SQ01.22 Từ chối truy cập</tspan></text>
+<path d="M405 3158L120 3158" stroke="#526579" stroke-width="1.4" fill="none" stroke-dasharray="6 5" marker-end="url(#open)"/>
+<rect x="132" y="3111" width="261" height="38" rx="0" fill="#ffffff" stroke="none"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="middle"><tspan x="262.5" y="3125.35">SQ01.23 Bạn không có quyền thực</tspan><tspan x="262.5" y="3144.85">hiện thao tác này.</tspan></text>
+<rect x="45" y="3250" width="1040" height="66" rx="0" fill="#edf5f0" stroke="#719485"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="3288.1">ref SQ15 · Khôi phục đăng nhập; giữ phần nhập chưa gửi; trở lại đúng màn hình</tspan></text>
+<rect x="45" y="3372" width="1040" height="68" rx="0" fill="#fffbe8" stroke="#d4c77b"/>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="57" y="3391.6">Đăng xuất khỏi thiết bị dùng chung kết thúc phiên và xóa dữ liệu tạm của phiên. Chỉ được đổi sang vai trò đã cấp; backend vẫn</tspan><tspan x="57" y="3411.1">kiểm</tspan><tspan x="57" y="3430.6">tra quyền, không chỉ ẩn menu.</tspan></text>
+<rect x="1140" y="432" width="540" height="156" rx="7" fill="#f7f9fc" stroke="#cbd5e1"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="1155" y="463.78">UI-01 · Cổng đăng nhập chung</tspan></text>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="1155" y="495.1">Hiện: mã nhân viên, mật khẩu, nút hiện/ẩn mật khẩu, nút “Đăng</tspan><tspan x="1155" y="514.6">nhập”.</tspan><tspan x="1155" y="534.1">Không cho chọn vai trò để tự cấp quyền.</tspan><tspan x="1155" y="553.6">Khi gửi: hiện “Đang đăng nhập…”; khóa gửi lặp.</tspan><tspan x="1155" y="573.1">Lỗi tại ô: “Nhập mã nhân viên”, “Nhập mật khẩu”.</tspan></text>
+<rect x="1140" y="2402" width="540" height="236" rx="7" fill="#f7f9fc" stroke="#cbd5e1"/>
+<text font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24364b" text-anchor="start"><tspan x="1155" y="2433.78">UI-02 · Dashboard theo quyền</tspan></text>
+<text font-family="Arial,sans-serif" font-size="15" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="1155" y="2466.1">Người bảo trì: Ca của tôi; mở ca; lịch sử máy; tra cứu tri thức;</tspan><tspan x="1155" y="2485.6">đề xuất của tôi.</tspan><tspan x="1155" y="2505.1">Chuyên gia: Tri thức của tôi; ghi tri thức; ca cần hỗ trợ/đang</tspan><tspan x="1155" y="2524.6">tham gia; tra cứu.</tspan><tspan x="1155" y="2544.1">Chuyên gia trưởng: Hàng đợi duyệt; việc đang xem; lịch sử quyết</tspan><tspan x="1155" y="2563.6">định; tra cứu.</tspan><tspan x="1155" y="2583.1">Hiện tên nhân viên, vai trò đang dùng, thông báo chưa đọc.</tspan><tspan x="1155" y="2602.6">Nếu có nhiều quyền đã cấp: cho đổi không gian làm việc; không tạo</tspan><tspan x="1155" y="2622.1">tài khoản mới.</tspan></text>
+<text font-family="Arial,sans-serif" font-size="12" font-weight="400" fill="#24364b" text-anchor="start"><tspan x="28" y="3576.08">Nguồn: denso-maintenance-workflows-BPMN.drawio  |  BPMN: Luồng hỗ trợ prototype  |  Xem 00 · Bản đồ để chọn tình huống.</tspan></text></svg>

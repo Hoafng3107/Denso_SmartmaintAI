@@ -1,0 +1,15 @@
+# Local browser profiles and UI inspection artifacts
+.presentation-browser/
+.presentation-chrome/
+.ui-check-cdp-profile*/
+
+# draw.io automatic backup files
+*.drawio.bkp
+
+# Local environment and operating system files
+.env
+.env.*
+!.env.example
+node_modules/
+Thumbs.db
+.DS_Store
