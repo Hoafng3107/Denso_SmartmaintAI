@@ -76,6 +76,9 @@
   SM.icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths[name] || paths.file}</svg>`;
   SM.badge = (text, tone = 'neutral') => `<span class="badge badge-${SM.e(tone)}">${SM.e(text)}</span>`;
   SM.button = (label, action, style = 'secondary', attrs = '') => `<button type="button" class="btn btn-${SM.e(style)}" data-action="${SM.e(action)}" ${attrs}>${SM.e(label)}</button>`;
+  SM.head = (title, action = '') => {
+    return `<div class="page-head"><h1 id="page-title">${SM.e(title)}</h1>${action ? `<div class="actions">${action}</div>` : ''}</div>`;
+  };
   SM.empty = (title, text, extra = '') => `<div class="empty-state">${SM.icon('file')}<h3>${SM.e(title)}</h3><p>${SM.e(text)}</p>${extra}</div>`;
   let fieldSerial = 0;
   function formField(label, name, value, options, textarea) {
@@ -172,6 +175,7 @@
     if (!SM.allowed(page)) { SM.toast('Tài khoản này không có quyền mở chức năng đó.', 'warning'); return; }
     if (!SM.guardLeave(() => SM.go(page, id, tab))) return;
     SM.closeModal();
+    if (SM.ui.page && SM.ui.page !== 'notifications') SM.prevPage = SM.ui.page;
     SM.ui = { ...SM.ui, page, id, tab, menuOpen: false };
     const hash = '#' + [page, id || '', tab || ''].map(encodeURIComponent).join('/').replace(/\/+$/, '');
     try { history.pushState(null, '', hash); } catch (_) { location.hash = hash; }
