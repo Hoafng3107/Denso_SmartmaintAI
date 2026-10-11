@@ -216,10 +216,34 @@
     `;
   }
 
+  function getDynamicSuggestions() {
+    // 1. Thu thập các tri thức đã duyệt phù hợp với phân loại máy đang xem
+    const scope = S.db.knowledge.filter(k => k.status === 'published' && (libraryFilter.family === 'all' || k.family === libraryFilter.family));
+    
+    // 2. Thống kê tần suất các từ khóa/thẻ tag thực tế có trong kho
+    const tagCounts = new Map();
+    scope.forEach(k => {
+      (k.tags || []).forEach(t => {
+        const clean = String(t).trim();
+        if (clean && !['Case đã duyệt', 'Kinh nghiệm chuyên gia', k.family].includes(clean)) {
+          tagCounts.set(clean, (tagCounts.get(clean) || 0) + 1);
+        }
+      });
+    });
+
+    // 3. Xếp hạng theo độ phổ biến thực tế
+    const sorted = Array.from(tagCounts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(entry => entry[0]);
+
+    return sorted.length ? sorted.slice(0, 5) : ['Camera', 'Rung trục chính', 'Đổi model'];
+  }
+
   S.pages.library = { title: 'Kho tri thức', roles: ['maintenance', 'expert', 'lead'], render: function () {
     const q = normalize(libraryFilter.query);
     const items = S.db.knowledge.filter(k => k.status === 'published' && (libraryFilter.family === 'all' || k.family === libraryFilter.family) && (libraryFilter.kind === 'all' || k.kind === libraryFilter.kind) && (!q || normalize([k.id, k.title, k.family, ...Object.values(k.content || {})].join(' ')).includes(q)));
     const hasFilter = Boolean(libraryFilter.query || libraryFilter.family !== 'all' || libraryFilter.kind !== 'all');
+    const dynamicSuggestions = getDynamicSuggestions();
 
     const searchBarHtml = `
       <form data-form="k-search" class="card library-search-panel">
@@ -288,11 +312,12 @@
             <div class="library-quick-tags-wrap">
               <span class="quick-tags-label">Gợi ý:</span>
               <div class="quick-tags-list">
-                ${['Camera', 'Rung trục chính', 'Đổi model', 'Recipe'].map(tag => `
+                ${dynamicSuggestions.map(tag => `
                   <button type="button" 
                           class="quick-tag-chip ${libraryFilter.query === tag ? 'is-active' : ''}" 
                           data-action="k-quick-search" 
-                          data-tag="${e(tag)}">
+                          data-tag="${e(tag)}"
+                          title="Lọc nhanh: ${e(tag)}">
                     ${e(tag)}
                   </button>
                 `).join('')}
