@@ -59,10 +59,98 @@
   }
   function preserved(text) { return '<div style="white-space:pre-wrap;overflow-wrap:anywhere">' + e(text || 'Chưa có thông tin') + '</div>'; }
   function contentView(content) {
-    return '<div class="stack">' + fields.map(([key, label]) => '<section><h3 class="section-title">' + e(label) + '</h3>' + preserved((content || {})[key]) + '</section>').join('') + '</div>';
+    const c = content || {};
+    const fieldIcons = {
+      symptom: 'alert',
+      context: 'history',
+      checks: 'search',
+      solution: 'tool',
+      result: 'checkcircle',
+      cause: 'help',
+      evidence: 'file',
+      safety: 'shield',
+      limits: 'info'
+    };
+    const fieldTones = {
+      symptom: 'tone-blue',
+      solution: 'tone-teal',
+      safety: 'tone-amber',
+      cause: 'tone-purple'
+    };
+    return `
+      <div class="modal-content-view">
+        ${fields.map(([key, label, desc]) => {
+          const val = c[key];
+          const tone = fieldTones[key] || '';
+          const ic = fieldIcons[key] || 'file';
+          return `
+            <section class="modal-content-section ${tone}">
+              <div class="modal-section-header">
+                <span class="modal-section-icon">${icon(ic)}</span>
+                <div class="modal-section-title-wrap">
+                  <h3 class="modal-section-title">${e(label)}</h3>
+                  <span class="modal-section-hint">${e(desc)}</span>
+                </div>
+              </div>
+              <div class="modal-section-body">
+                ${val ? `<div class="modal-section-text">${e(val)}</div>` : `<span class="empty-field-text">Chưa có thông tin ghi nhận.</span>`}
+              </div>
+            </section>
+          `;
+        }).join('')}
+      </div>
+    `;
   }
   function timeline(p) {
-    return '<div class="timeline">' + (p.history || []).slice().reverse().map(h => '<div class="timeline-item"><span class="timeline-dot"></span><div class="timeline-content"><strong>' + e(h.detail || h.type) + '</strong><div class="source-meta">' + e(S.person(h.actorId)) + ' · ' + e(S.fmtDate(h.at)) + ' · bản đề xuất ' + e(h.version || 1) + '</div></div></div>').join('') + '</div>';
+    const history = (p.history || []).slice().reverse();
+    if (!history.length) {
+      return '<div class="empty-timeline-hint">Chưa có lịch sử ghi nhận.</div>';
+    }
+    const typeTone = {
+      draft: 'neutral',
+      structure: 'blue',
+      edit: 'slate',
+      compare: 'purple',
+      submit: 'amber',
+      changes: 'orange',
+      published: 'green',
+      withdraw: 'red'
+    };
+    const typeLabels = {
+      draft: 'Bản nháp ban đầu',
+      structure: 'Trích xuất AI',
+      edit: 'Cập nhật nội dung',
+      compare: 'Đối chiếu tri thức',
+      submit: 'Gửi kiểm duyệt',
+      changes: 'Yêu cầu bổ sung',
+      published: 'Đã phê duyệt',
+      withdraw: 'Đã thu hồi'
+    };
+    return '<div class="proposal-timeline">' + history.map((h, idx) => {
+      const isLast = idx === history.length - 1;
+      const tone = typeTone[h.type] || 'blue';
+      const label = typeLabels[h.type] || 'Ghi nhận';
+      return `
+        <div class="proposal-timeline-item ${isLast ? 'is-last' : ''}">
+          <div class="proposal-timeline-rail">
+            <span class="proposal-timeline-dot dot--${tone}"></span>
+            ${!isLast ? '<span class="proposal-timeline-line"></span>' : ''}
+          </div>
+          <div class="proposal-timeline-card">
+            <div class="proposal-timeline-header">
+              <span class="proposal-timeline-badge badge--${tone}">${label}</span>
+              <span class="proposal-timeline-version">Bản ${e(h.version || 1)}</span>
+            </div>
+            <p class="proposal-timeline-title">${e(h.detail || h.type)}</p>
+            <div class="proposal-timeline-meta">
+              <span class="meta-actor">${icon('user')} ${e(S.person(h.actorId))}</span>
+              <span class="meta-sep">·</span>
+              <span class="meta-time">${icon('clock')} ${e(S.fmtDate(h.at))}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('') + '</div>';
   }
   function parseRaw(raw) {
     const result = { content: {} };
@@ -103,22 +191,180 @@
     return !!(c && c.reportState === 'confirmed' && p.reportSnapshot && c.report?.id === p.reportSnapshot.id && c.report?.revision === p.reportSnapshot.revision && c.report?.confirmedAt === p.reportSnapshot.confirmedAt);
   }
   function compareView(p) {
-    if (!p.comparison) return S.empty('Đối chiếu trước khi gửi', 'Hoàn thiện và xác nhận biểu mẫu, sau đó đối chiếu với các nguồn đã duyệt.', btn('Đối chiếu kho tri thức', 'k-compare', 'primary', 'data-id="' + e(p.id) + '"'));
-    return '<p class="field-hint">Đối chiếu theo loại máy và từ khóa; kết quả khác cách ghi cần được đọc trong nguồn gốc.</p>' + (!hasCurrentComparison(p) ? '<div class="notice notice-warning" role="status">Bản nháp hoặc nguồn đã thay đổi. Cần kiểm tra nội dung và đối chiếu lại trước khi gửi.</div>' : '') +
-      (p.comparison.sources.length ? p.comparison.sources.map(s => {
-        const k = S.getKnowledge(s.id, s.version);
-        if (!k) return '<div class="notice notice-warning">Nguồn ' + e(s.id) + ' không còn khả dụng. Hãy đối chiếu lại.</div>';
-        return '<article class="card"><div class="card-head"><div><div class="source-meta">' + e(k.id) + ' · v' + e(k.version) + ' · ' + e(k.family) + '</div><h3>' + e(k.title) + '</h3><div class="source-meta">Tác giả: ' + e(S.person(k.authorId)) + ' · Duyệt: ' + e(S.person(k.reviewerId)) + '</div></div>' + sourceButton(k.id, k.version, 'Đọc toàn văn') + '</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Tiêu chí</th><th>Đề xuất của bạn</th><th>Nguồn đã duyệt</th><th>Đối chiếu</th></tr></thead><tbody>' + fields.map(([key, label]) => {
-          const a = (p.content || {})[key], b = (k.content || {})[key];
-          const unresolved = value => !value || /^(chua (xac dinh|biet|ro|co thong tin|du du kien)|khong co du lieu)/.test(normalize(value));
-          const kind = unresolved(a) || unresolved(b) ? ['Chưa đủ dữ liệu', 'amber'] : normalize(a) === normalize(b) ? ['Cùng nội dung ghi', 'green'] : ['Khác cách ghi · cần đọc', 'blue'];
-          const excerpt = value => value && value.length > 180 ? value.slice(0, 177) + '…' : value;
-          return '<tr><th scope="row">' + e(label) + '</th><td>' + preserved(excerpt(a)) + '</td><td>' + preserved(excerpt(b)) + '</td><td>' + S.badge(kind[0], kind[1]) + '</td></tr>';
-        }).join('') + '</tbody></table></div></article>';
-      }).join('') : '<div class="notice notice-warning">Chưa tìm thấy nguồn phù hợp trong kho hiện có. Kết quả này không chứng minh nội dung hoàn toàn mới.</div>');
+    if (!p.comparison) {
+      return `
+        <div class="card compare-empty-card">
+          <div class="card-body compare-empty-body">
+            <div class="compare-empty-icon">${icon('spark')}</div>
+            <h3>Chưa thực hiện đối chiếu kho tri thức</h3>
+            <p>Hoàn thiện và xác nhận biểu mẫu ở Bước 2, sau đó đối chiếu với các nguồn đã duyệt để phát hiện điểm trùng hoặc bổ sung.</p>
+            <button type="button" class="btn btn-primary" data-action="k-compare" data-id="${e(p.id)}">
+              ${icon('spark')}
+              <span>Đối chiếu kho tri thức</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    const hasCurrent = hasCurrentComparison(p);
+    return `
+      <div class="card proposal-step-card proposal-compare-card">
+        <div class="card-head proposal-step-card-head">
+          <div class="step-card-head-left">
+            <span class="step-tag-pill">MỤC 3 · MA TRẬN ĐỐI CHIẾU TRI THỨC</span>
+            <h2 class="step-card-title">Đối chiếu với tri thức đã xuất bản</h2>
+            <p class="subtext">Đối chiếu theo nhóm máy <strong>${e(p.family || '')}</strong> và từ khóa kỹ thuật. Kết quả khác cách ghi cần được đọc trực tiếp trong nguồn gốc.</p>
+          </div>
+          <div class="step-card-head-right">
+            <span class="badge ${hasCurrent ? 'badge-success' : 'badge-warning'}">
+              ${hasCurrent ? 'Đã đối chiếu bản hiện tại' : 'Cần đối chiếu lại'}
+            </span>
+          </div>
+        </div>
+
+        <div class="card-body stack">
+          ${!hasCurrent ? `
+            <div class="notice notice-warning" role="status">
+              <strong>Bản nháp hoặc nguồn tham khảo đã thay đổi.</strong>
+              <p>Cần kiểm tra lại nội dung và đối chiếu lại trước khi gửi kiểm duyệt.</p>
+            </div>
+          ` : ''}
+
+          ${p.comparison.sources.length ? p.comparison.sources.map(s => {
+            const k = S.getKnowledge(s.id, s.version);
+            if (!k) return `<div class="notice notice-warning">Nguồn ${e(s.id)} không còn khả dụng trong kho. Hãy đối chiếu lại.</div>`;
+            return `
+              <article class="compare-source-card">
+                <div class="compare-source-head">
+                  <div class="source-head-info">
+                    <div class="source-head-badges">
+                      <span class="source-id-badge mono">${e(k.id)} · v${e(k.version)}</span>
+                      <span class="source-family-badge">${e(k.family)}</span>
+                    </div>
+                    <h3 class="source-card-title">${e(k.title)}</h3>
+                    <div class="source-author-line">
+                      <span>Tác giả: <strong>${e(S.person(k.authorId))}</strong></span>
+                      <span class="separator">·</span>
+                      <span>Duyệt: <strong>${e(S.person(k.reviewerId))}</strong></span>
+                    </div>
+                  </div>
+                  <div class="source-head-action">
+                    ${sourceButton(k.id, k.version, 'Đọc toàn văn')}
+                  </div>
+                </div>
+
+                <div class="table-wrap compare-table-wrap">
+                  <table class="data-table compare-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 190px;">Tiêu chí SOP</th>
+                        <th>Đề xuất của bạn</th>
+                        <th>Nguồn đã duyệt (${e(k.id)})</th>
+                        <th style="width: 175px;">Đối chiếu AI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${fields.map(([key, label]) => {
+                        const a = (p.content || {})[key], b = (k.content || {})[key];
+                        const unresolved = value => !value || /^(chua (xac dinh|biet|ro|co thong tin|du du kien)|khong co du lieu)/.test(normalize(value));
+                        const kind = unresolved(a) || unresolved(b) ? ['Chưa đủ dữ liệu', 'amber'] : normalize(a) === normalize(b) ? ['Cùng nội dung ghi', 'green'] : ['Khác cách ghi · cần đọc', 'blue'];
+                        const excerpt = value => value && value.length > 180 ? value.slice(0, 177) + '…' : value;
+                        return `
+                          <tr>
+                            <th scope="row" class="compare-row-label">${e(label)}</th>
+                            <td class="compare-cell cell-proposed">${preserved(excerpt(a))}</td>
+                            <td class="compare-cell cell-source">${preserved(excerpt(b))}</td>
+                            <td class="compare-cell cell-status">${S.badge(kind[0], kind[1])}</td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            `;
+          }).join('') : `
+            <div class="notice notice-warning">
+              Chưa tìm thấy nguồn phù hợp trong kho hiện có. Kết quả này không chứng minh nội dung hoàn toàn mới.
+            </div>
+          `}
+        </div>
+      </div>
+    `;
   }
+
   function metaCard(p) {
-    return '<div class="card"><div class="card-body stack"><h3 class="section-title">Dấu vết đóng góp</h3><dl class="kv-list"><dt>Mã đề xuất</dt><dd class="mono">' + e(p.id) + '</dd><dt>Tác giả</dt><dd>' + e(S.person(p.authorId)) + '</dd><dt>Nguồn</dt><dd>' + (p.origin === 'case' ? 'Báo cáo công việc ' + e(p.caseId) : 'Kinh nghiệm chuyên gia') + '</dd><dt>Bản đang xem</dt><dd>' + e(proposalVersion(p)) + '</dd><dt>Cập nhật</dt><dd>' + e(S.fmtDate(p.updatedAt)) + '</dd><dt>Người cùng đóng góp</dt><dd>' + e(contributorIds(p).map(S.person).join(', ') || 'Chưa có người khác') + '</dd></dl>' + (p.caseId ? btn('Xem báo cáo nguồn', 'k-case-source', 'secondary', 'data-id="' + e(p.id) + '"') : '') + '</div></div><div class="card"><div class="card-body stack"><h3 class="section-title">Lịch sử đề xuất</h3>' + timeline(p) + ((p.submissions || []).length ? '<h3 class="section-title">Các bản đã gửi</h3>' + p.submissions.slice().reverse().map(sub => btn('Bản ' + sub.version + ' · ' + S.fmtDate(sub.at, false), 'k-submission', 'secondary', 'data-id="' + e(p.id) + '" data-submission="' + e(sub.id) + '"')).join('') : '') + '</div></div>';
+    const isCase = p.origin === 'case';
+    return `
+      <div class="card proposal-meta-card">
+        <div class="card-head proposal-meta-head">
+          <div class="meta-head-badge-row">
+            <span class="meta-head-tag">AUDIT TRAIL · TRUY VẾT DỮ KIỆN</span>
+          </div>
+          <h3 class="section-title">Dấu vết đóng góp</h3>
+        </div>
+        <div class="card-body stack">
+          <dl class="kv-list proposal-kv-list">
+            <dt>Mã đề xuất</dt>
+            <dd><span class="badge-proposal-id mono">${e(p.id)}</span></dd>
+            <dt>Tác giả</dt>
+            <dd>
+              <span class="proposal-author-chip">
+                ${icon('user')}
+                <strong>${e(S.person(p.authorId))}</strong>
+              </span>
+            </dd>
+            <dt>Nguồn</dt>
+            <dd>
+              <span class="proposal-source-chip ${isCase ? 'source-case' : 'source-expert'}">
+                ${isCase ? icon('file') : icon('spark')}
+                <span>${isCase ? `Báo cáo ca ${e(p.caseId)}` : 'Kinh nghiệm chuyên gia'}</span>
+              </span>
+            </dd>
+            <dt>Bản đang xem</dt>
+            <dd><span class="badge badge-version">Bản ${e(proposalVersion(p))}</span></dd>
+            <dt>Cập nhật</dt>
+            <dd><span class="proposal-date-chip">${e(S.fmtDate(p.updatedAt))}</span></dd>
+            <dt>Người cùng đóng góp</dt>
+            <dd>${e(contributorIds(p).map(S.person).join(', ') || 'Chưa có người khác')}</dd>
+          </dl>
+          ${p.caseId ? `
+            <div class="meta-card-actions">
+              <button type="button" class="btn btn-secondary btn-view-case-source" data-action="k-case-source" data-id="${e(p.id)}">
+                ${icon('file')}
+                <span>Xem báo cáo nguồn</span>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <div class="card proposal-history-card">
+        <div class="card-head proposal-meta-head">
+          <div class="meta-head-badge-row">
+            <span class="meta-head-tag">VÒNG ĐỜI & LỊCH SỬ</span>
+          </div>
+          <h3 class="section-title">Lịch sử đề xuất</h3>
+        </div>
+        <div class="card-body stack">
+          ${timeline(p)}
+          ${(p.submissions || []).length ? `
+            <div class="submitted-versions-wrap">
+              <h4 class="sub-section-title">Các bản đã gửi</h4>
+              <div class="submission-btn-group">
+                ${p.submissions.slice().reverse().map(sub => `
+                  <button type="button" class="btn btn-secondary btn-submission-item" data-action="k-submission" data-id="${e(p.id)}" data-submission="${e(sub.id)}">
+                    ${icon('clock')}
+                    <span>Bản ${sub.version} · ${S.fmtDate(sub.at, false)}</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
   }
 
   S.seed(function (db) {
@@ -402,17 +648,355 @@
       searchBarHtml +
       '<section class="library-results" aria-live="polite"><div class="library-results-head"><div><h2>Nguồn có thể tham khảo</h2><p class="subtext">Nguồn đã qua kiểm duyệt, kèm điều kiện áp dụng và phiên bản.</p></div><span class="library-result-count">' + items.length + '<span>nguồn</span></span></div>' + (items.length ? '<div class="library-grid">' + items.map(renderLibraryCard).join('') + '</div>' : S.empty('Chưa có nguồn phù hợp', 'Thử từ khóa hoặc loại máy khác.')) + '</section>';
   } };
-  S.pages['knowledge-detail'] = { title: 'Chi tiết tri thức', roles: ['maintenance', 'expert', 'lead'], render: function () {
-    const currentK = S.db.knowledge.find(k => k.id === S.ui.id && k.status === 'published');
-    const version = S.ui.tab && /^v\d+$/.test(S.ui.tab) ? Number(S.ui.tab.slice(1)) : undefined;
-    const k = currentK && S.getKnowledge(currentK.id, version);
-    if (!k) return S.empty('Không tìm thấy tri thức', 'Nguồn hoặc phiên bản này không có trong kho đã duyệt.', btn('Về kho tri thức', 'k-library'));
-    const snapshots = (currentK.history || []).map(h => h.snapshot || h).filter(h => h && h.version);
-    const versions = [...new Set([currentK.version, ...snapshots.map(h => h.version)])].sort((a, b) => b - a);
-    return pageHead(k.id + ' / v' + k.version, k.title, 'Tác giả ' + S.person(k.authorId) + ' · Người duyệt ' + S.person(k.reviewerId), btn('Về kho tri thức', 'k-library') + (S.user().role === 'expert' ? btn('Đề xuất bổ sung', 'k-update-source', 'primary', 'data-id="' + e(currentK.id) + '"') : '')) +
-      (k.version !== currentK.version ? '<div class="notice notice-warning">Bạn đang xem phiên bản lịch sử. Phiên bản hiện hành là v' + e(currentK.version) + '. Các hồ sơ đã tham khảo bản cũ vẫn giữ nguồn tương ứng.</div>' : '<div class="notice notice-success">Phiên bản đã duyệt · Sẵn sàng tham khảo trong phạm vi điều kiện và giới hạn của nguồn.</div>') +
-      '<div class="split-layout"><div class="card"><div class="card-body">' + contentView(k.content) + '</div></div><aside class="stack"><div class="card"><div class="card-body stack"><h3 class="section-title">Thông tin nguồn</h3><dl class="kv-list"><dt>Loại máy</dt><dd>' + e(k.family) + '</dd><dt>Nguồn</dt><dd>' + (k.kind === 'case' ? 'Case công việc đã duyệt' : 'Kinh nghiệm chuyên gia') + '</dd><dt>Đóng góp</dt><dd>' + e(contributorIds(k).map(S.person).join(', ') || S.person(k.authorId)) + '</dd><dt>Ngày xuất bản</dt><dd>' + e(S.fmtDate(k.updatedAt)) + '</dd><dt>Nguyên nhân</dt><dd>' + e(({ confirmed: 'Đã xác nhận theo bằng chứng nguồn', hypothesis: 'Giả thuyết', unknown: 'Chưa xác định' })[k.causeStatus] || 'Xem căn cứ trong nội dung') + '</dd></dl></div></div><div class="card"><div class="card-body stack"><h3 class="section-title">Phiên bản</h3>' + versions.map(v => btn('v' + v + (v === currentK.version ? ' · hiện hành' : ' · lịch sử'), 'k-version', v === k.version ? 'primary' : 'secondary', 'data-id="' + e(k.id) + '" data-version="' + v + '"')).join('') + '</div></div><div class="notice notice-info">Đối chiếu điều kiện thực tế và quy trình có hiệu lực trước khi áp dụng.</div></aside></div>';
-  } };
+  function renderKnowledgeDetail(k, currentK, versions) {
+    const isCurrent = k.version === currentK.version;
+    const authorUser = S.db.users.find(u => u.id === k.authorId);
+    const reviewerUser = S.db.users.find(u => u.id === k.reviewerId);
+    const familyKey = (k.family || '').toLowerCase().replace(/\s+/g, '-');
+    const content = k.content || {};
+
+    const causeStatusText = {
+      confirmed: 'Đã xác nhận theo bằng chứng nguồn',
+      hypothesis: 'Giả thuyết kỹ thuật cần kiểm chứng',
+      unknown: 'Chưa xác định nguyên nhân gốc'
+    }[k.causeStatus] || 'Xem căn cứ trong nội dung';
+
+    const causeStatusTone = {
+      confirmed: 'green',
+      hypothesis: 'amber',
+      unknown: 'neutral'
+    }[k.causeStatus] || 'neutral';
+
+    return `
+    <div class="knowledge-detail-container">
+      <!-- Header with prominent Knowledge Code (DENSO Plant MES Grade) -->
+      <header class="case-detail-header knowledge-detail-header page-head">
+        <div class="knowledge-header-main">
+          <div class="knowledge-header-breadcrumbs">
+            <button type="button" class="breadcrumb-link" data-action="k-library">
+              ${icon('book')} <span>Kho tri thức</span>
+            </button>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-item">${e(k.family || 'Thiết bị')}</span>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-item mono">${e(k.id)}</span>
+          </div>
+
+          <div class="knowledge-header-eyebrow">
+            <span class="badge badge-case-id mono knowledge-id-badge">${e(k.id)}</span>
+            <span class="badge badge-version-pill">v${e(k.version)}</span>
+            <span class="badge ${isCurrent ? 'badge-status-published' : 'badge-status-history'}">
+              <span class="status-dot ${isCurrent ? 'dot-published' : 'dot-history'}"></span>
+              <span>${isCurrent ? 'Đã duyệt · Có hiệu lực' : 'Bản lưu trữ'}</span>
+            </span>
+            <span class="badge badge-family badge-family--${e(familyKey)}">
+              ${icon('machine')}
+              <span>${e(k.family || 'Thiết bị')}</span>
+            </span>
+            <span class="badge ${k.kind === 'case' ? 'badge-purple' : 'badge-blue'}">
+              ${k.kind === 'case' ? `${icon('wrench')} Từ ca bảo trì` : `${icon('users')} Kinh nghiệm chuyên gia`}
+            </span>
+            ${k.caseId ? `<span class="badge badge-neutral">Mã ca: ${e(k.caseId)}</span>` : ''}
+          </div>
+
+          <h1 id="page-title" class="knowledge-header-title">${e(k.title)}</h1>
+
+          <div class="knowledge-header-meta">
+            <div class="meta-item" title="Tác giả đóng góp">
+              <span class="meta-avatar">${e(authorUser?.initials || 'TG')}</span>
+              <span>Tác giả: <strong>${e(S.person(k.authorId))}</strong></span>
+            </div>
+            <span class="meta-sep">·</span>
+            <div class="meta-item" title="Người phê duyệt">
+              ${icon('shield')}
+              <span>Phê duyệt: <strong>${e(S.person(k.reviewerId))}</strong></span>
+            </div>
+            <span class="meta-sep">·</span>
+            <div class="meta-item" title="Thời gian xuất bản">
+              ${icon('clock')}
+              <span>Cập nhật: <strong>${e(S.fmtDate(k.updatedAt, false))}</strong></span>
+            </div>
+            ${k.assetIds?.length ? `
+            <span class="meta-sep">·</span>
+            <div class="meta-item" title="Thiết bị áp dụng">
+              ${icon('machine')}
+              <span>Thiết bị: <strong>${e(k.assetIds.join(', '))}</strong></span>
+            </div>` : ''}
+          </div>
+        </div>
+
+        <div class="knowledge-header-actions actions">
+          <button type="button" class="btn btn-secondary knowledge-back-btn" data-action="k-library">
+            ${icon('back')}
+            <span>Về kho tri thức</span>
+          </button>
+          ${S.user().role === 'expert' ? `
+          <button type="button" class="btn btn-primary" data-action="k-update-source" data-id="${e(currentK.id)}">
+            ${icon('edit')}
+            <span>Đề xuất bổ sung</span>
+          </button>` : ''}
+        </div>
+      </header>
+
+      <!-- Status / Verification Banner -->
+      ${isCurrent ? `
+      <div class="knowledge-status-banner verified">
+        <div class="banner-icon-wrap">${icon('checkcircle')}</div>
+        <div class="banner-body">
+          <div class="banner-title">Phiên bản tri thức chuẩn hóa đang có hiệu lực (v${e(k.version)})</div>
+          <p class="banner-desc">Đã qua quy trình kiểm duyệt chất lượng kỹ thuật của Chuyên gia trưởng. Sẵn sàng tra cứu và tham khảo trong phạm vi điều kiện và giới hạn của nguồn.</p>
+        </div>
+        <div class="banner-pills">
+          <span class="badge badge-green">${icon('shield')} Đạt chuẩn MES</span>
+          <span class="badge badge-neutral">${k.kind === 'case' ? 'Case thực tế' : 'Kinh nghiệm chuyên gia'}</span>
+        </div>
+      </div>` : `
+      <div class="knowledge-status-banner historical">
+        <div class="banner-icon-wrap warning">${icon('alert')}</div>
+        <div class="banner-body">
+          <div class="banner-title">Bạn đang xem phiên bản lịch sử v${e(k.version)}</div>
+          <p class="banner-desc">Phiên bản hiện hành mới nhất là <strong>v${e(currentK.version)}</strong>. Các hồ sơ bảo trì trước đây từng tham khảo bản này vẫn lưu vết độc lập.</p>
+        </div>
+        <div class="banner-action">
+          <button type="button" class="btn btn-secondary btn-small" data-action="k-version" data-id="${e(currentK.id)}" data-version="${currentK.version}">
+            <span>Mở bản hiện hành v${currentK.version}</span> ${icon('arrow')}
+          </button>
+        </div>
+      </div>`}
+
+      <!-- Main Layout: 2 Columns -->
+      <div class="split-layout knowledge-split-layout">
+        
+        <!-- Left Column: Structured Technical Knowledge Content -->
+        <main class="knowledge-main-content stack">
+          
+          <!-- Section 1: Hiện tượng & Điều kiện phát sinh -->
+          <section class="card kd-section-card">
+            <div class="kd-section-head">
+              <div class="kd-section-icon icon-alert">${icon('alert')}</div>
+              <div>
+                <h2 class="kd-section-title">1. Hiện tượng & Điều kiện phát sinh</h2>
+                <p class="kd-section-subtitle">Dấu hiệu quan sát hiện trường, Alarm cảnh báo và bối cảnh vận hành thiết bị</p>
+              </div>
+            </div>
+            <div class="kd-section-body">
+              <div class="kd-field-box">
+                <span class="kd-field-label">Dấu hiệu / Vấn đề</span>
+                <div class="kd-field-content kd-highlight-box">${preserved(content.symptom)}</div>
+              </div>
+              <div class="kd-field-box">
+                <span class="kd-field-label">Điều kiện phát sinh</span>
+                <div class="kd-field-content">${preserved(content.context)}</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 2: Kiểm tra & Hướng xử lý đã chuẩn hóa -->
+          <section class="card kd-section-card">
+            <div class="kd-section-head">
+              <div class="kd-section-icon icon-wrench">${icon('wrench')}</div>
+              <div>
+                <h2 class="kd-section-title">2. Kiểm tra & Hướng xử lý đã chuẩn hóa</h2>
+                <p class="kd-section-subtitle">Trình tự kiểm tra thực tế, giải pháp kỹ thuật và tiêu chí kiểm chứng nghiệm thu</p>
+              </div>
+            </div>
+            <div class="kd-section-body">
+              <div class="kd-field-box">
+                <span class="kd-field-label">Kiểm tra và căn cứ lựa chọn</span>
+                <div class="kd-field-content">${preserved(content.checks)}</div>
+              </div>
+              
+              <!-- Prominent Solution Callout -->
+              <div class="kd-solution-callout">
+                <div class="solution-callout-head">
+                  <span class="solution-callout-icon">${icon('checkcircle')}</span>
+                  <span class="solution-callout-title">Cách xử lý / Bài học kinh nghiệm trọng tâm</span>
+                </div>
+                <div class="solution-callout-body">
+                  ${preserved(content.solution)}
+                </div>
+              </div>
+
+              <div class="kd-field-box">
+                <span class="kd-field-label">Kết quả và cách kiểm chứng</span>
+                <div class="kd-field-content">${preserved(content.result)}</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 3: Nguyên nhân & Bằng chứng kỹ thuật -->
+          <section class="card kd-section-card">
+            <div class="kd-section-head">
+              <div class="kd-section-icon icon-file">${icon('file')}</div>
+              <div>
+                <h2 class="kd-section-title">3. Nguyên nhân kỹ thuật & Bằng chứng</h2>
+                <p class="kd-section-subtitle">Phân định giữa nhận định đã xác minh với giả thuyết, kèm mã hồ sơ căn cứ</p>
+              </div>
+            </div>
+            <div class="kd-section-body">
+              <div class="kd-field-box">
+                <div class="row-between" style="margin-bottom: 6px;">
+                  <span class="kd-field-label" style="margin: 0;">Nguyên nhân / Giả thuyết</span>
+                  ${S.badge(causeStatusText, causeStatusTone)}
+                </div>
+                <div class="kd-field-content">${preserved(content.cause)}</div>
+              </div>
+              <div class="kd-field-box">
+                <span class="kd-field-label">Bằng chứng và nguồn hồ sơ</span>
+                <div class="kd-field-content kd-evidence-box">${preserved(content.evidence)}</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 4: Tuân thủ an toàn & Giới hạn áp dụng -->
+          <section class="card kd-section-card kd-section-card--safety">
+            <div class="kd-section-head">
+              <div class="kd-section-icon icon-shield">${icon('shield')}</div>
+              <div>
+                <h2 class="kd-section-title">4. Tuân thủ an toàn & Giới hạn áp dụng (DENSO Standard)</h2>
+                <p class="kd-section-subtitle">Quy trình SOP bắt buộc và giới hạn phạm vi trước khi kỹ thuật viên can thiệp</p>
+              </div>
+            </div>
+            <div class="kd-section-body">
+              <!-- Safety Notice -->
+              <div class="kd-safety-callout">
+                <div class="safety-callout-head">
+                  <span class="safety-callout-icon">${icon('alert')}</span>
+                  <span class="safety-callout-title">An toàn lao động và quy trình tham chiếu (SOP)</span>
+                </div>
+                <div class="safety-callout-body">
+                  ${preserved(content.safety)}
+                </div>
+              </div>
+
+              <!-- Limits Box -->
+              <div class="kd-limits-callout">
+                <div class="limits-callout-head">
+                  <span class="limits-callout-icon">${icon('info')}</span>
+                  <span class="limits-callout-title">Điều kiện áp dụng và giới hạn nguồn tri thức</span>
+                </div>
+                <div class="limits-callout-body">
+                  ${preserved(content.limits)}
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </main>
+
+        <!-- Right Column: Sidebar Specs, Version History & Quick Info -->
+        <aside class="knowledge-sidebar stack">
+          
+          <!-- Card: Thông số nguồn & Phân loại -->
+          <div class="card kd-sidebar-card">
+            <div class="card-head">
+              <h3>Thông số nguồn & Phân loại</h3>
+            </div>
+            <div class="card-body">
+              <dl class="kv-list kd-kv-list">
+                <div>
+                  <dt>Mã tri thức</dt>
+                  <dd><span class="badge badge-case-id mono font-bold">${e(k.id)}</span></dd>
+                </div>
+                <div>
+                  <dt>Phiên bản</dt>
+                  <dd><span class="badge badge-neutral">v${e(k.version)}</span></dd>
+                </div>
+                <div>
+                  <dt>Loại máy</dt>
+                  <dd><span class="badge badge-family badge-family--${e(familyKey)}">${e(k.family || 'Thiết bị')}</span></dd>
+                </div>
+                <div>
+                  <dt>Thiết bị</dt>
+                  <dd><strong>${e(k.assetIds?.join(', ') || 'Toàn line ' + (k.family || ''))}</strong></dd>
+                </div>
+                <div>
+                  <dt>Nguồn gốc</dt>
+                  <dd>${k.kind === 'case' ? 'Case công việc đã duyệt' : 'Kinh nghiệm chuyên gia'}</dd>
+                </div>
+                <div>
+                  <dt>Đóng góp</dt>
+                  <dd><strong>${e(contributorIds(k).map(S.person).join(', ') || S.person(k.authorId))}</strong></dd>
+                </div>
+                <div>
+                  <dt>Phê duyệt</dt>
+                  <dd><strong>${e(S.person(k.reviewerId))}</strong></dd>
+                </div>
+                <div>
+                  <dt>Ngày xuất bản</dt>
+                  <dd>${e(S.fmtDate(k.updatedAt))}</dd>
+                </div>
+                <div>
+                  <dt>Nguyên nhân</dt>
+                  <dd>${S.badge(causeStatusText, causeStatusTone)}</dd>
+                </div>
+              </dl>
+
+              ${k.tags?.length ? `
+              <div class="kd-tags-section">
+                <span class="kd-tags-label">Từ khóa phân loại:</span>
+                <div class="pill-list kd-pill-list">
+                  ${k.tags.map(t => `<span class="context-tag">${e(t)}</span>`).join('')}
+                </div>
+              </div>` : ''}
+            </div>
+          </div>
+
+          <!-- Card: Lịch sử phiên bản -->
+          <div class="card kd-sidebar-card">
+            <div class="card-head">
+              <h3>Lịch sử phiên bản (${versions.length})</h3>
+            </div>
+            <div class="card-body stack">
+              <div class="kd-version-list">
+                ${versions.map(v => {
+                  const isThis = v === k.version;
+                  const isLatest = v === currentK.version;
+                  return `
+                  <button type="button" class="kd-version-item ${isThis ? 'active' : ''}" data-action="k-version" data-id="${e(currentK.id)}" data-version="${v}">
+                    <div class="kd-version-meta">
+                      <span class="kd-version-tag ${isThis ? 'tag-active' : ''}">v${v}</span>
+                      <div class="kd-version-info">
+                        <strong>${isLatest ? 'Phiên bản hiện hành' : 'Bản lưu trữ lịch sử'}</strong>
+                        <small>${isThis ? 'Đang hiển thị trên màn hình' : 'Bấm để xem nội dung bản này'}</small>
+                      </div>
+                    </div>
+                    <div class="kd-version-status">
+                      ${isThis ? `<span class="badge badge-blue">Đang xem</span>` : `<span class="badge badge-neutral">${icon('arrow')}</span>`}
+                    </div>
+                  </button>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Cam kết an toàn & Kaizen -->
+          <div class="notice notice-info kd-safety-notice">
+            ${icon('shield')}
+            <div>
+              <strong>Quy chuẩn an toàn DENSO</strong>
+              <p>Luôn đối chiếu điều kiện thực tế hiện trường và bản quy trình SOP nhà máy đang có hiệu lực trước khi tiến hành thao tác.</p>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+    </div>`;
+  }
+
+  S.pages['knowledge-detail'] = {
+    title: 'Chi tiết tri thức',
+    roles: ['maintenance', 'expert', 'lead'],
+    render: function () {
+      const currentK = S.db.knowledge.find(k => k.id === S.ui.id && k.status === 'published');
+      const version = S.ui.tab && /^v\d+$/.test(S.ui.tab) ? Number(S.ui.tab.slice(1)) : undefined;
+      const k = currentK && S.getKnowledge(currentK.id, version);
+      if (!k) return S.empty('Không tìm thấy tri thức', 'Nguồn hoặc phiên bản này không có trong kho đã duyệt.', btn('Về kho tri thức', 'k-library'));
+      const snapshots = (currentK.history || []).map(h => h.snapshot || h).filter(h => h && h.version);
+      const versions = [...new Set([currentK.version, ...snapshots.map(h => h.version)])].sort((a, b) => b - a);
+      return renderKnowledgeDetail(k, currentK, versions);
+    }
+  };
 
   function renderProposalCard(p) {
     const isEdit = editable(p);
@@ -553,38 +1137,511 @@
       toolbarHtml + list;
   } };
 
+  function runAiModal(opts) {
+    const { title, subtitle, badgeText = 'DENSO AI · INDUSTRIAL MES ENGINE', steps = [], duration = 1400, onComplete } = opts;
+    const oldModal = document.getElementById('proposal-ai-modal');
+    if (oldModal) oldModal.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'proposal-ai-modal';
+    overlay.className = 'proposal-ai-modal-overlay';
+    overlay.innerHTML = `
+      <div class="proposal-ai-modal-card">
+        <div class="ai-modal-top">
+          <div class="ai-modal-badge">
+            <span class="ai-spark-pulse">${icon('spark')}</span>
+            <span>${e(badgeText)}</span>
+          </div>
+          <div class="ai-modal-status-pill" id="ai-modal-pill">
+            <span class="ai-live-dot"></span>
+            <span id="ai-status-text">ĐANG XỬ LÝ</span>
+          </div>
+        </div>
+        <h3 class="ai-modal-title">${e(title)}</h3>
+        <p class="ai-modal-desc">${e(subtitle)}</p>
+
+        <div class="ai-modal-progress-container">
+          <div class="ai-modal-progress-bar">
+            <div class="ai-modal-progress-fill" id="ai-progress-fill" style="width: 15%"></div>
+          </div>
+          <div class="ai-modal-progress-meta">
+            <span id="ai-step-label" class="ai-step-label">${e(steps[0]?.label || 'Đang chuẩn bị...')}</span>
+            <span id="ai-percent-label" class="ai-percent-label">15%</span>
+          </div>
+        </div>
+
+        <div class="ai-modal-steps-list">
+          ${steps.map((st, i) => `
+            <div class="ai-modal-step-row ${i === 0 ? 'is-active' : 'is-pending'}" id="ai-step-row-${i}">
+              <div class="ai-step-indicator">
+                <span class="ai-step-num">${i + 1}</span>
+                <span class="ai-step-check" style="display:none">${icon('check')}</span>
+                <span class="ai-step-spinner"></span>
+              </div>
+              <div class="ai-step-content">
+                <strong>${e(st.label)}</strong>
+                <small>${e(st.desc)}</small>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="ai-modal-footer">
+          <div class="ai-modal-note">
+            ${icon('alert')}
+            <span>Bảo toàn 100% dữ kiện gốc. Bạn có thể kiểm tra và chỉnh sửa ở bước tiếp theo.</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const fill = overlay.querySelector('#ai-progress-fill');
+    const percentLabel = overlay.querySelector('#ai-percent-label');
+    const stepLabel = overlay.querySelector('#ai-step-label');
+    const pill = overlay.querySelector('#ai-modal-pill');
+    const statusText = overlay.querySelector('#ai-status-text');
+
+    function setStep(stepIndex, pct, label) {
+      if (fill) fill.style.width = pct + '%';
+      if (percentLabel) percentLabel.textContent = pct + '%';
+      if (stepLabel && label) stepLabel.textContent = label;
+
+      steps.forEach((_, i) => {
+        const row = overlay.querySelector('#ai-step-row-' + i);
+        if (!row) return;
+        const numEl = row.querySelector('.ai-step-num');
+        const checkEl = row.querySelector('.ai-step-check');
+        const spinEl = row.querySelector('.ai-step-spinner');
+        if (i < stepIndex) {
+          row.className = 'ai-modal-step-row is-completed';
+          if (numEl) numEl.style.display = 'none';
+          if (spinEl) spinEl.style.display = 'none';
+          if (checkEl) checkEl.style.display = 'inline-flex';
+        } else if (i === stepIndex) {
+          row.className = 'ai-modal-step-row is-active';
+          if (numEl) numEl.style.display = 'none';
+          if (spinEl) spinEl.style.display = 'inline-block';
+          if (checkEl) checkEl.style.display = 'none';
+        } else {
+          row.className = 'ai-modal-step-row is-pending';
+          if (numEl) numEl.style.display = 'inline-flex';
+          if (spinEl) spinEl.style.display = 'none';
+          if (checkEl) checkEl.style.display = 'none';
+        }
+      });
+    }
+
+    setTimeout(() => {
+      setStep(1, 58, steps[1]?.label);
+    }, 450);
+
+    setTimeout(() => {
+      setStep(2, 88, steps[2]?.label);
+    }, 950);
+
+    setTimeout(() => {
+      setStep(3, 100, 'Hoàn tất xử lý!');
+      if (pill) {
+        pill.className = 'ai-modal-status-pill is-success';
+        if (statusText) statusText.textContent = 'HOÀN TẤT';
+      }
+      setTimeout(() => {
+        overlay.classList.add('is-fadeout');
+        setTimeout(() => {
+          overlay.remove();
+          if (typeof onComplete === 'function') onComplete();
+        }, 220);
+      }, 350);
+    }, duration);
+  }
+
+  function rawEditor(p) {
+    const charCount = (p.rawText || '').length;
+    const lineCount = (p.rawText || '').split(/\r?\n/).length;
+
+    return `
+      <div class="card proposal-step-card proposal-raw-card">
+        <div class="card-head proposal-step-card-head">
+          <div class="step-card-head-left">
+            <span class="step-tag-pill">MỤC 1 · THU THẬP & GHI CHÉP GỐC</span>
+            <h2 class="step-card-title">Nội dung gốc từ hiện trường</h2>
+            <p class="subtext">Ghi chép chuyên gia, nội dung trao đổi hoặc biên bản liên quan. Dữ liệu gốc luôn được bảo toàn độc lập với biểu mẫu chuẩn hóa.</p>
+          </div>
+          <div class="step-card-head-right">
+            <span class="char-counter-pill">${charCount} ký tự · ${lineCount} dòng</span>
+          </div>
+        </div>
+
+        <div class="card-body stack">
+          <div class="raw-textarea-wrap">
+            <div class="textarea-header-strip">
+              <label class="field-label" for="raw-text-editor">
+                ${icon('edit')}
+                <span>Ghi chép cần xử lý</span>
+              </label>
+              <span class="raw-format-hint">Hỗ trợ phân tách nhiều chủ đề bằng dòng <code>---</code></span>
+            </div>
+            ${area('', 'rawText', p.rawText, p, '', 14)}
+          </div>
+
+          <div class="raw-action-toolbar">
+            <div class="action-buttons-left">
+              <button type="button" class="btn btn-primary btn-ai-structure" data-action="k-structure" data-id="${e(p.id)}">
+                ${icon('spark')}
+                <span>AI sắp xếp nội dung</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-goto-form" data-action="k-tab" data-tab="form">
+                ${icon('file')}
+                <span>Điền biểu mẫu trực tiếp</span>
+              </button>
+            </div>
+            ${!p.rawText?.trim() ? `
+              <div class="action-buttons-right">
+                <button type="button" class="btn btn-ghost btn-sample-note" data-action="k-sample" data-id="${e(p.id)}">
+                  ${icon('book')}
+                  <span>Dùng ghi chú mẫu</span>
+                </button>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="raw-guide-footer">
+            <div class="guide-box">
+              <span class="guide-icon">${icon('shield')}</span>
+              <div class="guide-text">
+                <strong>Nguyên tắc bảo toàn dữ kiện Denso:</strong> AI chỉ đóng vai trò phân loại, cấu trúc và trích xuất thông tin. Mọi dữ liệu thiếu sẽ được giữ trống để con người xác nhận, tuyệt đối không tự tạo dữ kiện.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function proposalForm(p) {
     const missing = issues(p);
-    return '<div class="card"><div class="card-head"><div><h2>Biểu mẫu tri thức</h2><p class="subtext">Giữ dữ kiện gốc. Mục chưa rõ hoặc không áp dụng cần nêu lý do ngay trong ô.</p></div>' + S.badge(missing.length ? missing.length + ' mục cần hoàn thiện' : 'Đã đủ các mục', missing.length ? 'amber' : 'green') + '</div><div class="card-body stack"><div class="form-grid">' + field('Tiêu đề *', 'title', p.title, p) + select('Loại máy *', 'family', p.family, [['', 'Chọn loại máy'], ...familyOptions.map(f => [f, f])], p) + '</div>' +
-      fields.map(([key, label, hint]) => area(label + ' *', 'content.' + key, p.content[key], p, hint)).join('') +
-      select('Trạng thái nhận định nguyên nhân', 'causeStatus', p.causeStatus || 'unknown', [['unknown', 'Chưa xác định'], ['hypothesis', 'Giả thuyết cần kiểm chứng'], ['confirmed', 'Đã xác nhận — có bằng chứng']], p, 'Máy hoạt động lại không tự chứng minh nguyên nhân gốc.') +
-      '<details><summary>Thông tin điều kiện chi tiết và điểm thay đổi 5M1E</summary><div class="stack"><div class="form-grid">' + [['machineModel', 'Model máy'], ['productModel', 'Model sản phẩm'], ['mode', 'Chế độ vận hành'], ['speed', 'Tốc độ / tải và đơn vị'], ['line', 'Line / khu vực'], ['shift', 'Ca làm việc']].map(([key, label]) => field(label, 'contextDetails.' + key, (p.contextDetails || {})[key], p)).join('') + '</div>' + fiveM.map((label, i) => '<div class="form-grid">' + select(label, 'changes5m.m' + i, (p.changes5m || {})['m' + i] || 'unchecked', [['unchecked', 'Chưa kiểm tra'], ['none', 'Chưa ghi nhận thay đổi'], ['changed', 'Có thay đổi']], p) + field('Chi tiết ' + label.toLowerCase(), 'changes5m.d' + i, (p.changes5m || {})['d' + i], p, 'Ghi mốc và nội dung nếu có thay đổi trước khi xuất hiện vấn đề.') + '</div>').join('') + '</div></details>' +
-      '<label class="check-line"><input type="checkbox" data-input="k-author-check" data-id="' + e(p.id) + '"' + (p.authorConfirmed ? ' checked' : '') + '> Tôi đã đọc, kiểm tra cách phân loại và xác nhận nội dung cùng các giới hạn của bản này.</label><div class="error-summary" data-k-error tabindex="-1" hidden></div><div class="actions">' + btn('Đối chiếu kho tri thức', 'k-compare', 'primary', 'data-id="' + e(p.id) + '"') + '</div></div></div>';
+
+    return `
+      <div class="card proposal-step-card proposal-form-card">
+        <div class="card-head proposal-step-card-head">
+          <div class="step-card-head-left">
+            <span class="step-tag-pill">MỤC 2 · KIỂM TRA & CHUẨN HÓA BIỂU MẪU</span>
+            <h2 class="step-card-title">Biểu mẫu tri thức chuẩn hóa (SOP Denso)</h2>
+            <p class="subtext">Giữ dữ kiện gốc. Mục chưa rõ hoặc không áp dụng cần nêu lý do ngay trong ô.</p>
+          </div>
+          <div class="step-card-head-right">
+            ${S.badge(missing.length ? missing.length + ' mục cần hoàn thiện' : 'Đã đủ các mục', missing.length ? 'amber' : 'green')}
+          </div>
+        </div>
+
+        <div class="card-body stack">
+          <!-- Phân nhóm 1: Định danh bài học & Máy -->
+          <div class="proposal-form-section">
+            <div class="form-section-title">
+              <span class="section-num-badge">A</span>
+              <div>
+                <strong>Thông tin định danh bài học & Thiết bị</strong>
+                <p class="subtext">Tiêu đề thể hiện rõ hiện tượng và điều kiện máy.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              ${field('Tiêu đề *', 'title', p.title, p)}
+              ${select('Loại máy *', 'family', p.family, [['', 'Chọn loại máy'], ...familyOptions.map(f => [f, f])], p)}
+            </div>
+          </div>
+
+          <!-- Phân nhóm 2: 9 tiêu chuẩn kỹ thuật -->
+          <div class="proposal-form-section">
+            <div class="form-section-title">
+              <span class="section-num-badge">B</span>
+              <div>
+                <strong>Nội dung kỹ thuật cốt lõi (9 tiêu chuẩn SOP)</strong>
+                <p class="subtext">Mỗi mục phản ánh chính xác dữ kiện hiện trường hoặc căn cứ kỹ thuật.</p>
+              </div>
+            </div>
+
+            <div class="proposal-fields-list stack">
+              <!-- Field 1: Dấu hiệu -->
+              ${area('Dấu hiệu / vấn đề *', 'content.symptom', p.content.symptom, p, 'Hiện tượng quan sát được, Alarm, bộ phận và tần suất.')}
+              
+              <!-- Field 2: Bối cảnh -->
+              ${area('Điều kiện phát sinh *', 'content.context', p.content.context, p, 'Chế độ máy, model sản phẩm, line, tốc độ, ca và môi trường liên quan.')}
+              
+              <!-- Field 3: Kiểm tra -->
+              ${area('Kiểm tra và căn cứ lựa chọn *', 'content.checks', p.content.checks, p, 'Đã kiểm tra gì, thấy gì, vì sao ưu tiên hoặc đổi hướng kiểm tra?')}
+              
+              <!-- Field 4: Xử lý -->
+              ${area('Cách xử lý / bài học *', 'content.solution', p.content.solution, p, 'Việc đã thực hiện và trình tự; giữ cả hướng thử chưa hiệu quả nếu có.')}
+              
+              <!-- Field 5: Kết quả -->
+              ${area('Kết quả và cách kiểm chứng *', 'content.result', p.content.result, p, 'Kết quả quan sát, tiêu chí kiểm chứng, phần chưa đạt hoặc còn chờ.')}
+              
+              <!-- Field 6: Nguyên nhân & Trạng thái xác minh -->
+              <div class="proposal-cause-box">
+                <div class="cause-box-head">
+                  <span class="cause-box-label">Phân tích nguyên nhân & Căn cứ kỹ thuật</span>
+                </div>
+                ${select('Trạng thái nhận định nguyên nhân', 'causeStatus', p.causeStatus || 'unknown', [['unknown', 'Chưa xác định'], ['hypothesis', 'Giả thuyết cần kiểm chứng'], ['confirmed', 'Đã xác nhận — có bằng chứng']], p, 'Máy hoạt động lại không tự chứng minh nguyên nhân gốc.')}
+                ${area('Nguyên nhân / giả thuyết *', 'content.cause', p.content.cause, p, 'Phân biệt điều đã xác nhận với nhận định chưa được kiểm chứng.')}
+              </div>
+
+              <!-- Field 7: Bằng chứng -->
+              ${area('Bằng chứng và nguồn *', 'content.evidence', p.content.evidence, p, 'Mã hồ sơ, ghi nhận, kết quả đo hoặc tài liệu làm căn cứ.')}
+
+              <!-- Field 8: An toàn (Safety Gate) -->
+              <div class="proposal-safety-box">
+                <div class="safety-box-head">
+                  <span class="safety-icon-halo">${icon('alert')}</span>
+                  <div>
+                    <strong>An toàn và quy trình tham chiếu (Bắt buộc tuân thủ)</strong>
+                    <span class="safety-mini-badge">SOP MANDATORY</span>
+                  </div>
+                </div>
+                ${area('', 'content.safety', p.content.safety, p, 'Nêu mã/phiên bản quy trình phù hợp cần xác minh trước thao tác.')}
+              </div>
+
+              <!-- Field 9: Giới hạn -->
+              ${area('Điều kiện áp dụng và giới hạn *', 'content.limits', p.content.limits, p, 'Áp dụng khi nào, khác biệt nào cần đánh giá, khi nào cần chuyên gia?')}
+            </div>
+          </div>
+
+          <!-- Phân nhóm 3: Chi tiết điều kiện & 5M1E -->
+          <details class="proposal-5m1e-details">
+            <summary>
+              <div class="summary-left">
+                <span class="summary-icon">${icon('machine')}</span>
+                <span>Thông tin điều kiện chi tiết và điểm thay đổi 5M1E</span>
+              </div>
+              <span class="summary-pill">5M1E MATRIX</span>
+            </summary>
+            <div class="stack" style="padding-top: 14px;">
+              <div class="form-grid">
+                ${[['machineModel', 'Model máy'], ['productModel', 'Model sản phẩm'], ['mode', 'Chế độ vận hành'], ['speed', 'Tốc độ / tải và đơn vị'], ['line', 'Line / khu vực'], ['shift', 'Ca làm việc']].map(([key, label]) => field(label, 'contextDetails.' + key, (p.contextDetails || {})[key], p)).join('')}
+              </div>
+              ${fiveM.map((label, i) => `
+                <div class="form-grid">
+                  ${select(label, 'changes5m.m' + i, (p.changes5m || {})['m' + i] || 'unchecked', [['unchecked', 'Chưa kiểm tra'], ['none', 'Chưa ghi nhận thay đổi'], ['changed', 'Có thay đổi']], p)}
+                  ${field('Chi tiết ' + label.toLowerCase(), 'changes5m.d' + i, (p.changes5m || {})['d' + i], p, 'Ghi mốc và nội dung nếu có thay đổi trước khi xuất hiện vấn đề.')}
+                </div>
+              `).join('')}
+            </div>
+          </details>
+
+          <!-- Phân nhóm 4: Xác nhận và Chuyển bước -->
+          <div class="proposal-author-confirmation-box">
+            <label class="check-line">
+              <input type="checkbox" data-input="k-author-check" data-id="${e(p.id)}" ${p.authorConfirmed ? ' checked' : ''}>
+              <span>Tôi đã đọc, kiểm tra cách phân loại và xác nhận nội dung cùng các giới hạn của bản này.</span>
+            </label>
+          </div>
+
+          <div class="error-summary" data-k-error tabindex="-1" hidden></div>
+
+          <div class="proposal-form-actions">
+            <button type="button" class="btn btn-primary btn-compare-knowledge" data-action="k-compare" data-id="${e(p.id)}">
+              ${icon('spark')}
+              <span>Đối chiếu kho tri thức</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
   }
-  function rawEditor(p) {
-    return '<div class="card"><div class="card-head"><div><h2>Nội dung gốc</h2><p class="subtext">Ghi chép chuyên gia, nội dung trao đổi hoặc biên bản liên quan.</p></div></div><div class="card-body stack">' + area('Ghi chép cần xử lý', 'rawText', p.rawText, p, 'Nội dung gốc được giữ khi chuyển sang biểu mẫu.', 13) +
-      '<div class="actions">' + btn('AI sắp xếp nội dung', 'k-structure', 'primary', 'data-id="' + e(p.id) + '"') + btn('Điền biểu mẫu', 'k-tab', 'secondary', 'data-tab="form"') + '</div><p class="field-hint">Nhiều chủ đề có thể được tách bằng một dòng ---.</p></div></div>';
-  }
+
   function decisionForm(p) {
     const sourceOptions = (p.comparison ? p.comparison.sources : []).map(s => { const k = S.getKnowledge(s.id, s.version); return k ? [k.id, k.id + ' · v' + k.version + ' — ' + k.title] : null; }).filter(Boolean);
-    return '<div class="card"><div class="card-body stack"><h2>Chọn hướng ghi nhận</h2>' + select('Loại đề xuất', 'mode', p.mode || 'new', [['new', 'Tạo tri thức mới'], ['update', 'Bổ sung tri thức đã có'], ...(p.origin === 'case' ? [['link', 'Chỉ liên kết case lặp lại']] : [])], p) +
-      select('Nguồn đối chiếu / phiên bản gốc', 'targetId', p.targetId || '', [['', 'Chọn nếu cập nhật, liên kết hoặc hủy do trùng'], ...sourceOptions], p) +
-      area('Điểm mới, khác biệt hoặc lý do liên kết *', 'rationale', p.rationale, p, 'Ghi rõ điều kiện khác, nội dung bổ sung và lý do; việc cập nhật giữ nguyên phiên bản cũ.') +
-      '<label class="check-line"><input type="checkbox" data-input="k-update-complete" data-id="' + e(p.id) + '"' + (p.updateCompleteConfirmed ? ' checked' : '') + '> Nếu chọn bổ sung: tôi đã rà toàn bộ bản kế tiếp, giữ phần tri thức gốc còn đúng và chỉ thay đổi phần có căn cứ. Phiên bản cũ được lưu trong lịch sử.</label>' +
-      (p.status === 'changes' ? area('Phản hồi của bạn với người duyệt *', 'response', p.response, p, 'Nêu đã bổ sung gì và phần nào còn chưa đủ căn cứ.') : '') +
-      '<div class="notice notice-info" data-k-comparison-status>' + (hasCurrentComparison(p) ? 'Đối chiếu đang gắn với bản hiện tại.' : 'Cần đối chiếu lại bản hiện tại trước khi gửi.') + '</div><div class="error-summary" data-k-error tabindex="-1" hidden></div><div class="actions">' + btn('Xem lại và gửi kiểm duyệt', 'k-submit-preview', 'primary', 'data-id="' + e(p.id) + '"') + btn('Đối chiếu lại', 'k-compare', 'secondary', 'data-id="' + e(p.id) + '"') + btn('Lưu trữ đề xuất trùng', 'k-withdraw', 'ghost', 'data-id="' + e(p.id) + '"') + '</div></div></div>';
+    const hasCurrent = hasCurrentComparison(p);
+
+    return `
+      <div class="card proposal-step-card proposal-decision-card">
+        <div class="card-head proposal-step-card-head">
+          <div class="step-card-head-left">
+            <span class="step-tag-pill">QUYẾT ĐỊNH XUẤT BẢN</span>
+            <h2 class="step-card-title">Chọn hướng ghi nhận & Gửi kiểm duyệt</h2>
+            <p class="subtext">Xác định cách thức tích hợp bài học này vào kho tri thức chuẩn hóa Denso.</p>
+          </div>
+        </div>
+
+        <div class="card-body stack">
+          <div class="decision-form-grid">
+            ${select('Loại đề xuất *', 'mode', p.mode || 'new', [['new', 'Tạo tri thức mới'], ['update', 'Bổ sung tri thức đã có'], ...(p.origin === 'case' ? [['link', 'Chỉ liên kết case lặp lại']] : [])], p, 'Xác định quan hệ với các tri thức hiện hữu trong hệ thống.')}
+            ${select('Nguồn đối chiếu / phiên bản gốc', 'targetId', p.targetId || '', [['', 'Chọn nếu cập nhật, liên kết hoặc hủy do trùng'], ...sourceOptions], p, 'Chỉ chọn khi thực hiện cập nhật hoặc liên kết với tri thức đã xuất bản.')}
+          </div>
+
+          ${area('Điểm mới, khác biệt hoặc lý do liên kết *', 'rationale', p.rationale, p, 'Ghi rõ điều kiện khác, nội dung bổ sung và lý do; việc cập nhật giữ nguyên phiên bản cũ.', 4)}
+
+          <div class="update-confirmation-box">
+            <label class="check-line">
+              <input type="checkbox" data-input="k-update-complete" data-id="${e(p.id)}" ${p.updateCompleteConfirmed ? ' checked' : ''}>
+              <span>Nếu chọn bổ sung: tôi đã rà toàn bộ bản kế tiếp, giữ phần tri thức gốc còn đúng và chỉ thay đổi phần có căn cứ. Phiên bản cũ được lưu trong lịch sử.</span>
+            </label>
+          </div>
+
+          ${p.status === 'changes' ? area('Phản hồi của bạn với người duyệt *', 'response', p.response, p, 'Nêu đã bổ sung gì và phần nào còn chưa đủ căn cứ.', 4) : ''}
+
+          <div class="comparison-status-notice ${hasCurrent ? 'is-valid' : 'is-pending'}" data-k-comparison-status>
+            ${hasCurrent ? icon('check') : icon('alert')}
+            <span>${hasCurrent ? 'Đối chiếu đang gắn với bản hiện tại.' : 'Cần đối chiếu lại bản hiện tại trước khi gửi.'}</span>
+          </div>
+
+          <div class="error-summary" data-k-error tabindex="-1" hidden></div>
+
+          <div class="decision-action-toolbar">
+            <div class="decision-actions-primary">
+              <button type="button" class="btn btn-primary btn-submit-preview" data-action="k-submit-preview" data-id="${e(p.id)}">
+                ${icon('check')}
+                <span>Xem lại và gửi kiểm duyệt</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-recompare" data-action="k-compare" data-id="${e(p.id)}">
+                ${icon('spark')}
+                <span>Đối chiếu lại</span>
+              </button>
+            </div>
+            <div class="decision-actions-secondary">
+              <button type="button" class="btn btn-ghost btn-withdraw" data-action="k-withdraw" data-id="${e(p.id)}">
+                ${icon('close')}
+                <span>Lưu trữ đề xuất trùng</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }
+
   S.pages.proposal = { title: 'Soạn đề xuất', roles: ['expert', 'maintenance'], render: function () {
     const p = current();
     if (!accessible(p)) return S.empty('Không thể mở đề xuất', 'Bạn chỉ có quyền mở đề xuất của mình hoặc đề xuất có đóng góp của mình.', btn('Về đề xuất của tôi', 'k-proposals'));
     const canEdit = editable(p);
     const tab = ['raw', 'form', 'compare'].includes(S.ui.tab) ? S.ui.tab : 'form';
-    return pageHead(p.id + ' / BẢN ' + p.version, p.title || 'Tri thức mới', 'Tác giả: ' + S.person(p.authorId) + ' · ' + (p.origin === 'case' ? 'Trích từ báo cáo đã xác nhận của ' + p.caseId : 'Ghi nhận kinh nghiệm chuyên gia'), status(p) + btn(canEdit ? 'Lưu và thoát' : 'Về danh sách', 'k-proposals')) +
-      (p.origin === 'case' && !caseSourceCurrent(p) && !['published','withdrawn','rejected'].includes(p.status) ? '<div class="notice notice-warning"><strong>Báo cáo nguồn đã thay đổi hoặc đang được đính chính.</strong><p>Nội dung đề xuất vẫn giữ bản nguồn lúc tạo. Cần đối chiếu với báo cáo đã xác nhận mới trước khi gửi/duyệt.</p>' + (canEdit ? btn('Đối chiếu lại báo cáo nguồn', 'k-refresh-report-preview', 'secondary', 'data-id="' + e(p.id) + '"') : '') + '</div>' : '') +
-      (p.feedback ? '<div class="notice ' + (p.status === 'rejected' ? 'notice-danger' : 'notice-warning') + '"><strong>Phản hồi kiểm duyệt</strong>' + preserved(p.feedback) + (p.suggestion ? '<p><strong>Đề nghị sửa ' + e(fields.find(f => f[0] === p.suggestion.field)?.[1] || p.suggestion.field) + ':</strong></p>' + preserved(p.suggestion.text) + (canEdit ? btn('Áp dụng nội dung đề nghị', 'k-accept-suggestion', 'secondary', 'data-id="' + e(p.id) + '"') : '') : '') + '</div>' : '') +
-      (p.publishedId ? '<div class="notice notice-success">' + (p.mode === 'link' ? 'Đã duyệt liên kết với ' : 'Đã xuất bản ') + e(p.publishedId) + ' · v' + e(p.publishedVersion) + ' ' + sourceButton(p.publishedId, p.publishedVersion, 'Mở tri thức') + '</div>' : '') +
-      '<div class="split-layout"><div class="stack">' + (canEdit ? '<div class="status-strip"><span class="save-state" data-save-state>Đã lưu · ' + e(S.fmtDate(p.updatedAt)) + '</span><span data-k-comparison-status>' + (hasCurrentComparison(p) ? 'Đã đối chiếu bản hiện tại' : 'Nội dung cần được đối chiếu trước khi gửi') + '</span></div><div class="tabs" aria-label="Các bước ghi nhận">' + [['raw', '1. Nội dung gốc'], ['form', '2. Kiểm tra biểu mẫu'], ['compare', '3. Đối chiếu & gửi']].map(([v, label]) => '<button type="button" class="tab' + (tab === v ? ' active' : '') + '" data-action="k-tab" data-tab="' + v + '">' + label + '</button>').join('') + '</div>' + (tab === 'raw' ? rawEditor(p) : tab === 'form' ? proposalForm(p) : compareView(p) + decisionForm(p)) :
-        '<div class="notice notice-info">' + (p.status === 'pending' ? 'Bản đã gửi được khóa để kiểm duyệt đúng nội dung. Kết quả sẽ có trong thông báo và đề xuất của bạn.' : p.status === 'withdrawn' ? 'Nháp được giữ trong lịch sử; không tạo bản mới trong kho.' : 'Nội dung và lịch sử được giữ để truy vết.') + '</div><div class="card"><div class="card-body">' + contentView(p.content) + '</div></div><details class="card"><summary class="card-head">Nội dung gốc</summary><div class="card-body">' + preserved(p.rawText) + '</div></details>') + '</div><aside class="stack">' + metaCard(p) + '</aside></div>';
+    const statusMeta = statuses[p.status] || statuses.draft;
+    const isCase = p.origin === 'case';
+    const hasCurrent = hasCurrentComparison(p);
+
+    const headerHtml = `
+      <header class="proposal-detail-header">
+        <div class="proposal-header-top">
+          <div class="proposal-header-tags">
+            <span class="badge-proposal-origin">
+              ${isCase ? icon('wrench') : icon('spark')}
+              <span>${isCase ? 'ĐỀ XUẤT TRI THỨC TỪ CA' : 'TRI THỨC KINH NGHIỆM CHUYÊN GIA'}</span>
+            </span>
+            <span class="badge-proposal-id mono">${e(p.id)}</span>
+            <span class="badge-proposal-version">Revision ${e(p.version || 1)}</span>
+            <span class="badge-proposal-status ${p.status}">
+              <span class="proposal-status-dot dot-${p.status}"></span>
+              <span>${e(statusMeta[0])}</span>
+            </span>
+          </div>
+          <div class="proposal-header-actions">
+            <button type="button" class="btn btn-secondary btn-save-exit" data-action="k-proposals">
+              ${icon('arrow')}
+              <span>${canEdit ? 'Lưu và thoát' : 'Về danh sách'}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="proposal-header-main">
+          <h1 class="proposal-title">${e(p.title || 'Đề xuất bài học tri thức')}</h1>
+          <div class="proposal-header-meta">
+            <span class="meta-item">
+              ${icon('user')}
+              <span>Tác giả: <strong>${e(S.person(p.authorId))}</strong></span>
+            </span>
+            ${isCase && p.caseId ? `
+              <span class="meta-separator">·</span>
+              <span class="meta-item meta-case-ref">
+                ${icon('file')}
+                <span>Hồ sơ nguồn: <strong>Ca ${e(p.caseId)}</strong></span>
+              </span>
+            ` : ''}
+            ${p.family ? `
+              <span class="meta-separator">·</span>
+              <span class="meta-item">
+                ${icon('machine')}
+                <span>Loại máy: <strong>${e(p.family)}</strong></span>
+              </span>
+            ` : ''}
+            <span class="meta-separator">·</span>
+            <span class="meta-item">
+              ${icon('clock')}
+              <span>Cập nhật: ${e(S.fmtDate(p.updatedAt, false))}</span>
+            </span>
+          </div>
+        </div>
+      </header>
+    `;
+
+    const alertsHtml = `
+      ${p.origin === 'case' && !caseSourceCurrent(p) && !['published','withdrawn','rejected'].includes(p.status) ? `
+        <div class="notice notice-warning proposal-alert-banner">
+          <div class="notice-head"><strong>Báo cáo nguồn đã thay đổi hoặc đang được đính chính.</strong></div>
+          <p>Nội dung đề xuất vẫn giữ bản nguồn lúc tạo. Cần đối chiếu với báo cáo đã xác nhận mới trước khi gửi/duyệt.</p>
+          ${canEdit ? btn('Đối chiếu lại báo cáo nguồn', 'k-refresh-report-preview', 'secondary', 'data-id="' + e(p.id) + '"') : ''}
+        </div>
+      ` : ''}
+      ${p.feedback ? `
+        <div class="notice ${p.status === 'rejected' ? 'notice-danger' : 'notice-warning'} proposal-alert-banner">
+          <div class="notice-head"><strong>Phản hồi kiểm duyệt</strong></div>
+          ${preserved(p.feedback)}
+          ${p.suggestion ? `
+            <p><strong>Đề nghị sửa ${e(fields.find(f => f[0] === p.suggestion.field)?.[1] || p.suggestion.field)}:</strong></p>
+            ${preserved(p.suggestion.text)}
+            ${canEdit ? btn('Áp dụng nội dung đề nghị', 'k-accept-suggestion', 'secondary', 'data-id="' + e(p.id) + '"') : ''}
+          ` : ''}
+        </div>
+      ` : ''}
+      ${p.publishedId ? `
+        <div class="notice notice-success proposal-alert-banner">
+          ${p.mode === 'link' ? 'Đã duyệt liên kết với ' : 'Đã xuất bản '} <strong>${e(p.publishedId)} · v${e(p.publishedVersion)}</strong>
+          ${sourceButton(p.publishedId, p.publishedVersion, 'Mở tri thức')}
+        </div>
+      ` : ''}
+    `;
+
+    const stepperBarHtml = `
+      <div class="proposal-stepper-bar">
+        <div class="proposal-save-indicator">
+          <span class="save-status-live">
+            <span class="live-dot-pulse"></span>
+            <span data-save-state>Đã lưu trên trình duyệt · ${e(S.fmtDate(p.updatedAt))}</span>
+          </span>
+          <span class="comparison-status-pill ${hasCurrent ? 'is-valid' : 'is-pending'}" data-k-comparison-status>
+            ${hasCurrent ? icon('check') : icon('clock')}
+            <span>${hasCurrent ? 'Đã đối chiếu bản hiện tại' : 'Nội dung cần đối chiếu trước khi gửi'}</span>
+          </span>
+        </div>
+
+        <nav class="proposal-steps-nav" aria-label="Các bước ghi nhận tri thức">
+          ${[
+            ['raw', '1', 'Nội dung gốc', 'Dữ kiện ban đầu'],
+            ['form', '2', 'Kiểm tra biểu mẫu', 'Chuẩn hóa SOP'],
+            ['compare', '3', 'Đối chiếu & gửi', 'So sánh & quyết định']
+          ].map(([v, num, label, sub]) => `
+            <button type="button" 
+                    class="proposal-step-tab ${tab === v ? 'is-active' : ''}" 
+                    data-action="k-tab" 
+                    data-tab="${v}"
+                    role="tab"
+                    aria-selected="${tab === v}">
+              <span class="step-tab-num">${num}</span>
+              <div class="step-tab-text">
+                <span class="step-tab-label">${label}</span>
+                <span class="step-tab-sub">${sub}</span>
+              </div>
+            </button>
+          `).join('')}
+        </nav>
+      </div>
+    `;
+
+    return headerHtml + alertsHtml +
+      '<div class="split-layout"><div class="stack">' +
+      (canEdit ? stepperBarHtml + (tab === 'raw' ? rawEditor(p) : tab === 'form' ? proposalForm(p) : compareView(p) + decisionForm(p)) :
+        '<div class="notice notice-info">' + (p.status === 'pending' ? 'Bản đã gửi được khóa để kiểm duyệt đúng nội dung. Kết quả sẽ có trong thông báo và đề xuất của bạn.' : p.status === 'withdrawn' ? 'Nháp được giữ trong lịch sử; không tạo bản mới trong kho.' : 'Nội dung và lịch sử được giữ để truy vết.') + '</div><div class="card"><div class="card-body">' + contentView(p.content) + '</div></div><details class="card"><summary class="card-head">Nội dung gốc</summary><div class="card-body">' + preserved(p.rawText) + '</div></details>') +
+      '</div><aside class="stack proposal-sidebar-column">' + metaCard(p) + '</aside></div>';
   } };
 
   S.pages.review = { title: 'Kiểm duyệt tri thức', roles: ['lead'], render: function () {
@@ -653,14 +1710,46 @@
   S.actions['k-source'] = function (el) {
     const k = S.getKnowledge(el.dataset.id, Number(el.dataset.version) || undefined);
     if (!k || k.status !== 'published') return S.toast('Không tìm thấy nguồn đã duyệt.', 'error');
-    S.modal(k.id + ' · v' + k.version + ' — ' + k.title, '<div class="source-meta">' + e(k.family) + ' · Tác giả: ' + e(S.person(k.authorId)) + ' · Duyệt: ' + e(S.person(k.reviewerId)) + '</div><div class="divider"></div>' + contentView(k.content), btn('Đóng nguồn', 'k-close', 'primary'));
+    const metaStrip = `
+      <div class="modal-source-header-meta">
+        <span class="badge ${k.kind==='case'?'badge-blue':'badge-purple'}">${k.kind==='case'?'Case đã duyệt':'Tri thức chuyên gia'}</span>
+        <span class="meta-item">${icon('tag')} Dòng máy: <strong>${e(k.family || 'Chung')}</strong></span>
+        <span class="meta-item">${icon('user')} Tác giả: <strong>${e(S.person(k.authorId))}</strong></span>
+        <span class="meta-item">${icon('shield')} Người duyệt: <strong>${e(S.person(k.reviewerId))}</strong></span>
+      </div>
+    `;
+    S.modal(k.id + ' · v' + k.version + ' — ' + k.title, metaStrip + contentView(k.content), btn('Đóng nguồn', 'k-close', 'primary'));
   };
   S.actions['k-close'] = () => S.closeModal();
   S.actions['k-refresh-report-preview'] = el => {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
     const c = S.db.cases.find(x => x.id === p.caseId);
     if (!c || c.reportState !== 'confirmed') return S.toast('Cần hoàn tất xác nhận bản đính chính báo cáo trước khi cập nhật nguồn cho đề xuất.', 'warning');
-    S.modal('Đối chiếu bản báo cáo nguồn', '<div class="stack"><div class="notice notice-info">Biểu mẫu tri thức bạn đã sửa sẽ được giữ. Sau khi đổi bản nguồn, cần rà lại nội dung, xác nhận và đối chiếu kho trước khi gửi.</div><details><summary>Bản nguồn trước · revision ' + e(p.reportSnapshot?.revision) + '</summary>' + preserved(p.reportSnapshot?.summary) + '</details><section><h3>Báo cáo đã xác nhận mới · revision ' + e(c.report.revision) + '</h3>' + preserved(c.report.summary) + '</section></div>', btn('Giữ bản nguồn trước', 'k-close') + btn('Dùng bản nguồn mới và rà lại biểu mẫu', 'k-refresh-report-apply', 'primary', 'data-id="' + e(p.id) + '" data-revision="' + e(c.report.revision) + '"'));
+    const bodyHtml = `
+      <div class="stack">
+        <div class="notice notice-info">
+          ${icon('info')}
+          <div>Biểu mẫu tri thức bạn đã sửa sẽ được giữ nguyên. Sau khi đổi bản nguồn, bạn cần rà soát lại nội dung, xác nhận và đối chiếu kho trước khi gửi kiểm duyệt.</div>
+        </div>
+        <div class="modal-report-compare">
+          <div class="compare-column">
+            <div class="compare-col-header">
+              <span class="badge badge-neutral">Bản nguồn trước</span>
+              <strong>Revision ${e(p.reportSnapshot?.revision)}</strong>
+            </div>
+            <div class="compare-col-body">${preserved(p.reportSnapshot?.summary)}</div>
+          </div>
+          <div class="compare-column">
+            <div class="compare-col-header">
+              <span class="badge badge-blue">Báo cáo đã xác nhận mới</span>
+              <strong>Revision ${e(c.report.revision)}</strong>
+            </div>
+            <div class="compare-col-body">${preserved(c.report.summary)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    S.modal('Đối chiếu bản báo cáo nguồn', bodyHtml, btn('Giữ bản nguồn trước', 'k-close', 'secondary') + btn('Dùng bản nguồn mới & rà lại', 'k-refresh-report-apply', 'primary', 'data-id="' + e(p.id) + '" data-revision="' + e(c.report.revision) + '"'));
   };
   S.actions['k-refresh-report-apply'] = el => {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
@@ -698,15 +1787,29 @@
   S.actions['k-structure'] = function (el) {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
     if (!p.rawText.trim()) return err('Nhập hoặc dán nội dung trước khi sắp xếp.');
-    const blocks = p.rawText.split(/^\s*---\s*$/m).filter(t => t.trim());
-    const parsed = blocks.map(parseRaw);
-    const found = parsed.some(x => Object.keys(x.content).length || x.title);
-    if (!found) {
-      S.modal('Nội dung đã được giữ', '<div class="notice notice-warning">Chưa nhận diện được các mục trong văn bản này. Nội dung gốc vẫn được lưu; có thể điền biểu mẫu hoặc bổ sung nhãn cho từng mục.</div>' + preserved(p.rawText), btn('Giữ nội dung gốc', 'k-close') + btn('Điền biểu mẫu', 'k-manual-from-modal', 'primary'));
-      return;
-    }
-    const body = '<div class="notice notice-info">Xem lại các mục được trích từ nội dung gốc. Các mục thiếu để trống; phần đã chỉnh sửa được giữ nguyên.</div><form data-form="k-apply-structure" data-id="' + e(p.id) + '" data-version="' + p.version + '"><div class="stack">' + parsed.map((x, i) => '<section class="card"><div class="card-body stack"><label class="check-line"><input type="checkbox" name="blocks" value="' + i + '" checked><strong>' + e(x.title || 'Chủ đề ' + (i + 1)) + '</strong></label><div class="source-meta">' + e(x.family || 'Chưa có loại máy') + ' · ' + Object.keys(x.content).length + '/' + fields.length + ' mục có nội dung</div>' + Object.entries(x.content).map(([key, value]) => '<div><strong>' + e(fields.find(f => f[0] === key)?.[1] || key) + '</strong>' + preserved(value) + '</div>').join('') + '<div class="field-hint">Mục thiếu: ' + e(fields.filter(([key]) => !x.content[key]).map(([, label]) => label).join(', ') || 'Không có') + '</div></div></section>').join('') + '<div class="error-summary" tabindex="-1" hidden></div><div class="actions">' + btn('Giữ biểu mẫu hiện tại', 'k-close') + '<button type="submit" class="btn btn-primary">Dùng các chủ đề đã chọn</button></div></div></form>';
-    S.modal('Xem trước nội dung theo biểu mẫu', body);
+
+    runAiModal({
+      title: 'Đang cấu trúc hóa ghi chép hiện trường...',
+      subtitle: 'Tự động bóc tách thực thể kỹ thuật & phân loại 5M1E từ nội dung gốc',
+      badgeText: 'DENSO AI · KNOWLEDGE EXTRACTION',
+      steps: [
+        { label: 'Phân tách khối văn bản hiện trường', desc: 'Nhận diện các chủ đề và ranh giới ghi chép (---)' },
+        { label: 'Nhận diện thực thể kỹ thuật & 5M1E', desc: 'Trích xuất triệu chứng, điều kiện và nguyên nhân máy' },
+        { label: 'Chuẩn hóa cấu trúc SOP Denso 9 tiêu chuẩn', desc: 'Lập bản xem trước và phát hiện các mục còn thiếu' }
+      ],
+      duration: 1350,
+      onComplete: () => {
+        const blocks = p.rawText.split(/^\s*---\s*$/m).filter(t => t.trim());
+        const parsed = blocks.map(parseRaw);
+        const found = parsed.some(x => Object.keys(x.content).length || x.title);
+        if (!found) {
+          S.modal('Nội dung đã được giữ', '<div class="notice notice-warning">Chưa nhận diện được các mục trong văn bản này. Nội dung gốc vẫn được lưu; có thể điền biểu mẫu hoặc bổ sung nhãn cho từng mục.</div>' + preserved(p.rawText), btn('Giữ nội dung gốc', 'k-close') + btn('Điền biểu mẫu', 'k-manual-from-modal', 'primary'));
+          return;
+        }
+        const body = '<div class="notice notice-info">Xem lại các mục được trích từ nội dung gốc. Các mục thiếu để trống; phần đã chỉnh sửa được giữ nguyên.</div><form data-form="k-apply-structure" data-id="' + e(p.id) + '" data-version="' + p.version + '"><div class="stack">' + parsed.map((x, i) => '<section class="card"><div class="card-body stack"><label class="check-line"><input type="checkbox" name="blocks" value="' + i + '" checked><strong>' + e(x.title || 'Chủ đề ' + (i + 1)) + '</strong></label><div class="source-meta">' + e(x.family || 'Chưa có loại máy') + ' · ' + Object.keys(x.content).length + '/' + fields.length + ' mục có nội dung</div>' + Object.entries(x.content).map(([key, value]) => '<div><strong>' + e(fields.find(f => f[0] === key)?.[1] || key) + '</strong>' + preserved(value) + '</div>').join('') + '<div class="field-hint">Mục thiếu: ' + e(fields.filter(([key]) => !x.content[key]).map(([, label]) => label).join(', ') || 'Không có') + '</div></div></section>').join('') + '<div class="error-summary" tabindex="-1" hidden></div><div class="actions">' + btn('Giữ biểu mẫu hiện tại', 'k-close') + '<button type="submit" class="btn btn-primary">Dùng các chủ đề đã chọn</button></div></div></form>';
+        S.modal('Xem trước nội dung theo biểu mẫu', body);
+      }
+    });
   };
   S.actions['k-manual-from-modal'] = () => { S.closeModal(); S.go('proposal', S.ui.id, 'form'); };
   S.forms['k-apply-structure'] = function (form) {
@@ -715,19 +1818,40 @@
     const selected = new FormData(form).getAll('blocks').map(Number);
     if (!selected.length) return S.error(form, 'Chọn ít nhất một chủ đề hoặc giữ biểu mẫu hiện tại.');
     const blocks = p.rawText.split(/^\s*---\s*$/m).filter(t => t.trim());
-    const ok = S.commit(() => {
-      selected.forEach((i, idx) => {
-        const data = parseRaw(blocks[i]);
-        const dest = idx === 0 ? p : baseProposal(p.authorId, p.origin);
-        if (!dest.title && data.title) dest.title = data.title;
-        if (!dest.family && familyOptions.includes(data.family)) dest.family = data.family;
-        Object.entries(data.content).forEach(([key, value]) => { if (!dest.content[key]) dest.content[key] = value; });
-        if (idx > 0) { dest.rawText = blocks[i]; dest.sourceProposalId = p.id; dest.sourceRawSnapshot = p.rawText; dest.caseId = p.caseId; dest.contributors = clone(p.contributors || []); S.db.proposals.push(dest); }
-        stamp(dest, 'Áp dụng phần trích xuất có nhãn từ nội dung gốc; cần tác giả kiểm tra');
-      });
-      S.log('proposal.structure', p.id, selected.length + ' chủ đề được áp dụng');
-    }, selected.length > 1 ? 'Đã tạo các nháp riêng. Mở từng nháp tại Đề xuất của tôi để hoàn thiện.' : 'Đã điền các mục trống; hãy kiểm tra trước khi đối chiếu.', false);
-    if (ok) { S.closeModal(); S.go('proposal', p.id, 'form'); }
+
+    // Đóng modal xem trước để hiển thị cửa sổ AI tiến trình
+    S.closeModal();
+
+    runAiModal({
+      title: 'Đang điền dữ liệu vào biểu mẫu SOP...',
+      subtitle: 'Tự động áp dụng dữ kiện vào 9 tiêu chuẩn SOP Denso và hoàn thiện bản nháp',
+      badgeText: 'DENSO AI · AUTO-FILL SOP FORM',
+      steps: [
+        { label: 'Xác thực các chủ đề đã chọn', desc: 'Đồng bộ hóa ' + selected.length + ' khối dữ kiện hiện trường' },
+        { label: 'Điền 9 trường kỹ thuật SOP', desc: 'Áp dụng vào Dấu hiệu, Điều kiện, Cách xử lý, An toàn...' },
+        { label: 'Cập nhật bản nháp & chuyển trang', desc: 'Lưu thay đổi vào bộ nhớ cục bộ và mở biểu mẫu' }
+      ],
+      duration: 1300,
+      onComplete: () => {
+        const ok = S.commit(() => {
+          selected.forEach((i, idx) => {
+            const data = parseRaw(blocks[i]);
+            const dest = idx === 0 ? p : baseProposal(p.authorId, p.origin);
+            if (!dest.title && data.title) dest.title = data.title;
+            if (!dest.family && familyOptions.includes(data.family)) dest.family = data.family;
+            Object.entries(data.content).forEach(([key, value]) => { if (!dest.content[key]) dest.content[key] = value; });
+            if (idx > 0) { dest.rawText = blocks[i]; dest.sourceProposalId = p.id; dest.sourceRawSnapshot = p.rawText; dest.caseId = p.caseId; dest.contributors = clone(p.contributors || []); S.db.proposals.push(dest); }
+            stamp(dest, 'Áp dụng phần trích xuất có nhãn từ nội dung gốc; cần tác giả kiểm tra');
+          });
+          S.log('proposal.structure', p.id, selected.length + ' chủ đề được áp dụng');
+        }, selected.length > 1 ? 'Đã tạo các nháp riêng. Mở từng nháp tại Đề xuất của tôi để hoàn thiện.' : 'Đã điền các mục vào biểu mẫu SOP; hãy kiểm tra trước khi đối chiếu.', false);
+
+        if (ok) {
+          S.go('proposal', p.id, 'form');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    });
   };
   S.actions['k-compare'] = function (el) {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
@@ -736,7 +1860,28 @@
       S.go('proposal', p.id, 'form');
       return err(missing.length ? 'Cần hoàn thiện: ' + missing.join('; ') + '.' : 'Xác nhận đã đọc và kiểm tra biểu mẫu trước khi đối chiếu.');
     }
-    if (S.commit(() => { p.comparison = { version: p.version, at: S.now(), sources: candidates(p) }; addHistory(p, 'compare', 'Đối chiếu kho đã duyệt theo loại máy và từ khóa (mô phỏng)'); S.log('proposal.compare', p.id); }, 'Đã đối chiếu. Đọc nguồn và chọn hướng ghi nhận.', false)) S.go('proposal', p.id, 'compare');
+
+    runAiModal({
+      title: 'Đang đối chiếu tri thức tương đồng...',
+      subtitle: 'So khớp vector ngữ nghĩa (Semantic Matching) với cơ sở tri thức đã ban hành',
+      badgeText: 'DENSO AI · SEMANTIC VECTOR RETRIEVAL',
+      steps: [
+        { label: 'Trích xuất đặc trưng & từ khóa SOP', desc: 'Phân tích tiêu đề, triệu chứng và giải pháp kỹ thuật' },
+        { label: 'Tìm kiếm nguồn bài học tương đồng', desc: 'Đối chiếu trong họ máy ' + (p.family || 'tương ứng') + ' đã được phê duyệt' },
+        { label: 'Xây dựng ma trận sai khác & hoàn tất', desc: 'Đánh giá điểm tương đồng, bổ sung và lệch cách ghi' }
+      ],
+      duration: 1400,
+      onComplete: () => {
+        if (S.commit(() => {
+          p.comparison = { version: p.version, at: S.now(), sources: candidates(p) };
+          addHistory(p, 'compare', 'Đối chiếu kho đã duyệt theo loại máy và từ khóa (mô phỏng)');
+          S.log('proposal.compare', p.id);
+        }, 'Đã đối chiếu. Đọc nguồn và chọn hướng ghi nhận.', false)) {
+          S.go('proposal', p.id, 'compare');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    });
   };
   function submitIssues(p) {
     const list = issues(p);
@@ -759,7 +1904,25 @@
   S.actions['k-submit-preview'] = function (el) {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
     const errors = submitIssues(p); if (errors.length) return err('Chưa thể gửi: ' + errors.join('; ') + '.');
-    S.modal('Xác nhận gửi kiểm duyệt', '<div class="stack"><div>' + S.badge(modes[p.mode], 'blue') + '<h3>' + e(p.title) + '</h3><p>Tác giả: ' + e(S.person(p.authorId)) + ' · Bản đề xuất ' + p.version + '</p></div><dl class="kv-list"><dt>Nguồn gốc</dt><dd>' + e(p.caseId || 'Kinh nghiệm chuyên gia') + '</dd><dt>Nguồn mục tiêu</dt><dd>' + e(p.targetId ? p.targetId + ' · v' + p.targetVersion : 'Tạo tri thức mới') + '</dd><dt>Căn cứ</dt><dd>' + e(p.rationale) + '</dd></dl><div class="notice notice-info">Bản này sẽ chuyển sang chờ duyệt. Chỉ tri thức được phê duyệt mới xuất hiện trong kho tham khảo.</div></div>', btn('Quay lại chỉnh sửa', 'k-close') + btn('Gửi kiểm duyệt', 'k-submit', 'primary', 'data-id="' + e(p.id) + '" data-version="' + p.version + '"'));
+    const bodyHtml = `
+      <div class="stack">
+        <div class="modal-confirm-card">
+          <div class="confirm-card-badges">
+            ${S.badge(modes[p.mode], 'blue')}
+            <span class="badge badge-neutral">Bản đề xuất ${p.version}</span>
+          </div>
+          <h3 class="confirm-card-title">${e(p.title)}</h3>
+          <p class="confirm-card-author">${icon('user')} Tác giả: <strong>${e(S.person(p.authorId))}</strong></p>
+        </div>
+        <dl class="kv-list">
+          <dt>Nguồn gốc</dt><dd>${e(p.caseId || 'Kinh nghiệm chuyên gia')}</dd>
+          <dt>Nguồn mục tiêu</dt><dd>${e(p.targetId ? p.targetId + ' · v' + p.targetVersion : 'Tạo tri thức mới')}</dd>
+          <dt>Căn cứ đề xuất</dt><dd>${e(p.rationale || 'Chưa ghi')}</dd>
+        </dl>
+        <div class="notice notice-info">${icon('info')} Bản này sẽ chuyển sang trạng thái chờ duyệt. Chỉ tri thức được phê duyệt chính thức mới xuất hiện trong kho tham khảo.</div>
+      </div>
+    `;
+    S.modal('Xác nhận gửi kiểm duyệt', bodyHtml, btn('Quay lại chỉnh sửa', 'k-close', 'secondary') + btn('Gửi kiểm duyệt', 'k-submit', 'primary', 'data-id="' + e(p.id) + '" data-version="' + p.version + '"'));
   };
   S.actions['k-submit'] = function (el) {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
@@ -778,7 +1941,19 @@
   S.actions['k-withdraw'] = function (el) {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
     if (!hasCurrentComparison(p) || !p.targetId || !(p.rationale || '').trim()) return err('Đối chiếu bản hiện tại, chọn nguồn đã có và ghi lý do trùng trước khi lưu trữ.');
-    S.modal('Lưu trữ đề xuất trùng', '<p>Đề xuất <strong>' + e(p.id) + '</strong> được lưu trữ và liên kết tới <strong>' + e(p.targetId) + ' v' + e(p.targetVersion) + '</strong>. Nội dung nháp và tác giả vẫn có trong lịch sử.</p>' + preserved(p.rationale), btn('Quay lại', 'k-close') + btn('Xác nhận lưu trữ', 'k-confirm-withdraw', 'primary', 'data-id="' + e(p.id) + '" data-version="' + p.version + '"'));
+    const bodyHtml = `
+      <div class="stack">
+        <div class="notice notice-warning">
+          <strong>Lưu trữ đề xuất:</strong> Đề xuất <strong>${e(p.id)}</strong> sẽ được lưu trữ và liên kết tham chiếu tới tri thức đã có <strong>${e(p.targetId)} v${e(p.targetVersion)}</strong>.
+        </div>
+        <p>Nội dung nháp và lịch sử đóng góp của tác giả vẫn được bảo toàn nguyên trạng trong hệ thống.</p>
+        <div class="suggest-box">
+          <strong>Lý do lưu trữ / căn cứ trùng lặp:</strong>
+          ${preserved(p.rationale)}
+        </div>
+      </div>
+    `;
+    S.modal('Lưu trữ đề xuất trùng lặp', bodyHtml, btn('Quay lại', 'k-close', 'secondary') + btn('Xác nhận lưu trữ', 'k-confirm-withdraw', 'primary', 'data-id="' + e(p.id) + '" data-version="' + p.version + '"'));
   };
   S.actions['k-confirm-withdraw'] = function (el) {
     const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
@@ -786,7 +1961,7 @@
     if (S.commit(() => { p.status = 'withdrawn'; p.updatedAt = S.now(); addHistory(p, 'withdraw', 'Lưu trữ do trùng với ' + p.targetId + ' v' + p.targetVersion + ': ' + p.rationale); S.log('proposal.withdraw', p.id, p.targetId); }, 'Đã lưu trữ đề xuất trùng; nội dung cũ được giữ.', false)) { S.closeModal(); S.render(); }
   };
   S.actions['k-accept-suggestion'] = function (el) {
-    const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p) || !p.suggestion) return;
+    const p = S.db.proposals.find(x => x.id === el.dataset.id); if (!ownership(p)) return;
     if (S.commit(() => { p.content[p.suggestion.field] = p.suggestion.text; p.response = 'Đã đọc và áp dụng nội dung người duyệt đề nghị; tiếp tục kiểm tra toàn bộ bản đề xuất.'; p.suggestion.acceptedAt = S.now(); stamp(p, 'Tác giả áp dụng đề nghị sửa; cần xác nhận và đối chiếu lại'); }, 'Đã áp dụng đề nghị. Kiểm tra và đối chiếu lại trước khi gửi.')) return;
   };
 
@@ -811,7 +1986,30 @@
     if (decision === 'approve' && ['update', 'link'].includes(p.mode) && (!target || target.version !== p.targetVersion)) return S.error(form, 'Phiên bản nguồn đã thay đổi. Yêu cầu tác giả đối chiếu và gửi lại trước khi duyệt.');
     if (decision === 'approve' && p.origin === 'case' && !S.db.cases.some(c => c.id === p.caseId && c.reportState === 'confirmed')) return S.error(form, 'Báo cáo nguồn chưa còn ở trạng thái đã xác nhận. Cần đối chiếu lại với tác giả.');
     pendingDecision = { id: p.id, version: p.version, decision, feedback, suggestField, suggestText, editorialTitle, editorialNote };
-    S.modal('Xác nhận quyết định', '<div class="stack"><h3>' + e(({ approve: 'Phê duyệt và đưa vào kho', changes: 'Chuyển về tác giả bổ sung', reject: 'Từ chối đề xuất tri thức' })[decision]) + '</h3><p>' + e(p.title) + ' · bản ' + p.version + '</p><div class="notice notice-info">' + e(feedback) + '</div>' + (suggestText ? '<p><strong>Đề nghị sửa:</strong></p>' + preserved(suggestText) : '') + '<p>Quyết định chỉ áp dụng cho đề xuất tri thức; báo cáo và lịch sử công việc nguồn được giữ nguyên.</p></div>', btn('Quay lại', 'k-close') + btn('Xác nhận quyết định', 'k-confirm-decision', 'primary'));
+    const decisionLabels = { approve: 'Phê duyệt và đưa vào kho', changes: 'Chuyển về tác giả bổ sung', reject: 'Từ chối đề xuất tri thức' };
+    const decisionTones = { approve: 'green', changes: 'amber', reject: 'red' };
+    const bodyHtml = `
+      <div class="stack">
+        <div class="modal-confirm-card">
+          <div class="confirm-card-badges">
+            ${S.badge(decisionLabels[decision], decisionTones[decision] || 'blue')}
+            <span class="badge badge-neutral">Bản ${p.version}</span>
+          </div>
+          <h3 class="confirm-card-title">${e(p.title)}</h3>
+        </div>
+        <div class="notice notice-info">
+          <strong>Ý kiến kiểm duyệt:</strong><br>${e(feedback)}
+        </div>
+        ${suggestText ? `
+          <div class="suggest-box">
+            <strong>Đề nghị sửa cụ thể:</strong>
+            ${preserved(suggestText)}
+          </div>
+        ` : ''}
+        <p class="field-hint">Quyết định chỉ áp dụng cho đề xuất tri thức; báo cáo và lịch sử công việc nguồn được giữ nguyên.</p>
+      </div>
+    `;
+    S.modal('Xác nhận quyết định kiểm duyệt', bodyHtml, btn('Quay lại', 'k-close', 'secondary') + btn('Xác nhận quyết định', 'k-confirm-decision', 'primary'));
   };
   S.actions['k-confirm-decision'] = function () {
     const d = pendingDecision;
@@ -859,7 +2057,7 @@
     const report = p.reportSnapshot || c.report || {};
     const sourceNotice = '<div class="notice notice-info">Bản báo cáo nguồn tại thời điểm tạo đề xuất · ' + e(report.id || '') + ' · revision ' + e(report.revision || 1) + '. Kiểm duyệt tri thức không sửa báo cáo hay kết quả công việc này.</div>' + ((liveCase?.report?.revision !== report.revision || liveCase?.reportState !== 'confirmed') ? '<div class="notice notice-warning">Báo cáo hiện tại đang được đính chính hoặc đã có phiên bản khác. Bản nguồn đã chọn được giữ nguyên để đối chiếu; cần xác minh trước khi duyệt tri thức.</div>' : '');
     const raw = typeof report.summary === 'string' ? report.summary : JSON.stringify(report.summary || '', null, 2);
-    S.modal('Báo cáo nguồn · ' + c.id, '<div class="stack">' + sourceNotice + '<h3>' + e(c.title) + '</h3><dl class="kv-list"><dt>Máy</dt><dd>' + e(c.assetId) + '</dd><dt>Người phụ trách</dt><dd>' + e(S.person(c.ownerId)) + '</dd><dt>Trạng thái báo cáo</dt><dd>' + e(c.reportState === 'confirmed' ? 'Đã xác nhận' : c.reportState) + '</dd><dt>Số đợt xử lý</dt><dd>' + (c.rounds || []).length + '</dd></dl><h3>Tổng kết</h3>' + preserved(raw) + '<h3>Nguyên nhân / trạng thái xác minh</h3>' + preserved(report.cause) + '<h3>Bài học</h3>' + preserved(report.lessons) + '<h3>Giới hạn</h3>' + preserved(report.limits) + '<h3>Các đợt và ghi nhận</h3>' + (c.rounds || []).map((r, i) => '<section class="card"><div class="card-body"><h4>Đợt ' + (i + 1) + ' · ' + e(r.id || '') + '</h4>' + preserved(r.summary || r.result || '') + '<div class="stack">' + (r.events || r.entries || []).map(ev => '<div><strong>' + e(S.person(ev.performedBy || ev.performerId || c.ownerId)) + '</strong><span class="source-meta"> · người nhập ' + e(S.person(ev.enteredBy || ev.recordedBy || c.ownerId)) + '</span>' + preserved(ev.content || ev.text || ev.note) + '</div>').join('') + '</div></div></section>').join('') + '</div>', btn('Đóng báo cáo nguồn', 'k-close', 'primary'));
+    S.modal(c.id + ' — Báo cáo kỹ thuật nguồn', '<div class="stack">' + sourceNotice + '<h3>' + e(c.title) + '</h3><dl class="kv-list"><dt>Máy</dt><dd>' + e(c.assetId) + '</dd><dt>Người phụ trách</dt><dd>' + e(S.person(c.ownerId)) + '</dd><dt>Trạng thái báo cáo</dt><dd>' + e(c.reportState === 'confirmed' ? 'Đã xác nhận' : c.reportState) + '</dd><dt>Số đợt xử lý</dt><dd>' + (c.rounds || []).length + '</dd></dl><h3>Tổng kết</h3>' + preserved(raw) + '<h3>Nguyên nhân / trạng thái xác minh</h3>' + preserved(report.cause) + '<h3>Bài học</h3>' + preserved(report.lessons) + '<h3>Giới hạn</h3>' + preserved(report.limits) + '<h3>Các đợt và ghi nhận</h3>' + (c.rounds || []).map((r, i) => '<section class="card"><div class="card-body"><h4>Đợt ' + (i + 1) + ' · ' + e(r.id || '') + '</h4>' + preserved(r.summary || r.result || '') + '<div class="stack">' + (r.events || r.entries || []).map(ev => '<div><strong>' + e(S.person(ev.performedBy || ev.performerId || c.ownerId)) + '</strong><span class="source-meta"> · người nhập ' + e(S.person(ev.enteredBy || ev.recordedBy || c.ownerId)) + '</span>' + preserved(ev.content || ev.text || ev.note) + '</div>').join('') + '</div></div></section>').join('') + '</div>', btn('Đóng báo cáo nguồn', 'k-close', 'primary'));
   };
   S.actions['k-submission'] = function (el) {
     const p = S.db.proposals.find(x => x.id === el.dataset.id);
@@ -867,7 +2065,7 @@
     const sub = (p.submissions || []).find(x => x.id === el.dataset.submission);
     if (!sub) return S.toast('Không tìm thấy bản đã gửi.', 'warning');
     const snapshot = sub.snapshot;
-    S.modal(p.id + ' · Bản đã gửi ' + sub.version, '<div class="stack"><div class="notice notice-info">Bản chụp lúc gửi ' + e(S.fmtDate(sub.at)) + '. Đây là nội dung lịch sử chỉ đọc.</div><h3>' + e(snapshot.title) + '</h3><p>' + e(modes[snapshot.mode]) + ' · ' + e(snapshot.family) + '</p><h3>Căn cứ và phản hồi của tác giả</h3>' + preserved(snapshot.rationale) + preserved(snapshot.response) + contentView(snapshot.content) + '</div>', btn('Đóng bản lịch sử', 'k-close', 'primary'));
+    S.modal(p.id + ' · v' + sub.version + ' — Bản chụp lúc gửi', '<div class="stack"><div class="notice notice-info">Bản chụp lúc gửi ' + e(S.fmtDate(sub.at)) + '. Đây là nội dung lịch sử chỉ đọc.</div><h3>' + e(snapshot.title) + '</h3><p>' + e(modes[snapshot.mode]) + ' · ' + e(snapshot.family) + '</p><h3>Căn cứ và phản hồi của tác giả</h3>' + preserved(snapshot.rationale) + preserved(snapshot.response) + contentView(snapshot.content) + '</div>', btn('Đóng bản lịch sử', 'k-close', 'primary'));
   };
   S.createCaseProposal = function (caseRecord) {
     const c = caseRecord && S.db.cases.find(x => x.id === caseRecord.id);

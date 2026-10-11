@@ -145,13 +145,89 @@
   let lastFocus;
   SM.modal = (title, body, footer = '') => {
     const modal = document.getElementById('modal');
+    if (!modal) return;
     lastFocus = document.activeElement;
-    modal.innerHTML = `<div class="modal-head"><h2 id="modal-title">${SM.e(title)}</h2><button type="button" class="icon-btn" data-action="close-modal" aria-label="Đóng">${SM.icon('close')}</button></div><div class="modal-body">${body}</div>${footer ? `<div class="modal-footer">${footer}</div>` : ''}`;
+
+    // Reset modifier classes
+    modal.className = 'modal';
+
+    // Auto-detect sizing
+    const bodyStr = String(body);
+    const titleStr = String(title);
+    if (bodyStr.includes('kd-section-card') || bodyStr.includes('modal-content-view') || bodyStr.includes('table-wrap') || bodyStr.includes('grid-3') || titleStr.includes('Báo cáo nguồn') || titleStr.includes('nội dung theo biểu mẫu') || titleStr.includes('Hồ sơ tham chiếu')) {
+      modal.classList.add('modal--large');
+    } else if (titleStr.includes('tài khoản') || titleStr.includes('Khởi tạo lại') || titleStr.includes('chưa lưu') || titleStr.includes('Chưa thể hỗ trợ') || titleStr.includes('tham gia')) {
+      modal.classList.add('modal--medium');
+    }
+
+    // Smart Title & Header formatting
+    let headHtml = '';
+    const codeMatch = titleStr.match(/^([A-Z]{2,}(?:-[A-Z0-9]+)+)\s*(?:·\s*(?:v(\d+)|Bản\s*(\d+)|revision\s*(\d+)))?\s*(?:—|·|-)\s*(.+)$/i)
+      || titleStr.match(/^(.+?)\s*·\s*([A-Z]{2,}(?:-[A-Z0-9]+)+)(.*)$/i);
+
+    if (codeMatch) {
+      let code, version, cleanTitle;
+      if (titleStr.startsWith(codeMatch[1])) {
+        code = codeMatch[1];
+        version = codeMatch[2] ? 'v' + codeMatch[2] : (codeMatch[3] ? 'Bản ' + codeMatch[3] : (codeMatch[4] ? 'Rev ' + codeMatch[4] : ''));
+        cleanTitle = codeMatch[5] || '';
+      } else {
+        cleanTitle = codeMatch[1] || '';
+        code = codeMatch[2] || '';
+        version = (codeMatch[3] || '').trim();
+      }
+      headHtml = `
+        <div class="modal-head">
+          <div class="modal-head-main">
+            <div class="modal-head-eyebrow">
+              <span class="badge badge-case-id mono">${SM.e(code)}</span>
+              ${version ? `<span class="badge badge-neutral">${SM.e(version)}</span>` : ''}
+            </div>
+            <h2 id="modal-title" class="modal-title">${SM.e(cleanTitle || titleStr)}</h2>
+          </div>
+          <button type="button" class="modal-close-btn" data-action="close-modal" aria-label="Đóng">${SM.icon('close')}</button>
+        </div>
+      `;
+    } else {
+      let iconName = 'file';
+      let iconTone = '';
+      const lower = titleStr.toLowerCase();
+      if (lower.includes('tài khoản') || lower.includes('chuyên gia') || lower.includes('đăng nhập')) {
+        iconName = 'users';
+      } else if (lower.includes('cảnh báo') || lower.includes('lưu ý') || lower.includes('chưa lưu') || lower.includes('khởi tạo')) {
+        iconName = 'alert';
+        iconTone = 'icon-alert';
+      } else if (lower.includes('duyệt') || lower.includes('quyết định') || lower.includes('xác nhận')) {
+        iconName = 'shield';
+        iconTone = 'icon-shield';
+      } else if (lower.includes('kết quả') || lower.includes('thành công')) {
+        iconName = 'checkcircle';
+        iconTone = 'icon-shield';
+      }
+
+      headHtml = `
+        <div class="modal-head">
+          <div class="modal-head-main">
+            <div class="modal-head-title-row">
+              <span class="modal-head-icon ${iconTone}">${SM.icon(iconName)}</span>
+              <h2 id="modal-title" class="modal-title">${SM.e(titleStr)}</h2>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" data-action="close-modal" aria-label="Đóng">${SM.icon('close')}</button>
+        </div>
+      `;
+    }
+
+    modal.innerHTML = `${headHtml}<div class="modal-body">${body}</div>${footer ? `<div class="modal-footer">${footer}</div>` : ''}`;
     if (!modal.open) modal.showModal();
   };
   SM.closeModal = () => {
     const el = document.getElementById('modal');
-    if (el?.open) el.close();
+    if (el) {
+      if (el.open) el.close();
+      el.className = 'modal';
+      el.innerHTML = '';
+    }
     if (lastFocus?.isConnected) lastFocus.focus();
   };
   SM.error = (parent, text) => {
@@ -168,18 +244,34 @@
     const captured = SM.captureInputs();
     SM.recovery = { route: { ...SM.ui }, capturedAt: SM.now(), inputs: captured };
     leaveAction = next;
-    SM.modal('Có nội dung chưa lưu', '<p>Trình duyệt chưa xác nhận lưu thay đổi. Xuất nội dung đang nhập trước khi rời trang.</p><p class="field-hint">Nếu có tab khác thay đổi dữ liệu, hãy xuất nội dung rồi tải lại để đối chiếu; không ghi đè tự động.</p>', SM.button('Xuất nội dung đang nhập', 'export-unsaved') + SM.button('Ở lại', 'close-modal') + SM.button('Rời và bỏ thay đổi chưa lưu', 'leave-unsaved', 'danger'));
+    const bodyHtml = `
+      <div class="stack">
+        <div class="notice notice-warning">
+          <strong>Cảnh báo:</strong> Trình duyệt chưa xác nhận lưu thay đổi bạn vừa nhập vào hệ thống.
+        </div>
+        <p>Nếu bạn rời trang ngay bây giờ, các nội dung chưa lưu có thể bị mất. Bạn nên xuất nội dung đang nhập trước khi chuyển màn hình.</p>
+        <p class="field-hint">Nếu có tab trình duyệt khác thay đổi dữ liệu, hãy xuất nội dung rồi tải lại để đối chiếu; hệ thống không tự động ghi đè.</p>
+      </div>
+    `;
+    const footerHtml = SM.button('Xuất nội dung đang nhập', 'export-unsaved', 'secondary') + SM.button('Ở lại tiếp tục', 'close-modal', 'secondary') + SM.button('Rời và bỏ thay đổi', 'leave-unsaved', 'danger');
+    SM.modal('Có nội dung chưa lưu', bodyHtml, footerHtml);
     return false;
   };
   SM.go = (page, id = null, tab = null) => {
     if (!SM.allowed(page)) { SM.toast('Tài khoản này không có quyền mở chức năng đó.', 'warning'); return; }
     if (!SM.guardLeave(() => SM.go(page, id, tab))) return;
     SM.closeModal();
-    if (SM.ui.page && SM.ui.page !== 'notifications') SM.prevPage = SM.ui.page;
+    if (SM.ui.page && SM.ui.page !== 'notifications') {
+      SM.prevRoute = { page: SM.ui.page, id: SM.ui.id, tab: SM.ui.tab };
+      SM.prevPage = SM.ui.page;
+      try { sessionStorage.setItem('smartmaint-prev-route', JSON.stringify(SM.prevRoute)); } catch (_) {}
+    }
     SM.ui = { ...SM.ui, page, id, tab, menuOpen: false };
     const hash = '#' + [page, id || '', tab || ''].map(encodeURIComponent).join('/').replace(/\/+$/, '');
     try { history.pushState(null, '', hash); } catch (_) { location.hash = hash; }
-    SM.render(); window.scrollTo({ top: 0, behavior: 'instant' });
+    SM.render();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'instant' });
     requestAnimationFrame(() => document.getElementById('page-title')?.focus({ preventScroll: true }));
   };
   SM.login = id => {

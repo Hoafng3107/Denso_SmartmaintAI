@@ -482,7 +482,7 @@
     </nav>
     `;
   }
-  S.pages.case = {title:'Chi tiết ca bảo trì',roles,render:() => {const c=current();if(!viewable(c))return S.empty('Không thể mở ca','Ca không tồn tại hoặc bạn chưa được phân công tham gia.');const tab=S.ui.tab||(c.workState==='ended'?'report':'work');return header(c)+(tab==='context'?renderContext(c):tab==='sources'?renderSources(c):tab==='report'?renderReport(c):renderWork(c));}};
+  S.pages.case = {title:'Chi tiết ca bảo trì',roles,render:() => {const c=current();if(!viewable(c))return S.empty('Không thể mở ca','Ca không tồn tại hoặc bạn chưa được phân công tham gia.',button('Về danh sách ca','case-list','primary'));const tab=S.ui.tab||(c.workState==='ended'?'report':'work');return header(c)+(tab==='context'?renderContext(c):tab==='sources'?renderSources(c):tab==='report'?renderReport(c):renderWork(c));}};
   S.actions['case-tab'] = el => {const c=get(el.dataset.case);if(protect(c,'view'))S.go('case',c.id,el.dataset.tab);};
   function renderContext(c) {
     const a = S.asset(c.assetId), x = c.context || {}, disabled = owner(c) && c.workState !== 'ended' ? '' : 'disabled';
@@ -545,37 +545,583 @@
   S.inputs['case-context'] = el => {const c=get(el.dataset.case);if(!protect(c)||c.workState==='ended')return;const index=Number(el.name.split('_')[1]);const old=el.name.startsWith('change_')?c.context.changes[index].status:el.name.startsWith('detail_')?c.context.changes[index].detail:c.context[el.name];if(old===el.value)return;S.commit(()=>{if(el.name.startsWith('change_'))c.context.changes[index].status=el.value;else if(el.name.startsWith('detail_'))c.context.changes[index].detail=el.value;else c.context[el.name]=el.value;if(c.retrieval)c.retrieval.stale=true;dirtyReport(c);c.updatedAt=stamp();},null,false);};
   S.actions['case-reference'] = el => {
     const a=S.asset(el.dataset.asset);if(!a)return;
-    S.modal(`Hồ sơ tham chiếu · ${a.id}`,`<div class="stack"><div class="notice notice-info">HozenDX mô phỏng · chỉ đọc · dữ liệu lấy lúc ${h(sourceTime(a))}. Chưa có kết nối tới nhà máy.</div><h3>Lịch sử BM / PM</h3>${(a.history||[]).map(x=>`<div class="source-card"><div class="source-meta">${badge(x.type,'neutral')}<span>${h(x.id)}</span><span>${h(S.fmtDate(x.date,false))}</span></div><p>${h(x.summary)}</p><span class="field-hint">Hồ sơ tham chiếu, chưa mặc nhiên là tri thức đã duyệt.</span></div>`).join('')||'<p class="muted">Chưa có lịch sử trong bộ dữ liệu mô phỏng.</p>'}<h3>Tài liệu / quy trình tham chiếu</h3>${(a.references||[]).map(x=>`<div class="source-card"><h4>${h(x.title)}</h4><div class="source-meta">${h(x.id)} · ${h(x.type)} · phiên bản ${h(x.version)}</div><p>${h(x.summary)}</p></div>`).join('')||'<p class="muted">Chưa có tài liệu phù hợp được cung cấp.</p>'}<p class="field-hint">Đối chiếu quy trình có hiệu lực và quyền thao tác trước khi áp dụng.</p></div>`);
+    const bodyHtml = `
+      <div class="stack">
+        <div class="notice notice-info">
+          ${icon('info')}
+          <div>HozenDX mô phỏng · Dữ liệu chỉ đọc trích xuất lúc <strong>${h(sourceTime(a))}</strong>. Chưa có kết nối PLC/SCADA trực tiếp tới nhà máy.</div>
+        </div>
+        <h3>Lịch sử bảo trì BM / PM thiết bị</h3>
+        ${(a.history||[]).map(x=>`
+          <div class="source-card">
+            <div class="source-meta">
+              ${badge(x.type,'neutral')}
+              <strong>${h(x.id)}</strong>
+              <span>${h(S.fmtDate(x.date,false))}</span>
+            </div>
+            <p>${h(x.summary)}</p>
+            <span class="field-hint">Hồ sơ tham chiếu lịch sử; chưa mặc nhiên là tri thức đã ban hành.</span>
+          </div>
+        `).join('')||'<p class="muted">Chưa có lịch sử trong bộ dữ liệu mô phỏng.</p>'}
+        <h3>Tài liệu & Tiêu chuẩn vận hành (SOP/WI)</h3>
+        ${(a.references||[]).map(x=>`
+          <div class="source-card">
+            <h4>${h(x.title)}</h4>
+            <div class="source-meta">
+              <strong>${h(x.id)}</strong> · ${h(x.type)} · Phiên bản ${h(x.version)}
+            </div>
+            <p>${h(x.summary)}</p>
+          </div>
+        `).join('')||'<p class="muted">Chưa có tài liệu phù hợp được cung cấp.</p>'}
+        <p class="field-hint">Luôn đối chiếu quy trình có hiệu lực và thẩm quyền thao tác trước khi can thiệp thiết bị.</p>
+      </div>
+    `;
+    S.modal(`${a.id} — Hồ sơ tham chiếu thiết bị`, bodyHtml, button('Đóng hồ sơ', 'close-modal', 'primary'));
   };
 
   function retrievalSources(c) {return (c.retrieval?.sources||[]).map(x=>S.getKnowledge(x.id,x.version)).filter(Boolean);}
   function renderSourceExtracts(c,list) {
-    return `<div class="stack"><h3>Các kiểm tra được trích từ nguồn</h3>${list.slice(0,3).map(k=>`<div class="source-card stack"><div class="source-meta">${h(k.id)} · v${h(k.version)} · ${h(k.title)}</div><p>${h(k.content?.checks||'Nguồn chưa mô tả bước kiểm tra.')}</p><p class="field-hint"><strong>Bối cảnh nguồn:</strong> ${h(k.content?.context||'Chưa mô tả đủ.')}<br><strong>Hồ sơ hiện tại:</strong> ${h(c.context?.productModel||'Chưa rõ model sản phẩm')} · ${h(c.context?.mode||'Chưa rõ chế độ')}. Cần người thực hiện xác minh mức phù hợp trước khi chọn.</p>${button('Đọc căn cứ và giới hạn','case-source-read','secondary',`${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}"`)}</div>`).join('')}</div>`;
+    return `
+    <div class="extracts-container">
+      <div class="extracts-header">
+        <span class="extracts-title-badge">${icon('checkcircle')} Kiểm tra trọng tâm trích từ nguồn</span>
+        <span class="field-hint">Trích xuất từ ${Math.min(list.length, 3)} nguồn có độ tương đồng cao nhất</span>
+      </div>
+      <div class="extracts-cards-stack">
+        ${list.slice(0,3).map(k=>`
+        <div class="extract-item-card">
+          <div class="extract-item-head">
+            <div class="extract-source-meta">
+              <span class="badge ${k.kind==='case'?'badge-blue':'badge-purple'}">${k.kind==='case'?'Case đã duyệt':'Tri thức chuyên gia'}</span>
+              <strong class="extract-source-code">${h(k.id)} · v${h(k.version)}</strong>
+              <span class="extract-source-title">${h(k.title)}</span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs btn-extract-read"
+              data-action="case-source-read" ${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}">
+              ${icon('file')}
+              <span>Đọc căn cứ & giới hạn</span>
+            </button>
+          </div>
+          <div class="extract-checks-box">
+            <span class="checks-label">HÀNH ĐỘNG KIỂM TRA ĐỀ XUẤT</span>
+            <p class="checks-content">${h(k.content?.checks||'Nguồn chưa mô tả bước kiểm tra chi tiết.')}</p>
+          </div>
+          <div class="extract-context-compare">
+            <div class="compare-item">
+              <span class="compare-tag">Bối cảnh nguồn:</span>
+              <span class="compare-text">${h(k.content?.context||'Chưa mô tả đủ.')}</span>
+            </div>
+            <div class="compare-item compare-current">
+              <span class="compare-tag">Hồ sơ hiện tại:</span>
+              <span class="compare-text">${h(c.context?.productModel||'Chưa rõ model')} · ${h(c.context?.mode||'Chưa rõ chế độ')}</span>
+            </div>
+          </div>
+        </div>
+        `).join('')}
+      </div>
+    </div>
+    `;
   }
+
   function renderSources(c) {
-    const a=S.asset(c.assetId),list=retrievalSources(c),can=editable(c);
-    return `<div class="stack"><section class="card"><div class="card-body"><div class="page-head"><div><h2>Tra cứu theo hồ sơ</h2><p class="subtext">${h(c.context?.symptom || c.title)} · ${h(a?.family)} · ${h(c.context?.productModel || 'Chưa rõ model sản phẩm')}</p></div>${can?button(c.retrieval?'Tra cứu lại':'Tìm nguồn liên quan','case-search','primary',cid(c)):''}</div><p class="field-hint">Nguồn được lọc theo nhóm máy; mức phù hợp cần xác minh theo điều kiện thực tế.</p>${c.retrieval?.stale?'<div class="notice notice-warning">Bối cảnh đã thay đổi sau lần tra cứu. Hãy tra cứu lại trước khi chọn hướng.</div>':''}</div></section>${!c.retrieval?S.empty('Bắt đầu từ nguồn đã được duyệt','Tra cứu để đọc case và tri thức chuyên gia liên quan đến nhóm máy.'):!list.length?`<div class="notice notice-warning"><h3>Chưa có nguồn đã duyệt phù hợp nhóm máy</h3><p>Chưa đủ căn cứ để gợi ý hướng xử lý. Bổ sung dữ kiện và yêu cầu chuyên gia đánh giá tại hiện trường.</p>${owner(c)?button('Yêu cầu chuyên gia','case-support','primary',cid(c)):''}</div>`:`<div><div class="section-title"><h2>Nguồn tham khảo (${list.length})</h2><span class="muted">Lần tra cứu ${h(S.fmtDate(c.retrieval.at))}</span></div><div class="grid-3">${list.slice(0,c.retrieval.showAll?99:3).map(k=>`<article class="source-card stack"><div class="actions">${badge(k.kind==='case'?'Case đã duyệt':'Tri thức chuyên gia','blue')}${badge(`v${k.version}`,'neutral')}</div><h3>${h(k.title)}</h3><p class="source-meta">${h(k.id)} · ${h(S.person(k.authorId))}</p><p><strong>Dấu hiệu nguồn:</strong> ${h(k.content?.symptom||'Chưa có')}</p><p><strong>Phù hợp đã biết:</strong> cùng nhóm máy ${h(k.family)}.</p><p><strong>Cần đối chiếu:</strong> model sản phẩm, chế độ, bằng chứng kiểm tra và phạm vi áp dụng.</p><p class="field-hint">${h(k.content?.limits||'Cần đọc giới hạn trong nguồn trước khi tham khảo.')}</p><div class="actions">${button('Đọc nguồn','case-source-read','secondary',`${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}"`)}${can&&c.workState==='active'?button((c.selectedSources||[]).some(x=>x.id===k.id&&x.version===k.version)?'Đã chọn tham khảo':'Chọn tham khảo','case-source-pick','ghost',`${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}" ${c.retrieval.stale?'disabled':''}`):''}</div></article>`).join('')}</div>${list.length>3&&!c.retrieval.showAll?button('Xem thêm nguồn','case-more-sources','secondary',cid(c)):''}</div><section class="card"><div class="card-head"><h2>Tóm tắt hỗ trợ quyết định</h2>${badge('AI mô phỏng','purple')}</div><div class="card-body stack">${renderSourceExtracts(c,list)}<p><strong>Đã biết:</strong> ${h(c.context?.symptom||c.title)}. Có ${events(c).length} ghi nhận hiện trường trong ${c.rounds.length} đợt.</p><p><strong>Còn thiếu:</strong> cần xác minh mức phù hợp của từng nguồn với điều kiện và bằng chứng trong hồ sơ này. Cùng nhóm máy chưa chứng minh cùng nguyên nhân.</p><div class="grid-3"><div><h3>Trước mắt</h3><p>Đọc mục kiểm tra và giới hạn ở nguồn đã duyệt. Chọn bước kiểm tra phù hợp sau khi xác minh điều kiện an toàn.</p></div><div><h3>Theo dõi / trung hạn</h3><p>Ghi kết quả và tình huống tái phát. Chỉ đưa kế hoạch sửa chữa vào báo cáo khi có người phụ trách xác nhận.</p></div><div><h3>Cải tiến / dài hạn</h3><p>Chưa đủ căn cứ tự đề xuất thay thế thiết bị. Chuyên gia đánh giá từ lịch sử và bằng chứng tích lũy.</p></div></div><div class="notice notice-warning"><strong>An toàn trước thao tác</strong><p>${h(list[0]?.content?.safety||'Chưa có quy trình an toàn phù hợp được xác minh.')}</p><p>Mở quy trình theo máy và xác minh hiệu lực trước khi thực hiện. Chọn nguồn không đồng nghĩa được phép vận hành.</p>${button('Mở tham chiếu theo máy','case-reference','secondary',`data-asset="${h(c.assetId)}"`)}</div><div class="actions">${button('Ghi thêm kiểm tra','case-tab','primary',`${cid(c)} data-tab="work"`)}${owner(c)&&c.workState!=='ended'?button('Yêu cầu chuyên gia','case-support','secondary',cid(c)):''}</div></div></section>`}</div>`;
+    const a = S.asset(c.assetId), list = retrievalSources(c), can = editable(c);
+    return `
+    <div class="sources-workspace stack">
+      <section class="card sources-hub-card">
+        <div class="card-body">
+          <div class="sources-hub-header">
+            <div class="sources-hub-left">
+              <div class="sources-badge-eyebrow">
+                <span class="badge-ai-intel">${icon('spark')} Trợ lý AI tra cứu & căn cứ</span>
+                <span class="hub-family-tag">Nhóm máy: <strong>${h(a?.family || 'Chung')}</strong></span>
+              </div>
+              <h2 class="sources-hub-title">Tra cứu căn cứ & tri thức đề xuất</h2>
+              <div class="sources-query-context">
+                <div class="query-symptom-box">
+                  <span class="query-label">DẤU HIỆU HIỆN TRƯỜNG</span>
+                  <p class="query-text">${h(c.context?.symptom || c.title)}</p>
+                </div>
+                <div class="query-meta-chips">
+                  <span class="query-chip">
+                    ${icon('machine')}
+                    <span>Thiết bị: <strong>${h(c.assetId)}</strong> (${h(a?.name || '')})</span>
+                  </span>
+                  <span class="query-chip">
+                    ${icon('file')}
+                    <span>Model: <strong>${h(c.context?.productModel || 'Chưa rõ')}</strong></span>
+                  </span>
+                  ${c.retrieval ? `
+                  <span class="query-chip chip-timestamp">
+                    ${icon('clock')}
+                    <span>Lần tra cứu: <strong>${h(S.fmtDate(c.retrieval.at))}</strong></span>
+                  </span>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="sources-hub-actions">
+              ${can ? `
+              <button type="button" class="btn btn-primary btn-search-ai ${c._isSearching ? 'is-loading' : ''}" 
+                data-action="case-search" ${cid(c)} ${c._isSearching ? 'disabled' : ''}>
+                ${icon('spark')}
+                <span>${c._isSearching ? 'Đang phân tích...' : c.retrieval ? 'Tra cứu lại' : 'Tìm nguồn liên quan'}</span>
+              </button>
+              ` : ''}
+            </div>
+          </div>
+          ${c.retrieval?.stale ? `
+          <div class="notice notice-warning sources-stale-alert">
+            ${icon('alert')}
+            <div class="stale-alert-content">
+              <strong>Bối cảnh hiện trường đã thay đổi sau lần tra cứu</strong>
+              <p>Dữ liệu bối cảnh hoặc điều kiện máy vừa được chỉnh sửa. Nhấn <strong>"Tra cứu lại"</strong> để cập nhật phân tích mới nhất.</p>
+            </div>
+          </div>` : ''}
+        </div>
+      </section>
+
+      ${c._isSearching ? `
+      <section class="card ai-search-loading-card" role="status" aria-live="polite">
+        <div class="ai-loading-glow"></div>
+        <div class="ai-loading-header">
+          <div class="ai-radar-container">
+            <div class="ai-radar-pulse"></div>
+            <div class="ai-radar-core">
+              ${icon('spark')}
+            </div>
+          </div>
+          <div class="ai-loading-title-wrap">
+            <div class="ai-chip-pill">
+              <span class="ai-chip-dot"></span>
+              <span>SMARTMAINT AI ENGINE</span>
+            </div>
+            <h3 class="ai-loading-title">Đang đối chiếu dữ kiện & quét kho tri thức...</h3>
+            <p class="ai-loading-subtitle">
+              Phân tích bối cảnh máy <strong>${h(c.assetId)}</strong> (${h(a?.family || 'Nhóm máy')}), đối chiếu dấu hiệu lỗi và trích xuất các case tương đồng đã duyệt.
+            </p>
+          </div>
+        </div>
+
+        <div class="ai-progress-track">
+          <div class="ai-progress-bar" style="width: ${c._searchProgress || 25}%;">
+            <div class="ai-progress-shimmer"></div>
+          </div>
+        </div>
+
+        <div class="ai-pipeline-steps">
+          <div class="ai-pipeline-step ${(c._searchProgress || 0) >= 15 ? 'is-active' : ''} ${(c._searchProgress || 0) >= 60 ? 'is-done' : ''}">
+            <div class="step-marker">${(c._searchProgress || 0) >= 60 ? icon('check') : '1'}</div>
+            <div class="step-info">
+              <strong>Phân tích bối cảnh & triệu chứng</strong>
+              <span>Trích xuất alarm, model và hiện tượng quan sát</span>
+            </div>
+          </div>
+
+          <div class="ai-pipeline-step ${(c._searchProgress || 0) >= 60 ? 'is-active' : ''} ${(c._searchProgress || 0) >= 90 ? 'is-done' : ''}">
+            <div class="step-marker">${(c._searchProgress || 0) >= 90 ? icon('check') : '2'}</div>
+            <div class="step-info">
+              <strong>Quét tri thức & Case tương đồng</strong>
+              <span>Đối chiếu nhóm máy ${h(a?.family || '')} với cẩm nang chuyên gia</span>
+            </div>
+          </div>
+
+          <div class="ai-pipeline-step ${(c._searchProgress || 0) >= 90 ? 'is-active' : ''}">
+            <div class="step-marker">3</div>
+            <div class="step-info">
+              <strong>Tổng hợp khuyến nghị & quy chuẩn an toàn</strong>
+              <span>Lập lộ trình hành động 3 cấp độ và SOP an toàn</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      ` : ''}
+
+      ${!c.retrieval && !c._isSearching ? `
+      <div class="empty-state ai-welcome-empty">
+        <div class="empty-icon-halo">${icon('spark')}</div>
+        <h3>Bắt đầu tra cứu căn cứ từ tri thức đã duyệt</h3>
+        <p>Hệ thống AI sẽ phân tích triệu chứng hiện trường và đề xuất các bài học từ ca, quy trình kiểm tra đã được phê duyệt cho nhóm máy <strong>${h(a?.family || 'thiết bị')}</strong>.</p>
+        ${can ? `
+        <button type="button" class="btn btn-primary" data-action="case-search" ${cid(c)}>
+          ${icon('spark')}
+          <span>Khởi chạy AI tra cứu</span>
+        </button>
+        ` : ''}
+      </div>
+      ` : !list.length && !c._isSearching ? `
+      <div class="notice notice-warning sources-not-found-notice">
+        <div class="notice-icon-wrap">${icon('alert')}</div>
+        <div class="notice-body-wrap">
+          <h3>Chưa tìm thấy nguồn đã duyệt phù hợp nhóm máy ${h(a?.family || '')}</h3>
+          <p>Chưa đủ dữ liệu bài học đã duyệt để tự động gợi ý hướng xử lý. Cần bổ sung thêm thông số kiểm tra hiện trường hoặc mời chuyên gia hỗ trợ trực tiếp.</p>
+          ${owner(c) ? `
+          <div class="actions" style="margin-top: 12px;">
+            <button type="button" class="btn btn-primary" data-action="case-support" ${cid(c)}>
+              ${icon('users')}
+              <span>Yêu cầu chuyên gia hỗ trợ</span>
+            </button>
+          </div>` : ''}
+        </div>
+      </div>
+      ` : !c._isSearching ? `
+      <div class="sources-results-block">
+        <div class="sources-section-head">
+          <div class="section-head-left">
+            <h2 class="sources-section-title">
+              Nguồn tham khảo đã duyệt
+              <span class="sources-count-badge">${list.length}</span>
+            </h2>
+            <p class="subtext">Các case thực tế và bài học chuyên gia tương đồng cùng nhóm máy <strong>${h(a?.family || '')}</strong>.</p>
+          </div>
+        </div>
+
+        <div class="sources-grid">
+          ${list.slice(0, c.retrieval.showAll ? 99 : 3).map(k => {
+            const isPicked = (c.selectedSources || []).some(x => x.id === k.id && x.version === k.version);
+            const isExpert = k.kind !== 'case';
+            return `
+            <article class="source-item-card ${isPicked ? 'is-picked' : ''}">
+              <div class="source-card-top">
+                <div class="source-type-badges">
+                  <span class="badge ${isExpert ? 'badge-expert-knowledge' : 'badge-case-approved'}">
+                    ${isExpert ? icon('book') : icon('wrench')}
+                    <span>${isExpert ? 'Tri thức chuyên gia' : 'Case đã duyệt'}</span>
+                  </span>
+                  <span class="badge badge-version">v${h(k.version)}</span>
+                </div>
+                <div class="source-author-meta">
+                  <span class="source-id-pill">${h(k.id)}</span>
+                  <span class="source-author-name">${h(S.person(k.authorId))}</span>
+                </div>
+              </div>
+
+              <h3 class="source-item-title" title="${h(k.title)}">${h(k.title)}</h3>
+
+              <div class="source-brief-block">
+                <div class="brief-row">
+                  <span class="brief-label">Dấu hiệu đã gặp:</span>
+                  <p class="brief-val">${h(k.content?.symptom || 'Chưa ghi nhận')}</p>
+                </div>
+                <div class="brief-row brief-match">
+                  <span class="brief-label">Căn cứ phù hợp:</span>
+                  <span class="match-badge">${icon('check')} Cùng nhóm máy ${h(k.family)}</span>
+                </div>
+                <div class="brief-row brief-limits">
+                  <span class="brief-label">Lưu ý đối chiếu:</span>
+                  <p class="brief-hint">${h(k.content?.limits || 'Cần đọc kỹ giới hạn trước khi tham khảo.')}</p>
+                </div>
+              </div>
+
+              <div class="source-card-footer">
+                <button type="button" class="btn btn-ghost btn-sm btn-read-source" 
+                  data-action="case-source-read" ${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}">
+                  ${icon('file')}
+                  <span>Đọc chi tiết</span>
+                </button>
+                ${can && c.workState === 'active' ? `
+                <button type="button" class="btn btn-sm ${isPicked ? 'btn-picked' : 'btn-secondary'} btn-pick-source"
+                  data-action="case-source-pick" ${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}" ${c.retrieval.stale ? 'disabled' : ''}>
+                  ${isPicked ? icon('check') : icon('plus')}
+                  <span>${isPicked ? 'Đã chọn tham khảo' : 'Chọn tham khảo'}</span>
+                </button>
+                ` : ''}
+              </div>
+            </article>
+            `;
+          }).join('')}
+        </div>
+        ${list.length > 3 && !c.retrieval.showAll ? `
+        <div class="sources-show-more">
+          <button type="button" class="btn btn-secondary" data-action="case-more-sources" ${cid(c)}>
+            ${icon('chevrondown')}
+            <span>Xem thêm ${list.length - 3} nguồn khác</span>
+          </button>
+        </div>` : ''}
+      </div>
+
+      <section class="card decision-support-card">
+        <div class="card-head decision-head">
+          <div class="decision-head-title-wrap">
+            <span class="decision-badge-spark">${icon('spark')} Trợ lý AI tổng hợp</span>
+            <h2>Tóm tắt hỗ trợ quyết định</h2>
+            <p class="subtext">Phân tích đa chiều dựa trên các bài học tương đồng và dữ kiện hiện trường đã ghi nhận.</p>
+          </div>
+          <span class="badge badge-ai-mode">AI phân tích</span>
+        </div>
+        <div class="card-body stack">
+          ${renderSourceExtracts(c, list)}
+
+          <div class="evidence-matrix-grid">
+            <div class="evidence-box evidence-box--known">
+              <div class="evidence-box-header">
+                <span class="evidence-dot dot-green"></span>
+                <strong>ĐÃ BIẾT (Dữ kiện hiện trường)</strong>
+              </div>
+              <p class="evidence-symptom-text">${h(c.context?.symptom || c.title)}</p>
+              <div class="evidence-stats-pill">
+                ${icon('clock')}
+                <span>Có <strong>${events(c).length}</strong> ghi nhận hiện trường trong <strong>${c.rounds.length}</strong> đợt.</span>
+              </div>
+            </div>
+
+            <div class="evidence-box evidence-box--missing">
+              <div class="evidence-box-header">
+                <span class="evidence-dot dot-amber"></span>
+                <strong>CÒN THIẾU (Cần xác minh thêm)</strong>
+              </div>
+              <p class="evidence-missing-text">Cần xác minh mức phù hợp của từng nguồn với điều kiện và bằng chứng cụ thể. Cùng nhóm máy chưa chứng minh cùng nguyên nhân gốc rễ.</p>
+              <div class="evidence-stats-pill pill-warning">
+                ${icon('alert')}
+                <span>Cần đối chiếu thêm thông số 5M1E trước khi kết luận.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-horizons-container">
+            <div class="action-horizons-header">
+              <h3>Định hướng hành động 3 cấp độ</h3>
+              <span class="field-hint">Phân chia giải pháp từ xử lý cấp bách đến cải tiến chống tái diễn</span>
+            </div>
+            <div class="action-horizons-grid">
+              <div class="horizon-card horizon--immediate">
+                <div class="horizon-card-top">
+                  <span class="horizon-tag tag-green">CẤP ĐỘ 1</span>
+                  <h4>Trước mắt (Khắc phục ngay)</h4>
+                </div>
+                <p>Đọc mục kiểm tra và giới hạn ở nguồn đã duyệt. Chọn bước kiểm tra phù hợp sau khi xác minh điều kiện an toàn.</p>
+              </div>
+
+              <div class="horizon-card horizon--medium">
+                <div class="horizon-card-top">
+                  <span class="horizon-tag tag-amber">CẤP ĐỘ 2</span>
+                  <h4>Theo dõi / Trung hạn</h4>
+                </div>
+                <p>Ghi kết quả và tình huống tái phát. Chỉ đưa kế hoạch sửa chữa vào báo cáo khi có người phụ trách xác nhận.</p>
+              </div>
+
+              <div class="horizon-card horizon--long">
+                <div class="horizon-card-top">
+                  <span class="horizon-tag tag-purple">CẤP ĐỘ 3</span>
+                  <h4>Cải tiến / Dài hạn</h4>
+                </div>
+                <p>Chưa đủ căn cứ tự đề xuất thay thế thiết bị. Chuyên gia đánh giá từ lịch sử và bằng chứng tích lũy.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="safety-gate-card">
+            <div class="safety-gate-icon">
+              ${icon('alert')}
+            </div>
+            <div class="safety-gate-content">
+              <div class="safety-gate-title">
+                <strong>An toàn trước thao tác (Bắt buộc tuân thủ)</strong>
+                <span class="safety-badge">SOP MANDATORY</span>
+              </div>
+              <p class="safety-text">${h(list[0]?.content?.safety || 'Chưa có quy trình an toàn phù hợp được xác minh.')}</p>
+              <p class="safety-subtext">Mở quy trình theo máy và xác minh hiệu lực trước khi thực hiện. Chọn nguồn không đồng nghĩa được phép vận hành.</p>
+            </div>
+            <div class="safety-gate-action">
+              <button type="button" class="btn btn-secondary btn-safety-ref" data-action="case-reference" data-asset="${h(c.assetId)}">
+                ${icon('shield')}
+                <span>Mở tham chiếu theo máy</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="decision-footer-actions">
+            <button type="button" class="btn btn-primary btn-proceed-work" data-action="case-tab" ${cid(c)} data-tab="work">
+              <span>Tiếp tục: Ghi kiểm tra & xử lý</span>
+              ${icon('arrow')}
+            </button>
+            ${owner(c) && c.workState !== 'ended' ? `
+            <button type="button" class="btn btn-secondary btn-ask-expert" data-action="case-support" ${cid(c)}>
+              ${icon('users')}
+              <span>Yêu cầu chuyên gia hỗ trợ</span>
+            </button>` : ''}
+          </div>
+        </div>
+      </section>
+      ` : ''}
+    </div>
+    `;
   }
-  S.actions['case-search'] = el => {const c=get(el.dataset.case);if(!protect(c,'edit'))return;const family=S.asset(c.assetId)?.family;S.commit(()=>{c.retrieval={at:stamp(),stale:false,sources:S.db.knowledge.filter(k=>k.status==='published'&&k.family===family).map(k=>({id:k.id,version:k.version})),contextSnapshot:JSON.stringify(c.context)};updated(c,'Tra cứu nguồn đã duyệt',family);},'Đã lập kết quả tra cứu mô phỏng theo nhóm máy.');};
+
+  S.actions['case-search'] = el => {
+    const c = get(el.dataset.case);
+    if (!protect(c, 'edit')) return;
+    const family = S.asset(c.assetId)?.family;
+    
+    // Bắt đầu animation AI quét phân tích trong 1.5s
+    c._isSearching = true;
+    c._searchProgress = 20;
+    S.render();
+
+    setTimeout(() => {
+      if (!c._isSearching) return;
+      c._searchProgress = 65;
+      S.render();
+    }, 450);
+
+    setTimeout(() => {
+      if (!c._isSearching) return;
+      c._searchProgress = 90;
+      S.render();
+    }, 950);
+
+    setTimeout(() => {
+      c._isSearching = false;
+      delete c._searchProgress;
+      S.commit(() => {
+        c.retrieval = {
+          at: stamp(),
+          stale: false,
+          sources: S.db.knowledge.filter(k => k.status === 'published' && k.family === family).map(k => ({ id: k.id, version: k.version })),
+          contextSnapshot: JSON.stringify(c.context)
+        };
+        updated(c, 'Tra cứu nguồn đã duyệt', family);
+      }, 'Đã cập nhật kết quả tra cứu AI theo nhóm máy.');
+    }, 1500);
+  };
   S.actions['case-more-sources'] = el => {const c=get(el.dataset.case);if(protect(c,'view'))S.commit(()=>{c.retrieval.showAll=true;});};
   S.actions['case-source-read'] = el => {
     const c=get(el.dataset.case);if(!protect(c,'view'))return;const k=S.getKnowledge(el.dataset.source,Number(el.dataset.version));if(!k)return S.toast('Nguồn không còn sẵn sàng trong bộ dữ liệu.','warning');
-    S.modal(`${k.id} · ${k.title}`,`<div class="stack"><div class="source-meta">${badge(k.kind==='case'?'Case đã duyệt':'Tri thức chuyên gia','blue')} Phiên bản ${h(k.version)} · Tác giả ${h(S.person(k.authorId))} · Người duyệt ${h(S.person(k.reviewerId))}</div>${[['symptom','Dấu hiệu'],['context','Bối cảnh'],['cause','Nguyên nhân / giả thuyết'],['evidence','Bằng chứng'],['checks','Kiểm tra'],['solution','Hướng xử lý'],['result','Kết quả'],['safety','An toàn'],['limits','Giới hạn']].map(([key,label])=>`<div><h3>${label}</h3><p style="white-space:pre-line">${h(k.content?.[key]||'Chưa có dữ liệu.')}</p></div>`).join('')}</div>`,editable(c)?button('Chọn làm hướng tham khảo','case-source-pick','primary',`${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}"`):'');
+    const fieldIcons = {
+      symptom: 'alert',
+      context: 'history',
+      checks: 'search',
+      solution: 'tool',
+      result: 'checkcircle',
+      cause: 'help',
+      evidence: 'file',
+      safety: 'shield',
+      limits: 'info'
+    };
+    const fieldTones = {
+      symptom: 'tone-blue',
+      solution: 'tone-teal',
+      safety: 'tone-amber',
+      cause: 'tone-purple'
+    };
+    const sections = [
+      ['symptom','Dấu hiệu / vấn đề'],
+      ['context','Điều kiện phát sinh'],
+      ['checks','Kiểm tra và căn cứ'],
+      ['solution','Hướng xử lý / bài học'],
+      ['result','Kết quả và kiểm chứng'],
+      ['cause','Nguyên nhân / giả thuyết'],
+      ['evidence','Bằng chứng và nguồn'],
+      ['safety','An toàn & quy trình tham chiếu'],
+      ['limits','Điều kiện áp dụng & giới hạn']
+    ];
+    const metaStrip = `
+      <div class="modal-source-header-meta">
+        <span class="badge ${k.kind==='case'?'badge-blue':'badge-purple'}">${k.kind==='case'?'Case đã duyệt':'Tri thức chuyên gia'}</span>
+        <span class="meta-item">${icon('tag')} Dòng máy: <strong>${h(k.family || 'Chung')}</strong></span>
+        <span class="meta-item">${icon('user')} Tác giả: <strong>${h(S.person(k.authorId))}</strong></span>
+        <span class="meta-item">${icon('shield')} Người duyệt: <strong>${h(S.person(k.reviewerId))}</strong></span>
+      </div>
+    `;
+    const bodyHtml = metaStrip + `
+      <div class="modal-content-view">
+        ${sections.map(([key, label]) => {
+          const val = k.content?.[key];
+          const tone = fieldTones[key] || '';
+          const ic = fieldIcons[key] || 'file';
+          return `
+            <section class="modal-content-section ${tone}">
+              <div class="modal-section-header">
+                <span class="modal-section-icon">${icon(ic)}</span>
+                <div class="modal-section-title-wrap">
+                  <h3 class="modal-section-title">${label}</h3>
+                </div>
+              </div>
+              <div class="modal-section-body">
+                ${val ? `<div class="modal-section-text">${h(val)}</div>` : `<span class="empty-field-text">Chưa có thông tin ghi nhận.</span>`}
+              </div>
+            </section>
+          `;
+        }).join('')}
+      </div>
+    `;
+    const footerHtml = button('Đóng nguồn', 'close-modal', 'secondary') + (editable(c) ? button('Chọn làm hướng tham khảo', 'case-source-pick', 'primary', `${cid(c)} data-source="${h(k.id)}" data-version="${h(k.version)}"`) : '');
+    S.modal(`${k.id} · v${k.version} — ${k.title}`, bodyHtml, footerHtml);
   };
   S.actions['case-source-pick'] = el => {const c=get(el.dataset.case);if(!protect(c,'edit'))return;if(c.retrieval?.stale)return S.toast('Bối cảnh đã đổi. Hãy tra cứu lại trước khi chọn nguồn.','warning');const k=S.getKnowledge(el.dataset.source,Number(el.dataset.version));if(!k||k.status!=='published')return;if(S.getKnowledge(k.id)?.version!==k.version)return S.toast('Nguồn đã có phiên bản mới. Tra cứu lại và đối chiếu trước khi chọn hướng. Bản nguồn cũ vẫn giữ trong lịch sử.','warning');if(S.commit(()=>{c.selectedSources ||= [];if(!c.selectedSources.some(x=>x.id===k.id&&x.version===k.version))c.selectedSources.push({id:k.id,version:k.version,selectedBy:who().id,selectedAt:stamp(),feedback:''});updated(c,'Chọn nguồn tham khảo',`${k.id} v${k.version}`);},'Đã ghi nhận hướng tham khảo; chưa đánh dấu đã thực hiện.'))S.closeModal();};
 
   function supportPanel(c) {
-    const x=c.support;
-    if(!x)return `<div class="notice notice-info"><strong>Cần thêm kinh nghiệm tại hiện trường?</strong><p>Gửi bối cảnh và các bước đã thử cho chuyên gia. Bạn tiếp tục là người phụ trách hồ sơ.</p>${owner(c)&&c.workState!=='ended'?button('Yêu cầu chuyên gia','case-support','secondary',cid(c)):''}</div>`;
-    const status={requested:'Chờ phản hồi',accepted:'Đã nhận hỗ trợ',joined:'Đang phối hợp',unavailable:'Chưa thể hỗ trợ'};
-    return `<section class="card"><div class="card-head"><h2>Phối hợp chuyên gia</h2>${badge(status[x.status],x.status==='unavailable'?'amber':x.status==='joined'?'green':'blue')}</div><div class="card-body stack"><p><strong>${h(S.person(x.expertId))}</strong> · Yêu cầu lúc ${h(S.fmtDate(x.requestedAt))}</p><p>${h(x.reason)}</p>${x.response?`<p><strong>Phản hồi:</strong> ${h(x.response)}</p>`:''}${x.joinedAt?`<p class="source-meta">Tham gia từ ${h(S.fmtDate(x.joinedAt))} · Công đoạn: ${h(x.stage||'Điều tra / xử lý')}</p>`:''}${who().id===x.expertId&&x.status==='requested'?`<div class="actions">${button('Nhận hỗ trợ','case-support-accept','primary',cid(c))}${button('Chưa thể hỗ trợ','case-support-decline','secondary',cid(c))}</div>`:''}${who().id===x.expertId&&x.status==='accepted'?button('Bắt đầu tham gia tại hiện trường','case-support-join','primary',cid(c)):''}${owner(c)&&x.status==='unavailable'&&c.workState!=='ended'?button('Cập nhật yêu cầu hỗ trợ','case-support','secondary',cid(c)):''}<p class="field-hint">Người bảo trì hỗ trợ và ghi theo mốc. Chuyên gia xác nhận các nhóm nội dung của mình khi thuận tiện; không cần duyệt từng dòng.</p></div></section>`;
+    const x = c.support;
+    if (!x) {
+      return `
+      <div class="expert-assist-banner">
+        <div class="expert-assist-icon-wrap">
+          ${icon('users')}
+        </div>
+        <div class="expert-assist-content">
+          <strong>Cần thêm kinh nghiệm từ chuyên gia?</strong>
+          <p>Gửi bối cảnh và các bước đã thử cho chuyên gia để được định hướng từ xa hoặc phối hợp tại hiện trường. Bạn tiếp tục là người phụ trách hồ sơ.</p>
+        </div>
+        ${owner(c) && c.workState !== 'ended' ? `
+        <div class="expert-assist-action">
+          <button type="button" class="btn btn-secondary btn-expert-call" data-action="case-support" ${cid(c)}>
+            ${icon('users')}
+            <span>Yêu cầu chuyên gia</span>
+          </button>
+        </div>` : ''}
+      </div>
+      `;
+    }
+    const status = { requested: 'Chờ phản hồi', accepted: 'Đã nhận hỗ trợ', joined: 'Đang phối hợp', unavailable: 'Chưa thể hỗ trợ' };
+    const statusTone = { requested: 'amber', accepted: 'blue', joined: 'green', unavailable: 'neutral' };
+    return `
+    <section class="card expert-collab-card">
+      <div class="card-head expert-collab-head">
+        <div class="expert-collab-head-left">
+          <span class="badge-collab-tag">${icon('users')} Phối hợp chuyên gia</span>
+          <h3>Hỗ trợ kỹ thuật chuyên gia</h3>
+        </div>
+        ${badge(status[x.status], statusTone[x.status] || 'blue')}
+      </div>
+      <div class="card-body stack">
+        <div class="expert-info-strip">
+          <div class="expert-avatar-chip">
+            ${icon('user')}
+            <span>Chuyên gia: <strong>${h(S.person(x.expertId))}</strong></span>
+          </div>
+          <span class="collab-meta-sep">·</span>
+          <span class="collab-timestamp">Yêu cầu lúc: ${h(S.fmtDate(x.requestedAt))}</span>
+        </div>
+        <div class="expert-reason-box">
+          <span class="box-label">VẤN ĐỀ CẦN HỖ TRỢ</span>
+          <p>${h(x.reason)}</p>
+        </div>
+        ${x.response ? `
+        <div class="expert-response-box">
+          <span class="box-label">PHẢN HỒI TỪ CHUYÊN GIA</span>
+          <p>${h(x.response)}</p>
+        </div>` : ''}
+        ${x.joinedAt ? `
+        <div class="expert-joined-meta">
+          ${icon('checkcircle')}
+          <span>Tham gia từ <strong>${h(S.fmtDate(x.joinedAt))}</strong> · Công đoạn: <strong>${h(x.stage || 'Điều tra / xử lý')}</strong></span>
+        </div>` : ''}
+        ${who().id === x.expertId && x.status === 'requested' ? `
+        <div class="actions">
+          ${button('Nhận hỗ trợ', 'case-support-accept', 'primary', cid(c))}
+          ${button('Chưa thể hỗ trợ', 'case-support-decline', 'secondary', cid(c))}
+        </div>` : ''}
+        ${who().id === x.expertId && x.status === 'accepted' ? button('Bắt đầu tham gia tại hiện trường', 'case-support-join', 'primary', cid(c)) : ''}
+        ${owner(c) && x.status === 'unavailable' && c.workState !== 'ended' ? button('Cập nhật yêu cầu hỗ trợ', 'case-support', 'secondary', cid(c)) : ''}
+        <p class="field-hint">Người bảo trì hỗ trợ và ghi theo mốc. Chuyên gia xác nhận các nhóm nội dung của mình khi thuận tiện; không cần duyệt từng dòng.</p>
+      </div>
+    </section>
+    `;
   }
   S.actions['case-support'] = el => {
     const c=get(el.dataset.case);if(!protect(c)||c.workState==='ended')return;
     if(c.support&&['requested','accepted','joined'].includes(c.support.status)){S.go('case',c.id,'work');S.toast('Hồ sơ đã có yêu cầu hỗ trợ đang hoạt động.','info');return;}
     const ex=S.db.users.filter(u=>u.role==='expert');
     const summary=events(c).map(e=>`${labels.event[e.type]}: ${e.content}${e.result?' — '+e.result:''}`).join('\n');
-    S.modal('Yêu cầu chuyên gia hỗ trợ',`<form data-form="case-support-send" ${cid(c)} class="stack">${errorBox()}<div class="notice notice-info">Tóm tắt dưới đây được ghép từ bối cảnh và nhật ký đã lưu. Kiểm tra nội dung trước khi gửi.</div>${select('Chuyên gia','expertId',c.expertId||ex[0]?.id,ex.map(u=>[u.id,u.name]))}${area('Vấn đề cần chuyên gia làm rõ','reason',c.support?.reason||'', 'required')}${area('Bàn giao bối cảnh và các bước đã thử','handover',`${c.assetId} — ${c.context?.symptom||c.title}\n${summary}`,'rows="6"')}<button type="submit" class="btn btn-primary">Gửi yêu cầu trong ứng dụng</button></form>`);
+    S.modal('Yêu cầu chuyên gia hỗ trợ',`<form data-form="case-support-send" ${cid(c)} class="stack">${errorBox()}<div class="notice notice-info">Tóm tắt dưới đây được ghép từ bối cảnh và nhật ký đã lưu. Kiểm tra nội dung trước khi gửi.</div>${select('Chuyên gia','expertId',c.expertId||ex[0]?.id,ex.map(u=>[u.id,u.name]))}${area('Vấn đề cần chuyên gia làm rõ','reason',c.support?.reason||'', 'required')}${area('Bàn giao bối cảnh và các bước đã thử','handover',`${c.assetId} — ${c.context?.symptom||c.title}\n${summary}`,'rows="6"')}<div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button type="submit" class="btn btn-primary">Gửi yêu cầu trong ứng dụng</button></div></form>`);
   };
   S.forms['case-support-send'] = form => {
     const c=get(form.dataset.case);if(!protect(c)||c.workState==='ended')return;const f=new FormData(form),expertId=String(f.get('expertId')),reason=String(f.get('reason')||'').trim();
@@ -584,16 +1130,58 @@
     if(S.commit(()=>{c.supportHistory ||= [];if(c.support)c.supportHistory.push(structuredClone(c.support));c.support={expertId,status:'requested',reason,handover:String(f.get('handover')||''),requestedAt:stamp()};c.expertId=expertId;S.notice(expertId,'Có hồ sơ cần hỗ trợ',`${c.id}: ${reason}`,{page:'case',id:c.id,tab:'work'});updated(c,'Yêu cầu chuyên gia',expertId);},'Đã gửi yêu cầu. Nhật ký vẫn có thể tiếp tục ghi.'))S.closeModal();
   };
   S.actions['case-support-accept'] = el => {const c=get(el.dataset.case);if(!c||c.support?.expertId!==who().id||c.support.status!=='requested')return;S.commit(()=>{c.support.status='accepted';c.support.acceptedAt=stamp();S.notice(c.ownerId,'Chuyên gia đã nhận hỗ trợ',`${S.person(who().id)} đã nhận ${c.id}.`,{page:'case',id:c.id,tab:'work'});updated(c,'Nhận hỗ trợ');},'Đã nhận hỗ trợ. Xác nhận bắt đầu khi thực sự tham gia.');};
-  S.actions['case-support-decline'] = el => {const c=get(el.dataset.case);if(!c||c.support?.expertId!==who().id||c.support.status!=='requested')return;S.modal('Chưa thể hỗ trợ',`<form data-form="case-support-unavailable" ${cid(c)} class="stack">${errorBox()}${area('Lý do / thông tin bàn giao','response','','required')}<button class="btn btn-primary" type="submit">Gửi phản hồi</button></form>`);};
+  S.actions['case-support-decline'] = el => {const c=get(el.dataset.case);if(!c||c.support?.expertId!==who().id||c.support.status!=='requested')return;S.modal('Chưa thể hỗ trợ',`<form data-form="case-support-unavailable" ${cid(c)} class="stack">${errorBox()}${area('Lý do / thông tin bàn giao','response','','required')}<div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button class="btn btn-primary" type="submit">Gửi phản hồi</button></div></form>`);};
   S.forms['case-support-unavailable'] = form => {const c=get(form.dataset.case),f=new FormData(form),response=String(f.get('response')||'').trim();if(!c||c.support?.expertId!==who().id||c.support.status!=='requested')return;if(!response)return canFail(form,'Cần ghi lý do để người bảo trì chủ động tìm hỗ trợ.');if(S.commit(()=>{c.support.status='unavailable';c.support.response=response;S.notice(c.ownerId,'Chuyên gia chưa thể hỗ trợ',response,{page:'case',id:c.id,tab:'work'});updated(c,'Phản hồi chưa thể hỗ trợ');},'Đã gửi phản hồi.'))S.closeModal();};
-  S.actions['case-support-join'] = el => {const c=get(el.dataset.case);if(!c||c.support?.expertId!==who().id||c.support.status!=='accepted')return;S.modal('Bắt đầu tham gia hồ sơ',`<form data-form="case-support-start" ${cid(c)} class="stack">${field('Công đoạn bắt đầu tham gia','stage','Điều tra nguyên nhân và đánh giá hướng xử lý','required')}<p class="subtext">Thời điểm bắt đầu được ghi vào lịch sử. Người bảo trì vẫn phụ trách hồ sơ.</p><button class="btn btn-primary" type="submit">Xác nhận tham gia</button></form>`);};
+  S.actions['case-support-join'] = el => {const c=get(el.dataset.case);if(!c||c.support?.expertId!==who().id||c.support.status!=='accepted')return;S.modal('Bắt đầu tham gia hồ sơ',`<form data-form="case-support-start" ${cid(c)} class="stack">${field('Công đoạn bắt đầu tham gia','stage','Điều tra nguyên nhân và đánh giá hướng xử lý','required')}<p class="subtext">Thời điểm bắt đầu được ghi vào lịch sử. Người bảo trì vẫn phụ trách hồ sơ.</p><div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button class="btn btn-primary" type="submit">Xác nhận tham gia</button></div></form>`);};
   S.forms['case-support-start'] = form => {const c=get(form.dataset.case);if(!c||c.support?.expertId!==who().id||c.support.status!=='accepted')return;const f=new FormData(form);if(S.commit(()=>{c.support.status='joined';c.support.joinedAt=stamp();c.support.stage=String(f.get('stage')||'Điều tra / xử lý');if(!c.participants.includes(who().id))c.participants.push(who().id);S.notice(c.ownerId,'Chuyên gia bắt đầu tham gia',`${S.person(who().id)}: ${c.support.stage}`,{page:'case',id:c.id,tab:'work'});updated(c,'Bắt đầu tham gia',c.support.stage);},'Đã ghi nhận thời điểm và công đoạn tham gia.'))S.closeModal();};
 
   S.pages.assignments={title:'Hỗ trợ & xác nhận',roles:['expert'],render:()=>{const list=S.db.cases.filter(invited);return `${S.head('Hỗ trợ & xác nhận')}<div class="grid-2">${list.map(c=>`<div class="stack">${caseCard(c)}${supportPanel(c)}${expertGroups(c).some(g=>g.person===who().id&&!groupConfirmed(g))?`<div class="notice notice-warning">Có ghi nhận đang chờ bạn xác nhận. ${button('Xem đóng góp của tôi','case-group-modal','secondary',cid(c))}</div>`:''}</div>`).join('')}</div>${list.length?'':S.empty('Chưa có yêu cầu hỗ trợ','Yêu cầu của người bảo trì sẽ xuất hiện tại đây.')}`;}};
 
   function noteForm(c) {
-    const d=S.db.drafts[draftKey(c)]||{},people=(c.participants||[]).filter(id=>S.db.users.some(u=>u.id===id));
-    return `<form class="card" data-form="case-note" ${cid(c)}><div class="card-head"><h2>Ghi nhận nhanh</h2>${saveLabel()}</div><div class="card-body stack">${errorBox()}<div class="form-grid">${select('Loại ghi nhận','type',d.type||'observation',Object.entries(labels.event),`data-input="case-note-draft" ${cid(c)}`)}${select('Người thực hiện / người đưa nhận định','performedBy',d.performedBy||who().id,people.map(id=>[id,S.person(id)]),`data-input="case-note-draft" ${cid(c)}`)}</div>${area('Nội dung ghi nhận','content',d.content,`data-input="case-note-draft" ${cid(c)} required placeholder="Ghi nhanh điều đã quan sát, kiểm tra hoặc thực hiện…"`,'Có thể gõ hoặc dán ghi chú. Ghi theo mốc, không cần ghi từng động tác.')}<div class="form-grid">${field('Kết quả nếu đã có','result',d.result,`data-input="case-note-draft" ${cid(c)}`)}${field('Lý do lựa chọn / đổi hướng nếu cần','rationale',d.rationale,`data-input="case-note-draft" ${cid(c)}`)}</div><details><summary>Thông tin bổ sung · số đo và thời điểm thực tế</summary><div class="form-grid">${field('Giá trị đo','measurement',d.measurement,`data-input="case-note-draft" ${cid(c)}`)}${field('Đơn vị','unit',d.unit,`data-input="case-note-draft" ${cid(c)}`)}${field('Thời điểm thực tế khi ghi bù','performedAt',d.performedAt,`data-input="case-note-draft" ${cid(c)}`,'datetime-local')}</div></details><p class="field-hint">Người nhập: ${h(S.person(who().id))}. Nội dung ghi hộ chuyên gia sẽ được gom để chuyên gia xác nhận.</p><div class="actions"><button class="btn btn-primary" type="submit">Lưu ghi nhận</button><span class="field-hint">Chưa biết nguyên nhân vẫn lưu được.</span></div></div></form>`;
+    const d = S.db.drafts[draftKey(c)] || {}, people = (c.participants || []).filter(id => S.db.users.some(u => u.id === id));
+    return `
+    <form class="card work-note-card" data-form="case-note" ${cid(c)}>
+      <div class="card-head work-note-head">
+        <div class="work-note-head-title">
+          <div class="work-note-badge-eyebrow">
+            <span class="badge-log-tag">${icon('edit')} Nhật ký hiện trường</span>
+          </div>
+          <h2>Ghi nhận tiến trình xử lý</h2>
+          <p class="subtext">Ghi chú nhanh theo từng mốc hành động. Chưa rõ nguyên nhân vẫn lưu được mốc điều tra.</p>
+        </div>
+        ${saveLabel()}
+      </div>
+      <div class="card-body stack">
+        ${errorBox()}
+        <div class="form-grid">
+          ${select('Loại ghi nhận', 'type', d.type || 'observation', Object.entries(labels.event), `data-input="case-note-draft" ${cid(c)}`)}
+          ${select('Người thực hiện / đưa nhận định', 'performedBy', d.performedBy || who().id, people.map(id => [id, S.person(id)]), `data-input="case-note-draft" ${cid(c)}`)}
+        </div>
+        ${area('Nội dung ghi nhận', 'content', d.content, `data-input="case-note-draft" ${cid(c)} required placeholder="Mô tả cụ thể điều vừa quan sát, kiểm tra hoặc thao tác trên máy…"`,'Có thể gõ hoặc dán ghi chú. Ghi theo mốc hành động, không cần ghi từng thao tác li ti.')}
+        <div class="form-grid">
+          ${field('Kết quả nếu đã có', 'result', d.result, `data-input="case-note-draft" ${cid(c)} placeholder="Ví dụ: Đạt / Không đạt, lỗi không tái diễn..."`)}
+          ${field('Lý do lựa chọn / đổi hướng (nếu cần)', 'rationale', d.rationale, `data-input="case-note-draft" ${cid(c)} placeholder="Căn cứ đưa ra bước kiểm tra này"`)}
+        </div>
+        <details class="context-details work-details-accordion">
+          <summary>Thông tin bổ sung · Số đo & Thời điểm thực tế <span>(tuỳ chọn)</span></summary>
+          <div class="form-grid" style="margin-top: 14px;">
+            ${field('Giá trị đo', 'measurement', d.measurement, `data-input="case-note-draft" ${cid(c)} placeholder="Ví dụ: 24.5"`)}
+            ${field('Đơn vị', 'unit', d.unit, `data-input="case-note-draft" ${cid(c)} placeholder="V, bar, mm, °C..."`)}
+            ${field('Thời điểm thực tế khi ghi bù', 'performedAt', d.performedAt, `data-input="case-note-draft" ${cid(c)}`, 'datetime-local')}
+          </div>
+        </details>
+        <div class="work-note-footer">
+          <div class="note-footer-actions">
+            <button class="btn btn-primary btn-save-note" type="submit">
+              ${icon('check')}
+              <span>Lưu ghi nhận vào nhật ký</span>
+            </button>
+            <span class="field-hint">Người nhập: <strong>${h(S.person(who().id))}</strong>. Ghi hộ chuyên gia sẽ gom để chuyên gia xác nhận sau.</span>
+          </div>
+        </div>
+      </div>
+    </form>
+    `;
   }
   S.inputs['case-note-draft']=el=>{const c=get(el.dataset.case);if(!protect(c,'edit'))return;const key=draftKey(c);if(S.db.drafts[key]?.[el.name]===el.value)return;S.commit(()=>{S.db.drafts[key]={...S.db.drafts[key],[el.name]:el.value};},null,false);};
   S.forms['case-note']=form=>{
@@ -603,25 +1191,165 @@
     const actual=f.get('performedAt')?new Date(String(f.get('performedAt'))):new Date();if(Number.isNaN(actual.getTime())||actual.getTime()>Date.now()+60000)return canFail(form,'Thời điểm thực tế phải hợp lệ và không nằm trong tương lai.');
     S.commit(()=>{newEvent(c,{type,content,performedBy:performer,performedAt:actual.toISOString(),result:String(f.get('result')||''),rationale:String(f.get('rationale')||''),measurement:String(f.get('measurement')||''),unit:String(f.get('unit')||'')});delete S.db.drafts[draftKey(c)];updated(c,'Lưu ghi nhận',`${labels.event[type]} · ${S.person(performer)}`);},'Đã lưu ghi nhận và giữ trong lịch sử hồ sơ.');
   };
+
   function timeline(c) {
-    return `<section class="card"><div class="card-head"><h2>Nhật ký mọi đợt</h2><span class="muted">${events(c).length} ghi nhận</span></div><div class="card-body stack">${[...c.rounds].reverse().map(r=>`<section class="stack"><div class="section-title"><h3>Đợt ${r.number}</h3>${badge(r.state==='active'?'Đang thực hiện':'Đã kết thúc đợt',r.state==='active'?'blue':'neutral')}</div><p class="source-meta">Bắt đầu ${h(S.fmtDate(r.startedAt))}${r.endedAt?` · Kết thúc ${h(S.fmtDate(r.endedAt))}`:''}</p>${r.summary?`<div class="notice notice-info"><p>${h(r.summary)}</p>${r.nextSteps?`<p><strong>Tiếp theo:</strong> ${h(r.nextSteps)}</p>`:''}${r.recipient?`<p><strong>Bàn giao:</strong> ${h(r.recipient)}</p>`:''}</div>`:''}<div class="timeline">${[...r.events].reverse().map(e=>{const isExpert=S.db.users.find(u=>u.id===e.performedBy)?.role==='expert',g={signature:groupSignature(r,e.performedBy),confirmation:c.confirmations?.[`${r.id}:${e.performedBy}`]};return `<article class="timeline-item" id="event-${h(e.id)}"><span class="timeline-dot"></span><div class="timeline-content stack"><div class="actions">${badge(labels.event[e.type],'neutral')}${isExpert?badge(groupConfirmed(g)?'Đã xác nhận':'Chờ chuyên gia xác nhận',groupConfirmed(g)?'green':'amber'):''}<span class="source-meta">${h(S.fmtDate(e.performedAt))}</span></div><p style="white-space:pre-line">${h(e.content)}</p>${e.measurement?`<p><strong>Số đo:</strong> ${h(e.measurement)} ${h(e.unit)}</p>`:''}${e.result?`<p><strong>Kết quả:</strong> ${h(e.result)}</p>`:''}${e.rationale?`<p><strong>Lý do:</strong> ${h(e.rationale)}</p>`:''}<p class="source-meta">Thực hiện: ${h(S.person(e.performedBy))} · Nhập: ${h(S.person(e.enteredBy))} · Nhập lúc ${h(S.fmtDate(e.recordedAt))}</p>${e.history?.length?`<details><summary>${e.history.length} lần chỉnh sửa</summary>${e.history.map(v=>`<p class="field-hint">${h(S.fmtDate(v.changedAt))} · ${h(S.person(v.changedBy))}: ${h(v.content)}</p>`).join('')}</details>`:''}${correctable(c)&&(owner(c)||e.performedBy===who().id)?button('Sửa ghi nhận','case-note-edit','ghost',`${cid(c)} data-event="${h(e.id)}"`):''}</div></article>`;}).join('')||'<p class="muted">Đợt này chưa có ghi nhận. Bắt đầu bằng điều đã quan sát tại hiện trường.</p>'}</div></section>`).join('')}</div></section>`;
+    const totalCount = events(c).length;
+    return `
+    <section class="card work-timeline-card">
+      <div class="card-head timeline-main-head">
+        <div class="timeline-head-left">
+          <span class="badge-timeline-tag">${icon('clock')} Dòng thời gian</span>
+          <h2>Nhật ký tiến trình mọi đợt</h2>
+        </div>
+        <span class="badge badge-counter-total">${totalCount} ghi nhận</span>
+      </div>
+      <div class="card-body stack">
+        ${[...c.rounds].reverse().map(r => `
+        <section class="round-timeline-block stack">
+          <div class="round-block-header">
+            <div class="round-title-wrap">
+              <span class="round-badge-num">ĐỢT ${r.number}</span>
+              <h3 class="round-title">${r.state === 'active' ? 'Đợt đang thực hiện' : 'Đợt đã kết thúc'}</h3>
+            </div>
+            ${badge(r.state === 'active' ? 'Đang thực hiện' : 'Đã kết thúc đợt', r.state === 'active' ? 'blue' : 'neutral')}
+          </div>
+          <div class="round-meta-strip">
+            <span class="round-time-item">Bắt đầu: <strong>${h(S.fmtDate(r.startedAt))}</strong></span>
+            ${r.endedAt ? `<span class="meta-sep">·</span><span class="round-time-item">Kết thúc: <strong>${h(S.fmtDate(r.endedAt))}</strong></span>` : ''}
+          </div>
+          ${r.summary ? `
+          <div class="round-handover-card">
+            <div class="handover-title">
+              ${icon('file')}
+              <strong>Tóm tắt kết quả đợt:</strong>
+            </div>
+            <p class="handover-summary-text">${h(r.summary)}</p>
+            ${r.nextSteps ? `<p class="handover-next"><strong>Việc tiếp theo:</strong> ${h(r.nextSteps)}</p>` : ''}
+            ${r.recipient ? `<p class="handover-recipient"><strong>Bàn giao cho:</strong> ${h(r.recipient)}</p>` : ''}
+          </div>` : ''}
+
+          <div class="timeline work-timeline-stream">
+            ${[...r.events].reverse().map(e => {
+              const isExpert = S.db.users.find(u => u.id === e.performedBy)?.role === 'expert';
+              const g = { signature: groupSignature(r, e.performedBy), confirmation: c.confirmations?.[`${r.id}:${e.performedBy}`] };
+              const eventTone = {
+                observation: 'blue',
+                check: 'green',
+                hypothesis: 'purple',
+                action: 'amber',
+                result: 'emerald'
+              }[e.type] || 'neutral';
+              return `
+              <article class="work-event-item event-type--${e.type}" id="event-${h(e.id)}">
+                <span class="timeline-dot dot--${eventTone}"></span>
+                <div class="timeline-content work-event-card stack">
+                  <div class="work-event-header">
+                    <div class="event-tags-wrap">
+                      <span class="badge badge-event-type badge-${eventTone}">${labels.event[e.type] || e.type}</span>
+                      ${isExpert ? badge(groupConfirmed(g) ? 'Đã xác nhận' : 'Chờ chuyên gia xác nhận', groupConfirmed(g) ? 'green' : 'amber') : ''}
+                    </div>
+                    <span class="event-timestamp">${icon('clock')} ${h(S.fmtDate(e.performedAt))}</span>
+                  </div>
+
+                  <p class="event-body-text" style="white-space:pre-line">${h(e.content)}</p>
+
+                  ${e.measurement ? `
+                  <div class="event-metric-chip">
+                    <span class="metric-label">Số đo kỹ thuật:</span>
+                    <strong>${h(e.measurement)} ${h(e.unit)}</strong>
+                  </div>` : ''}
+
+                  ${e.result ? `
+                  <div class="event-result-box">
+                    <span class="result-label">Kết quả:</span>
+                    <p>${h(e.result)}</p>
+                  </div>` : ''}
+
+                  ${e.rationale ? `
+                  <div class="event-rationale-box">
+                    <span class="rationale-label">Căn cứ / Lý do:</span>
+                    <p>${h(e.rationale)}</p>
+                  </div>` : ''}
+
+                  <div class="work-event-footer">
+                    <div class="event-author-info">
+                      <span>Thực hiện: <strong>${h(S.person(e.performedBy))}</strong></span>
+                      <span class="meta-sep">·</span>
+                      <span>Nhập bởi: <strong>${h(S.person(e.enteredBy))}</strong> (${h(S.fmtDate(e.recordedAt))})</span>
+                    </div>
+                    ${correctable(c) && (owner(c) || e.performedBy === who().id) ? `
+                    <button type="button" class="btn btn-ghost btn-xs btn-edit-event" data-action="case-note-edit" ${cid(c)} data-event="${h(e.id)}">
+                      ${icon('edit')}
+                      <span>Sửa ghi nhận</span>
+                    </button>` : ''}
+                  </div>
+
+                  ${e.history?.length ? `
+                  <details class="event-history-details">
+                    <summary>${e.history.length} lần chỉnh sửa</summary>
+                    <div class="history-list">
+                      ${e.history.map(v => `
+                      <p class="field-hint">${h(S.fmtDate(v.changedAt))} · ${h(S.person(v.changedBy))}: ${h(v.content)} (Lý do: ${h(v.reason || 'Cập nhật')})</p>
+                      `).join('')}
+                    </div>
+                  </details>` : ''}
+                </div>
+              </article>
+              `;
+            }).join('') || '<div class="empty-round-hint"><p class="muted">Đợt này chưa có ghi nhận. Bắt đầu bằng việc ghi lại điều vừa quan sát hoặc kiểm tra tại hiện trường.</p></div>'}
+          </div>
+        </section>
+        `).join('')}
+      </div>
+    </section>
+    `;
   }
-  S.actions['case-note-edit']=el=>{const c=get(el.dataset.case);if(!protect(c,'correct'))return;const e=events(c).find(e=>e.id===el.dataset.event);if(!e||(!owner(c)&&e.performedBy!==who().id))return;S.modal('Chỉnh sửa ghi nhận',`<form class="stack" data-form="case-note-update" ${cid(c)} data-event="${h(e.id)}">${errorBox()}${area('Nội dung','content',e.content,'required')}${field('Kết quả','result',e.result)}${field('Lý do lựa chọn','rationale',e.rationale)}${field('Lý do chỉnh sửa','editReason','','required')}<p class="field-hint">Giữ bản trước trong lịch sử. Xác nhận của chuyên gia cho nhóm nội dung này sẽ cần được thực hiện lại.</p><button type="submit" class="btn btn-primary">Lưu phiên bản chỉnh sửa</button></form>`);};
+  S.actions['case-note-edit']=el=>{const c=get(el.dataset.case);if(!protect(c,'correct'))return;const e=events(c).find(e=>e.id===el.dataset.event);if(!e||(!owner(c)&&e.performedBy!==who().id))return;S.modal('Chỉnh sửa ghi nhận',`<form class="stack" data-form="case-note-update" ${cid(c)} data-event="${h(e.id)}">${errorBox()}${area('Nội dung','content',e.content,'required')}${field('Kết quả','result',e.result)}${field('Lý do lựa chọn','rationale',e.rationale)}${field('Lý do chỉnh sửa','editReason','','required')}<p class="field-hint">Giữ bản trước trong lịch sử. Xác nhận của chuyên gia cho nhóm nội dung này sẽ cần được thực hiện lại.</p><div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button type="submit" class="btn btn-primary">Lưu phiên bản chỉnh sửa</button></div></form>`);};
   S.forms['case-note-update']=form=>{const c=get(form.dataset.case);if(!protect(c,'correct'))return;const r=c.rounds.find(r=>r.events.some(e=>e.id===form.dataset.event)),e=r?.events.find(e=>e.id===form.dataset.event);if(!e||(!owner(c)&&e.performedBy!==who().id))return;const f=new FormData(form),content=String(f.get('content')||'').trim(),reason=String(f.get('editReason')||'').trim();if(!content||!reason)return canFail(form,'Nội dung và lý do chỉnh sửa là bắt buộc.');if(S.commit(()=>{const old={...e};delete old.history;e.history ||= [];e.history.push({...old,changedBy:who().id,changedAt:stamp(),reason});e.content=content;e.result=String(f.get('result')||'');e.rationale=String(f.get('rationale')||'');dirtyReport(c);updated(c,'Chỉnh sửa ghi nhận',reason);},'Đã giữ bản trước và cập nhật ghi nhận.'))S.closeModal();};
 
   function groupPanel(c) {
-    const groups=expertGroups(c);if(!groups.length)return '';
-    return `<section class="card"><div class="card-head"><h2>Xác nhận đóng góp</h2><span class="muted">Theo chuyên gia / đợt</span></div><div class="card-body stack">${groups.map(g=>`<div class="list-item"><div><strong>${h(S.person(g.person))} · Đợt ${g.round.number}</strong><p class="field-hint">${g.round.events.filter(e=>e.performedBy===g.person).length} ghi nhận · ${groupConfirmed(g)?'Nội dung không đổi, giữ nguyên xác nhận.':g.confirmation?.status==='changes'?'Chuyên gia yêu cầu sửa: '+h(g.confirmation.feedback||''):'Đang chờ xác nhận nội dung.'}</p></div>${badge(groupConfirmed(g)?'Đã xác nhận':'Chờ xác nhận',groupConfirmed(g)?'green':'amber')}</div>`).join('')}<div class="actions">${who().role==='expert'?button('Xem & xác nhận phần của tôi','case-group-modal','primary',cid(c)):button('Gửi yêu cầu xác nhận','case-group-request','secondary',cid(c))}</div></div></section>`;
+    const groups = expertGroups(c);
+    if (!groups.length) return '';
+    return `
+    <section class="card expert-groups-card">
+      <div class="card-head expert-groups-head">
+        <div class="groups-head-left">
+          <span class="badge-groups-icon">${icon('users')}</span>
+          <h2>Xác nhận đóng góp</h2>
+        </div>
+        <span class="muted">Theo chuyên gia / đợt</span>
+      </div>
+      <div class="card-body stack">
+        <div class="groups-list">
+          ${groups.map(g => `
+          <div class="group-contribution-item">
+            <div class="contribution-info">
+              <strong>${h(S.person(g.person))} · Đợt ${g.round.number}</strong>
+              <p class="field-hint">
+                ${g.round.events.filter(e => e.performedBy === g.person).length} ghi nhận · 
+                ${groupConfirmed(g) ? 'Nội dung không đổi, giữ nguyên xác nhận.' : g.confirmation?.status === 'changes' ? 'Chuyên gia yêu cầu sửa: ' + h(g.confirmation.feedback || '') : 'Đang chờ xác nhận nội dung.'}
+              </p>
+            </div>
+            ${badge(groupConfirmed(g) ? 'Đã xác nhận' : 'Chờ xác nhận', groupConfirmed(g) ? 'green' : 'amber')}
+          </div>
+          `).join('')}
+        </div>
+        <div class="actions">
+          ${who().role === 'expert' ? button('Xem & xác nhận phần của tôi', 'case-group-modal', 'primary', cid(c)) : button('Gửi yêu cầu xác nhận', 'case-group-request', 'secondary', cid(c))}
+        </div>
+      </div>
+    </section>
+    `;
   }
   S.actions['case-group-request']=el=>{const c=get(el.dataset.case);if(!protect(c))return;const ids=[...new Set(expertGroups(c).filter(g=>!groupConfirmed(g)).map(g=>g.person))];if(!ids.length)return S.toast('Các đóng góp hiện tại đã được xác nhận.','info');S.commit(()=>{ids.forEach(id=>S.notice(id,'Cần xác nhận đóng góp',`${c.id}: kiểm tra các ghi nhận theo đợt.`,{page:'case',id:c.id,tab:'work'}));updated(c,'Gửi yêu cầu xác nhận đóng góp',ids.join(', '));},'Đã thông báo chuyên gia. Bạn có thể lưu chờ và tiếp tục sau.');};
-  S.actions['case-group-modal']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert')return;const list=expertGroups(c).filter(g=>g.person===who().id);S.modal('Xác nhận đóng góp của tôi',`<div class="stack">${list.map(g=>`<section class="card"><div class="card-body stack"><h3>Đợt ${g.round.number}</h3>${g.round.events.filter(e=>e.performedBy===who().id).map(e=>`<div class="source-card"><strong>${h(labels.event[e.type])}</strong><p>${h(e.content)}</p>${e.result?`<p>Kết quả: ${h(e.result)}</p>`:''}${e.rationale?`<p>Lý do: ${h(e.rationale)}</p>`:''}<p class="field-hint">Người nhập: ${h(S.person(e.enteredBy))} · ${h(S.fmtDate(e.recordedAt))}</p></div>`).join('')}${groupConfirmed(g)?badge('Đã xác nhận đúng phiên bản hiện tại','green'):`<div class="actions">${button('Xác nhận đúng nhóm nội dung','case-group-confirm','primary',`${cid(c)} data-round="${h(g.round.id)}"`)}${button('Yêu cầu sửa','case-group-changes','secondary',`${cid(c)} data-round="${h(g.round.id)}"`)}</div>`}</div></section>`).join('')||'<p>Chưa có ghi nhận nào về phần đóng góp của bạn.</p>'}</div>`);};
+  S.actions['case-group-modal']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert')return;const list=expertGroups(c).filter(g=>g.person===who().id);S.modal('Xác nhận đóng góp của tôi',`<div class="stack">${list.map(g=>`<section class="card"><div class="card-body stack"><h3>Đợt ${g.round.number}</h3>${g.round.events.filter(e=>e.performedBy===who().id).map(e=>`<div class="source-card"><strong>${h(labels.event[e.type])}</strong><p>${h(e.content)}</p>${e.result?`<p>Kết quả: ${h(e.result)}</p>`:''}${e.rationale?`<p>Lý do: ${h(e.rationale)}</p>`:''}<p class="field-hint">Người nhập: ${h(S.person(e.enteredBy))} · ${h(S.fmtDate(e.recordedAt))}</p></div>`).join('')}${groupConfirmed(g)?badge('Đã xác nhận đúng phiên bản hiện tại','green'):`<div class="actions">${button('Xác nhận đúng nhóm nội dung','case-group-confirm','primary',`${cid(c)} data-round="${h(g.round.id)}"`)}${button('Yêu cầu sửa','case-group-changes','secondary',`${cid(c)} data-round="${h(g.round.id)}"`)}</div>`}</div></section>`).join('')||'<p>Chưa có ghi nhận nào về phần đóng góp của bạn.</p>'}</div>`,button('Đóng','close-modal','secondary'));};
   S.actions['case-group-confirm']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert')return;const g=expertGroups(c).find(g=>g.person===who().id&&g.round.id===el.dataset.round);if(!g)return;if(S.commit(()=>{c.confirmations ||= {};c.confirmations[`${g.round.id}:${who().id}`]={status:'confirmed',signature:g.signature,by:who().id,at:stamp()};S.notice(c.ownerId,'Đóng góp đã được xác nhận',`${S.person(who().id)} đã xác nhận đợt ${g.round.number} của ${c.id}.`,{page:'case',id:c.id,tab:c.workState==='ended'?'report':'work'});updated(c,'Xác nhận nhóm đóng góp',g.round.id);},'Đã xác nhận nhóm đóng góp của bạn.'))S.closeModal();};
-  S.actions['case-group-changes']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert')return;S.modal('Yêu cầu sửa ghi nhận',`<form data-form="case-group-feedback" ${cid(c)} data-round="${h(el.dataset.round)}" class="stack">${errorBox()}${area('Nội dung cần sửa và lý do','feedback','','required')}<button class="btn btn-primary" type="submit">Gửi yêu cầu sửa</button></form>`);};
+  S.actions['case-group-changes']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert')return;S.modal('Yêu cầu sửa ghi nhận',`<form data-form="case-group-feedback" ${cid(c)} data-round="${h(el.dataset.round)}" class="stack">${errorBox()}${area('Nội dung cần sửa và lý do','feedback','','required')}<div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button class="btn btn-primary" type="submit">Gửi yêu cầu sửa</button></div></form>`);};
   S.forms['case-group-feedback']=form=>{const c=get(form.dataset.case);if(!protect(c,'view')||who().role!=='expert')return;const g=expertGroups(c).find(g=>g.person===who().id&&g.round.id===form.dataset.round),feedback=String(new FormData(form).get('feedback')||'').trim();if(!g)return;if(!feedback)return canFail(form,'Nêu rõ nội dung cần sửa.');if(S.commit(()=>{c.confirmations ||= {};c.confirmations[`${g.round.id}:${who().id}`]={status:'changes',signature:g.signature,by:who().id,at:stamp(),feedback};if(c.report)c.reportState='changes';S.notice(c.ownerId,'Chuyên gia yêu cầu sửa ghi nhận',feedback,{page:'case',id:c.id,tab:'work'});updated(c,'Yêu cầu sửa đóng góp',feedback);},'Đã gửi yêu cầu sửa.'))S.closeModal();};
 
   function pmPanel(c) {
     if(c.type!=='PM')return '';const disabled=editable(c)?'':'disabled';
-    return `<section class="card"><div class="card-head"><div><h2>Checklist bảo dưỡng</h2><p class="subtext">Ghi kết quả thực tế cho từng hạng mục.</p></div>${badge('Mẫu PM nội bộ','blue')}</div><div class="card-body stack"><p class="source-meta">${h(c.pmTemplate?.id||'PM')} · phiên bản ${h(c.pmTemplate?.version||1)}. Mẫu được cấu hình theo máy; kết quả không tự lấy từ lịch.</p><div class="notice notice-info"><strong>Cách ghi:</strong> chọn Đạt, Không đạt hoặc Chưa thực hiện. Nếu Không đạt, ghi hiện tượng quan sát được rồi mở điều tra trong cùng hồ sơ.</div>${(c.pm||[]).map((x,i)=>`<div class="source-card stack"><h3>${i+1}. ${h(x.label)}</h3><p class="field-hint">Tiêu chí: ${h(x.criterion||'Đối chiếu mẫu có hiệu lực.')}</p><div class="form-grid">${select('Kết quả kiểm tra','status',x.status,[['unperformed','Chưa thực hiện'],['pass','Đạt'],['fail','Không đạt']],`data-input="case-pm" ${cid(c)} data-item="${h(x.id)}" ${disabled}`)}${field(`Giá trị đo${x.unit?' ('+x.unit+')':''}`,'value',x.value,`data-input="case-pm" ${cid(c)} data-item="${h(x.id)}" ${disabled}`)}</div>${field('Bất thường / ghi chú','abnormality',x.abnormality,`data-input="case-pm" ${cid(c)} data-item="${h(x.id)}" ${disabled}`)}${x.status==='fail'?`<div class="notice notice-warning">Bất thường cần được điều tra trong hồ sơ này.${editable(c)?button(x.investigationEventId?'Đã mở điều tra':'Mở điều tra bất thường','case-pm-investigate','secondary',`${cid(c)} data-item="${h(x.id)}" ${x.investigationEventId?'disabled':''}`):''}</div>`:''}${x.performedBy?`<p class="field-hint">Ghi nhận bởi ${h(S.person(x.performedBy))} lúc ${h(S.fmtDate(x.performedAt))}</p>`:''}</div>`).join('')}</div></section>`;
+    return `<section class="card pm-checklist-card"><div class="card-head pm-checklist-head"><div><span class="badge-pm-tag">${icon('wrench')} BẢO DƯỠNG ĐỊNH KỲ</span><h2>Checklist bảo dưỡng</h2><p class="subtext">Ghi kết quả thực tế cho từng hạng mục theo mẫu chuẩn.</p></div>${badge('Mẫu PM nội bộ','blue')}</div><div class="card-body stack"><p class="source-meta">${h(c.pmTemplate?.id||'PM')} · phiên bản ${h(c.pmTemplate?.version||1)}. Mẫu được cấu hình theo máy; kết quả không tự lấy từ lịch.</p><div class="notice notice-info"><strong>Cách ghi:</strong> chọn Đạt, Không đạt hoặc Chưa thực hiện. Nếu Không đạt, ghi hiện tượng quan sát được rồi mở điều tra trong cùng hồ sơ.</div>${(c.pm||[]).map((x,i)=>`<div class="pm-item-card stack"><h3>${i+1}. ${h(x.label)}</h3><p class="field-hint">Tiêu chí: ${h(x.criterion||'Đối chiếu mẫu có hiệu lực.')}</p><div class="form-grid">${select('Kết quả kiểm tra','status',x.status,[['unperformed','Chưa thực hiện'],['pass','Đạt'],['fail','Không đạt']],`data-input="case-pm" ${cid(c)} data-item="${h(x.id)}" ${disabled}`)}${field(`Giá trị đo${x.unit?' ('+x.unit+')':''}`,'value',x.value,`data-input="case-pm" ${cid(c)} data-item="${h(x.id)}" ${disabled}`)}</div>${field('Bất thường / ghi chú','abnormality',x.abnormality,`data-input="case-pm" ${cid(c)} data-item="${h(x.id)}" ${disabled}`)}${x.status==='fail'?`<div class="notice notice-warning">Bất thường cần được điều tra trong hồ sơ này.${editable(c)?button(x.investigationEventId?'Đã mở điều tra':'Mở điều tra bất thường','case-pm-investigate','secondary',`${cid(c)} data-item="${h(x.id)}" ${x.investigationEventId?'disabled':''}`):''}</div>`:''}${x.performedBy?`<p class="field-hint">Ghi nhận bởi ${h(S.person(x.performedBy))} lúc ${h(S.fmtDate(x.performedAt))}</p>`:''}</div>`).join('')}</div></section>`;
   }
   S.inputs['case-pm']=(el,event)=>{
     const c=get(el.dataset.case);if(!protect(c,'edit'))return;const item=c.pm?.find(x=>x.id===el.dataset.item);if(!item)return;
@@ -647,15 +1375,145 @@
   S.actions['case-pm-investigate']=el=>{const c=get(el.dataset.case);if(!protect(c,'edit'))return;const x=c.pm?.find(x=>x.id===el.dataset.item);if(!x||x.status!=='fail'||x.investigationEventId)return;if(!x.abnormality?.trim())return S.toast('Ghi hiện tượng bất thường trước khi mở điều tra.','warning');S.commit(()=>{const e=newEvent(c,{type:'observation',content:`Bất thường ở hạng mục PM “${x.label}”: ${x.abnormality}`,result:'Mở điều tra trong cùng hồ sơ PM.',pmItemId:x.id});x.investigationEventId=e.id;c.context.symptom=`Bất thường PM: ${x.abnormality}`;if(c.retrieval)c.retrieval.stale=true;updated(c,'Mở điều tra bất thường PM',x.id);},'Đã ghi bất thường. Checklist gốc vẫn được giữ trong hồ sơ.');};
 
   function renderWork(c) {
-    const r=activeRound(c);
-    return `<div class="split-layout"><div class="stack">${c.workState==='waiting'?`<div class="notice notice-warning"><h2>Ca đang chờ xử lý tiếp</h2><p>${h(c.waitingReason||'Xem tóm tắt bàn giao ở đợt gần nhất.')}</p><p>Hồ sơ ${h(c.id)} vẫn mở. Tiếp tục sẽ tạo đợt ${c.rounds.length+1} và giữ nguyên nhật ký cũ.</p>${owner(c)?button('Bắt đầu đợt tiếp theo','case-resume','primary',cid(c)):''}</div>`:''}${c.workState==='ended'?`<div class="notice notice-success"><strong>Công việc đã kết thúc.</strong><p>Tình trạng máy: ${h(labels.machine[c.machineState])}. Tiếp theo: hoàn tất báo cáo và xác nhận đóng góp nếu có.</p>${button('Mở báo cáo tổng kết','case-tab','primary',`${cid(c)} data-tab="report"`)}</div>`:''}${supportPanel(c)}${pmPanel(c)}${editable(c)&&r?noteForm(c):''}${timeline(c)}</div><aside class="stack"><section class="card"><div class="card-head"><h2>${r?`Đợt ${r.number} · ${r.state==='active'?'đang thực hiện':'đã kết thúc'}`:'Theo dõi công việc'}</h2></div><div class="card-body stack"><p>Người phụ trách hồ sơ: <strong>${h(S.person(c.ownerId))}</strong></p><p>Người tham gia: ${h((c.participants||[]).map(S.person).join(', '))}</p>${owner(c)&&r?button('Ghi kết quả & chọn bước tiếp','case-outcome','primary',cid(c)):''}<p class="field-hint">Kết quả được lưu thành mốc của đợt hiện tại. Chưa đạt hoặc chờ linh kiện không xóa các bước đã làm.</p></div></section>${groupPanel(c)}${c.selectedSources?.length?`<section class="card"><div class="card-head"><h2>Nguồn đã chọn tham khảo</h2></div><div class="card-body stack">${c.selectedSources.map(x=>`<div><p>${h(x.id)} · phiên bản ${h(x.version)}</p><div class="actions">${button('Đọc nguồn','case-source-read','ghost',`${cid(c)} data-source="${h(x.id)}" data-version="${h(x.version)}"`)}${editable(c)?button('Ghi kết quả áp dụng','case-source-feedback','ghost',`${cid(c)} data-source="${h(x.id)}" data-version="${h(x.version)}"`):''}</div>${x.feedback?`<p class="field-hint">${h(x.feedback)}</p>`:''}</div>`).join('')}</div></section>`:''}</aside></div>`;
+    const r = activeRound(c);
+    return `
+    <div class="split-layout work-stage-layout">
+      <div class="stack work-primary-column">
+        ${c.workState === 'waiting' ? `
+        <div class="notice notice-warning work-state-waiting-banner">
+          <div class="notice-icon-wrap">${icon('alert')}</div>
+          <div class="notice-content-wrap">
+            <h2>Ca đang tạm dừng chờ xử lý tiếp</h2>
+            <p>${h(c.waitingReason || 'Xem tóm tắt bàn giao ở đợt gần nhất.')}</p>
+            <p class="subtext">Hồ sơ <strong>${h(c.id)}</strong> vẫn mở. Tiếp tục sẽ tạo đợt ${c.rounds.length + 1} và giữ nguyên nhật ký cũ.</p>
+            ${owner(c) ? `
+            <div class="actions" style="margin-top: 10px;">
+              <button type="button" class="btn btn-primary" data-action="case-resume" ${cid(c)}>
+                ${icon('refresh')}
+                <span>Bắt đầu đợt tiếp theo</span>
+              </button>
+            </div>` : ''}
+          </div>
+        </div>` : ''}
+
+        ${c.workState === 'ended' ? `
+        <div class="notice notice-success work-state-ended-banner">
+          <div class="notice-icon-wrap">${icon('checkcircle')}</div>
+          <div class="notice-content-wrap">
+            <strong>Công việc hiện trường đã kết thúc.</strong>
+            <p>Tình trạng máy hiện tại: <strong>${h(labels.machine[c.machineState])}</strong>. Bước tiếp theo: hoàn tất hồ sơ báo cáo và xác nhận đóng góp của chuyên gia.</p>
+            <div class="actions" style="margin-top: 10px;">
+              <button type="button" class="btn btn-primary" data-action="case-tab" ${cid(c)} data-tab="report">
+                <span>Chuyển sang Báo cáo tổng kết</span>
+                ${icon('arrow')}
+              </button>
+            </div>
+          </div>
+        </div>` : ''}
+
+        ${supportPanel(c)}
+        ${pmPanel(c)}
+        ${editable(c) && r ? noteForm(c) : ''}
+        ${timeline(c)}
+      </div>
+
+      <aside class="stack work-sidebar-column">
+        <section class="card round-status-card">
+          <div class="card-head round-status-head">
+            <div class="round-status-title-wrap">
+              <span class="badge-round-indicator">${icon('clock')} THEO DÕI ĐỢT</span>
+              <h2>${r ? `Đợt ${r.number}` : 'Theo dõi công việc'}</h2>
+            </div>
+            ${r ? badge(r.state === 'active' ? 'Đang thực hiện' : 'Đã kết thúc', r.state === 'active' ? 'blue' : 'neutral') : ''}
+          </div>
+          <div class="card-body stack">
+            <div class="round-people-box">
+              <div class="people-row">
+                <span class="people-label">Phụ trách hồ sơ:</span>
+                <span class="people-val person-owner">
+                  ${icon('user')}
+                  <strong>${h(S.person(c.ownerId))}</strong>
+                </span>
+              </div>
+              <div class="people-row">
+                <span class="people-label">Tham gia hiện trường:</span>
+                <div class="participants-tags">
+                  ${(c.participants || []).map(id => `
+                  <span class="participant-tag">
+                    ${icon('user')}
+                    <span>${h(S.person(id))}</span>
+                  </span>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            ${owner(c) && r ? `
+            <div class="round-action-cta">
+              <button type="button" class="btn btn-primary btn-round-outcome" data-action="case-outcome" ${cid(c)}>
+                ${icon('check')}
+                <span>Ghi kết quả & chọn bước tiếp</span>
+              </button>
+              <p class="field-hint">Kết quả được lưu thành mốc của đợt hiện tại. Chờ linh kiện hoặc chuyển giao không xóa các bước đã thực hiện.</p>
+            </div>` : ''}
+          </div>
+        </section>
+
+        ${groupPanel(c)}
+
+        ${c.selectedSources?.length ? `
+        <section class="card selected-sources-sidebar-card">
+          <div class="card-head selected-sources-head">
+            <div class="sources-head-left">
+              <span class="badge-sources-icon">${icon('book')}</span>
+              <h2>Căn cứ đã chọn tham khảo</h2>
+            </div>
+            <span class="badge badge-neutral">${c.selectedSources.length}</span>
+          </div>
+          <div class="card-body stack">
+            ${c.selectedSources.map(x => {
+              const k = S.getKnowledge(x.id, Number(x.version)) || (S.db.knowledge || []).find(item => item.id === x.id) || (S.db.cases || []).find(item => item.id === x.id);
+              const title = k?.title || '';
+              return `
+            <div class="selected-source-item">
+              <div class="source-item-header">
+                <div class="source-title-line">
+                  <span class="source-code-pill">${h(x.id)}</span>
+                  ${title ? `<span class="source-sep">·</span><span class="source-title-text">${h(title)}</span>` : ''}
+                </div>
+                <span class="source-ver-tag">v${h(x.version)}</span>
+              </div>
+              <div class="actions source-item-actions">
+                <button type="button" class="btn btn-ghost btn-xs" data-action="case-source-read" ${cid(c)} data-source="${h(x.id)}" data-version="${h(x.version)}">
+                  ${icon('file')}
+                  <span>Đọc nguồn</span>
+                </button>
+                ${editable(c) ? `
+                <button type="button" class="btn btn-ghost btn-xs" data-action="case-source-feedback" ${cid(c)} data-source="${h(x.id)}" data-version="${h(x.version)}">
+                  ${icon('edit')}
+                  <span>Ghi kết quả áp dụng</span>
+                </button>` : ''}
+              </div>
+              ${x.feedback ? `
+              <div class="source-feedback-note">
+                <span class="feedback-label">Phản hồi áp dụng:</span>
+                <p>${h(x.feedback)}</p>
+              </div>` : ''}
+            </div>
+            `;
+            }).join('')}
+          </div>
+        </section>` : ''}
+      </aside>
+    </div>
+    `;
   }
-  S.actions['case-source-feedback']=el=>{const c=get(el.dataset.case);if(!protect(c,'edit'))return;S.modal('Ghi phản hồi trong hồ sơ',`<form data-form="case-source-feedback-save" ${cid(c)} data-source="${h(el.dataset.source)}" data-version="${h(el.dataset.version)}" class="stack">${errorBox()}${select('Mức áp dụng','application','reference',[['reference','Đang tham khảo, chưa thực hiện'],['partial','Đã áp dụng một phần'],['applied','Đã thực hiện theo hướng tham khảo'],['not-applicable','Không áp dụng được']])}${area('Điểm khác, phần đã làm và kết quả thực tế','feedback','','required')}<button type="submit" class="btn btn-primary">Lưu phản hồi vào nhật ký</button></form>`);};
+  S.actions['case-source-feedback']=el=>{const c=get(el.dataset.case);if(!protect(c,'edit'))return;S.modal('Ghi phản hồi trong hồ sơ',`<form data-form="case-source-feedback-save" ${cid(c)} data-source="${h(el.dataset.source)}" data-version="${h(el.dataset.version)}" class="stack">${errorBox()}${select('Mức áp dụng','application','reference',[['reference','Đang tham khảo, chưa thực hiện'],['partial','Đã áp dụng một phần'],['applied','Đã thực hiện theo hướng tham khảo'],['not-applicable','Không áp dụng được']])}${area('Điểm khác, phần đã làm và kết quả thực tế','feedback','','required')}<div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button type="submit" class="btn btn-primary">Lưu phản hồi vào nhật ký</button></div></form>`);};
   S.forms['case-source-feedback-save']=form=>{const c=get(form.dataset.case);if(!protect(c,'edit'))return;const x=c.selectedSources.find(x=>x.id===form.dataset.source&&String(x.version)===form.dataset.version),f=new FormData(form),feedback=String(f.get('feedback')||'').trim();if(!x)return;if(!feedback)return canFail(form,'Ghi rõ phần áp dụng, điểm khác hoặc kết quả thực tế.');if(S.commit(()=>{x.feedback=feedback;x.application=String(f.get('application'));newEvent(c,{type:x.application==='reference'?'observation':'result',content:`Phản hồi nguồn ${x.id} v${x.version}: ${feedback}`,sourceId:x.id,sourceVersion:x.version});updated(c,'Ghi phản hồi nguồn',x.id);},'Đã lưu phản hồi; không tự thay đổi tình trạng máy.'))S.closeModal();};
   S.actions['case-resume']=el=>{const c=get(el.dataset.case);if(!protect(c)||c.workState!=='waiting'||activeRound(c))return;S.commit(()=>{c.rounds.push({id:S.uid('RD'),number:c.rounds.length+1,state:'active',startedAt:stamp(),events:[]});c.workState='active';c.waitingReason='';dirtyReport(c);updated(c,'Tiếp tục đợt xử lý',`Đợt ${c.rounds.length}`);},'Đã mở đợt mới trong cùng hồ sơ.');};
   S.actions['case-outcome']=el=>{
     const c=get(el.dataset.case);if(!protect(c)||!activeRound(c))return;const r=activeRound(c);const summary=r.events.map(e=>`${labels.event[e.type]}: ${e.content}${e.result?' — '+e.result:''}`).join('\n');
-    S.modal('Kết quả đợt & bước tiếp theo',`<form data-form="case-outcome-save" ${cid(c)} class="stack">${errorBox()}${select('Tình trạng máy quan sát được','machineState',c.machineState,Object.entries(labels.machine))}${area('Căn cứ kiểm chứng / kết quả thực tế','evidence',c.resultEvidence,'required')}${select('Tiến độ tiếp theo','next','continue',[['continue','Tiếp tục điều tra trong đợt này'],['parts','Kết thúc đợt — chờ linh kiện'],['support','Kết thúc đợt — chờ hỗ trợ'],['handover','Kết thúc đợt — bàn giao'],['finish','Kết thúc công việc — chuyển tổng kết']])}<div class="notice notice-info">Tóm tắt được ghép từ nhật ký. Kiểm tra và bổ sung trước khi lưu.</div>${area('Tóm tắt đợt','summary',summary,'required rows="5"')}${area('Việc cần làm tiếp / lý do dừng','nextSteps','')}${field('Người / đơn vị nhận bàn giao (nếu bàn giao)','recipient','')}<details><summary>Kết thúc khi máy chưa được phục hồi</summary><div class="stack"><p class="field-hint">Chỉ ghi nhận khi đã có quyết định kết thúc công việc từ người có thẩm quyền tại nhà máy. Tài khoản bảo trì không tự cấp quyền quyết định.</p>${field('Người có thẩm quyền / chức trách','decisionBy','')}${field('Mã biên bản / quyết định bên ngoài','decisionRef','')}${area('Lý do kết thúc chưa khắc phục','decisionReason','')}<label class="check-line"><input name="decisionChecked" type="checkbox"> Tôi đã đối chiếu quyết định bên ngoài và ghi đúng nội dung.</label></div></details><div class="notice notice-warning">Chờ linh kiện hoặc hỗ trợ vẫn giữ hồ sơ mở. Máy phục hồi không tự chứng minh nguyên nhân gốc.</div><button type="submit" class="btn btn-primary">Lưu kết quả & tiếp tục</button></form>`);
+    S.modal('Kết quả đợt & bước tiếp theo',`<form data-form="case-outcome-save" ${cid(c)} class="stack">${errorBox()}${select('Tình trạng máy quan sát được','machineState',c.machineState,Object.entries(labels.machine))}${area('Căn cứ kiểm chứng / kết quả thực tế','evidence',c.resultEvidence,'required')}${select('Tiến độ tiếp theo','next','continue',[['continue','Tiếp tục điều tra trong đợt này'],['parts','Kết thúc đợt — chờ linh kiện'],['support','Kết thúc đợt — chờ hỗ trợ'],['handover','Kết thúc đợt — bàn giao'],['finish','Kết thúc công việc — chuyển tổng kết']])}<div class="notice notice-info">Tóm tắt được ghép từ nhật ký. Kiểm tra và bổ sung trước khi lưu.</div>${area('Tóm tắt đợt','summary',summary,'required rows="5"')}${area('Việc cần làm tiếp / lý do dừng','nextSteps','')}${field('Người / đơn vị nhận bàn giao (nếu bàn giao)','recipient','')}<details><summary>Kết thúc khi máy chưa được phục hồi</summary><div class="stack"><p class="field-hint">Chỉ ghi nhận khi đã có quyết định kết thúc công việc từ người có thẩm quyền tại nhà máy. Tài khoản bảo trì không tự cấp quyền quyết định.</p>${field('Người có thẩm quyền / chức trách','decisionBy','')}${field('Mã biên bản / quyết định bên ngoài','decisionRef','')}${area('Lý do kết thúc chưa khắc phục','decisionReason','')}<label class="check-line"><input name="decisionChecked" type="checkbox"> Tôi đã đối chiếu quyết định bên ngoài và ghi đúng nội dung.</label></div></details><div class="notice notice-warning">Chờ linh kiện hoặc hỗ trợ vẫn giữ hồ sơ mở. Máy phục hồi không tự chứng minh nguyên nhân gốc.</div><div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button type="submit" class="btn btn-primary">Lưu kết quả & tiếp tục</button></div></form>`);
   };
   S.forms['case-outcome-save']=form=>{
     const c=get(form.dataset.case);if(!protect(c)||!activeRound(c))return;const f=new FormData(form),machine=String(f.get('machineState')),next=String(f.get('next')),evidence=String(f.get('evidence')||'').trim(),summary=String(f.get('summary')||'').trim(),nextSteps=String(f.get('nextSteps')||'').trim();
@@ -671,24 +1529,316 @@
   };
 
   function renderReport(c) {
-    const r=c.report,people=pendingReportPeople(c),mayEdit=owner(c)&&c.reportState!=='confirmed';
-    if(!r)return `<div class="stack"><section class="card"><div class="card-body stack"><h2>Soạn nháp từ nhật ký</h2><p>${events(c).length} ghi nhận trong ${c.rounds.length} đợt đã sẵn sàng. Bản nháp được tổng hợp từ dữ kiện đã ghi, giữ nguyên phần nguyên nhân chưa xác định.</p>${owner(c)?button('Tạo nháp tổng kết','case-report-generate','primary',cid(c)):'<p class="muted">Người phụ trách hồ sơ sẽ tạo nháp báo cáo.</p>'}</div></section>${groupPanel(c)}</div>`;
-    const attrs=`data-input="case-report-input" ${cid(c)} ${mayEdit?'':'disabled'}`;
-    return `<div class="split-layout"><div class="stack">${r.feedback?`<div class="notice notice-warning"><strong>Phản hồi từ ${h(S.person(r.feedback.by))}</strong><p>${h(r.feedback.text)}</p></div>`:''}${r.sourceChanged?'<div class="notice notice-warning">Nhật ký hoặc bối cảnh có thay đổi sau lần tổng hợp. Cập nhật nháp và đối chiếu trước khi chốt. Phần bạn đã sửa sẽ được giữ cho đến khi bạn chọn thay.</div>':''}<section class="card"><div class="card-head"><div><h2>Báo cáo tổng kết</h2><p class="source-meta">${h(r.id)} · revision ${r.revision} · ${h(labels.report[c.reportState])}</p></div>${saveLabel()}</div><div class="card-body stack">${area('Diễn biến và kết quả mọi đợt','summary',r.summary,`${attrs} rows="14"`)}${select('Trạng thái nguyên nhân','causeStatus',r.causeStatus,[['unknown','Chưa xác định'],['hypothesis','Còn là giả thuyết'],['confirmed','Đã có bằng chứng xác nhận']],attrs)}${area('Nguyên nhân / giả thuyết và bằng chứng liên quan','cause',r.cause,attrs,'Nếu đã xác nhận, ghi căn cứ kiểm tra. Máy phục hồi không tự chứng minh nguyên nhân.')}<div class="form-grid">${area('Bài học / điểm cần theo dõi','lessons',r.lessons,attrs)}${area('Giới hạn và việc còn lại','limits',r.limits,attrs)}</div>${r.correctionReason?`<p class="field-hint">Đính chính: ${h(r.correctionReason)}</p>`:''}${c.externalClosureDecision?`<div class="notice notice-warning"><strong>Kết thúc chưa khắc phục theo quyết định bên ngoài</strong><p>${h(c.externalClosureDecision.reference)} · ${h(c.externalClosureDecision.by)}</p><p>${h(c.externalClosureDecision.reason)}</p></div>`:''}${mayEdit?`<div class="actions">${button('Cập nhật nháp từ nhật ký','case-report-generate','secondary',cid(c))}${button('Gửi / nhắc xác nhận','case-report-request','secondary',cid(c))}</div>`:''}${r.versions?.length?`<details><summary>Lịch sử ${r.versions.length} phiên bản lưu trước</summary>${r.versions.map(v=>`<div class="source-card"><p>Revision ${h(v.revision)} · ${h(S.fmtDate(v.savedAt))} · ${h(S.person(v.savedBy))}</p><p style="white-space:pre-line">${h(v.summary)}</p></div>`).join('')}</details>`:''}</div></section><section class="card"><div class="card-head"><h2>Dữ kiện nguồn của báo cáo</h2></div><div class="card-body stack">${c.rounds.map(round=>`<details><summary>Đợt ${round.number} · ${round.events.length} ghi nhận</summary>${round.events.map(e=>`<div class="source-card"><p><strong>${h(e.id)} · ${h(labels.event[e.type])}</strong></p><p>${h(e.content)}</p>${e.result?`<p>Kết quả: ${h(e.result)}</p>`:''}<p class="field-hint">${h(S.person(e.performedBy))} · ${h(S.fmtDate(e.performedAt))}</p></div>`).join('')}</details>`).join('')}</div></section></div><aside class="stack"><section class="card"><div class="card-head"><h2>Điều kiện chốt báo cáo</h2></div><div class="card-body stack"><p>${c.workState==='ended'?'✓':'○'} Công việc đã kết thúc</p><p>${!r.sourceChanged?'✓':'○'} Nháp đã đối chiếu nhật ký hiện tại</p><p>${people.length?'○':'✓'} Xác nhận đóng góp ${people.length?`— còn ${people.map(S.person).join(', ')}`:'đã đủ'}</p><p>Máy: ${h(labels.machine[c.machineState])}</p><p class="field-hint">Báo cáo chờ xác nhận không làm thay đổi tình trạng máy đã được ghi nhận.</p>${owner(c)&&c.reportState!=='confirmed'?button('Kiểm tra & chốt báo cáo','case-report-finalize','primary',cid(c)):''}${owner(c)&&c.reportState==='confirmed'?`<div class="notice notice-success">Báo cáo đã xác nhận và giữ trong lịch sử máy.</div>${button('Đề xuất tri thức từ hồ sơ','case-propose','primary',cid(c))}${button('Đính chính báo cáo','case-report-correct','secondary',cid(c))}<p class="field-hint">Có thể chỉ lưu lịch sử. Đề xuất tri thức là bản riêng và cần kiểm duyệt.</p>`:''}${who().role==='expert'&&c.reportState!=='confirmed'&&reportPeople(c).includes(who().id)?button('Xác nhận phần của tôi trong báo cáo','case-report-confirm-open','primary',cid(c)):''}</div></section>${groupPanel(c)}<section class="card"><div class="card-head"><h2>Tích hợp HozenDX</h2></div><div class="card-body stack">${badge('Chiều ghi: chưa cấu hình','neutral')}<p>Báo cáo được lưu cục bộ; chưa đồng bộ tới HozenDX.</p><p class="field-hint">Dữ liệu máy hiện là nguồn tham chiếu mô phỏng.</p></div></section></aside></div>`;
+    const r = c.report, people = pendingReportPeople(c), mayEdit = owner(c) && c.reportState !== 'confirmed';
+    if (!r) {
+      return `
+      <div class="report-init-hero card">
+        <div class="card-body stack">
+          <div class="report-init-badge-eyebrow">
+            <span class="badge-report-tag">${icon('file')} GIAI ĐOẠN 4 · BÁO CÁO TỔNG KẾT</span>
+          </div>
+          <div class="report-init-header">
+            <h2>Sẵn sàng tổng hợp báo cáo kỹ thuật ca</h2>
+            <p class="subtext">Bản nháp được tổng hợp tự động từ diễn biến thực tế qua các đợt xử lý tại hiện trường. Toàn bộ mốc quan sát, số đo và kết quả kiểm chứng sẽ được bảo toàn nguyên trạng.</p>
+          </div>
+          <div class="report-init-metrics-strip">
+            <div class="metric-pill">
+              ${icon('clock')}
+              <span>Tổng số đợt: <strong>${c.rounds.length} đợt</strong></span>
+            </div>
+            <div class="metric-pill">
+              ${icon('check')}
+              <span>Mốc ghi nhận: <strong>${events(c).length} mốc</strong></span>
+            </div>
+            <div class="metric-pill">
+              <span>Tình trạng máy: <strong>${h(labels.machine[c.machineState])}</strong></span>
+            </div>
+          </div>
+          <div class="report-init-action">
+            ${owner(c) ? `
+            <button type="button" class="btn btn-primary btn-generate-report" data-action="case-report-generate" ${cid(c)}>
+              ${icon('file')}
+              <span>Tạo nháp tổng kết từ nhật ký</span>
+            </button>
+            ` : `<p class="muted">Chỉ người phụ trách hồ sơ (<strong>${h(S.person(c.ownerId))}</strong>) có quyền tạo nháp báo cáo tổng kết.</p>`}
+          </div>
+        </div>
+      </div>
+      ${groupPanel(c)}
+      `;
+    }
+
+    const attrs = `data-input="case-report-input" ${cid(c)} ${mayEdit ? '' : 'disabled'}`;
+    const reportTone = { draft: 'amber', pending: 'blue', changes: 'red', confirmed: 'green' }[c.reportState] || 'neutral';
+
+    return `
+    <div class="split-layout report-stage-layout">
+      <div class="stack report-primary-column">
+        ${r.feedback ? `
+        <div class="notice notice-warning report-alert-banner">
+          <div class="alert-icon-wrap">${icon('alert')}</div>
+          <div class="alert-content-wrap">
+            <strong>Yêu cầu chỉnh sửa từ chuyên gia ${h(S.person(r.feedback.by))}</strong>
+            <p>${h(r.feedback.text)}</p>
+          </div>
+        </div>` : ''}
+
+        ${r.sourceChanged ? `
+        <div class="notice notice-warning report-alert-banner">
+          <div class="alert-icon-wrap">${icon('refresh')}</div>
+          <div class="alert-content-wrap">
+            <strong>Nhật ký hiện trường có thay đổi sau lần tổng hợp</strong>
+            <p>Bối cảnh hoặc các mốc xử lý vừa được cập nhật thêm. Hãy bấm <em>“Cập nhật nháp từ nhật ký”</em> để đối chiếu và đồng bộ dữ liệu mới nhất trước khi chốt hồ sơ.</p>
+          </div>
+        </div>` : ''}
+
+        <section class="card report-editor-card">
+          <div class="card-head report-editor-head">
+            <div class="report-head-title-wrap">
+              <div class="report-badge-eyebrow">
+                <span class="badge-report-tag">${icon('file')} BÁO CÁO TỔNG KẾT</span>
+              </div>
+              <h2>Hồ sơ kỹ thuật ca bảo trì</h2>
+              <div class="report-meta-chips">
+                <span class="badge-report-id">${h(r.id)}</span>
+                <span class="badge-report-revision">Revision ${h(r.revision)}</span>
+                <span class="badge badge-report-state badge-${reportTone}">${h(labels.report[c.reportState])}</span>
+              </div>
+            </div>
+            ${saveLabel()}
+          </div>
+
+          <div class="card-body stack">
+            <div class="report-form-section">
+              <div class="section-title-line">
+                <span class="section-num-badge">1</span>
+                <h3>Diễn biến & Kết quả các đợt xử lý</h3>
+              </div>
+              <p class="field-hint">Mô tả đầy đủ quá trình điều tra, phương án can thiệp và tình trạng thực tế qua các đợt.</p>
+              ${area('Diễn biến và kết quả mọi đợt', 'summary', r.summary, `${attrs} rows="8" placeholder="Nhập tóm tắt diễn biến xử lý..."`)}
+            </div>
+
+            <div class="report-form-section report-cause-section">
+              <div class="section-title-line">
+                <span class="section-num-badge">2</span>
+                <h3>Phân tích nguyên nhân & Căn cứ kỹ thuật</h3>
+              </div>
+              <div class="report-cause-grid">
+                ${select('Trạng thái nguyên nhân', 'causeStatus', r.causeStatus, [['unknown', 'Chưa xác định'], ['hypothesis', 'Còn là giả thuyết'], ['confirmed', 'Đã có bằng chứng xác nhận']], attrs)}
+                ${area('Nguyên nhân / giả thuyết và bằng chứng liên quan', 'cause', r.cause, `${attrs} rows="3" placeholder="Ghi nhận định nguyên nhân và bằng chứng cụ thể..."`, 'Nếu đã xác nhận, ghi căn cứ kiểm tra. Máy phục hồi không tự chứng minh nguyên nhân.')}
+              </div>
+            </div>
+
+            <div class="report-form-section">
+              <div class="section-title-line">
+                <span class="section-num-badge">3</span>
+                <h3>Bài học kinh nghiệm & Giới hạn kỹ thuật</h3>
+              </div>
+              <div class="form-grid">
+                ${area('Bài học / điểm cần theo dõi', 'lessons', r.lessons, `${attrs} rows="3" placeholder="Đúc kết kinh nghiệm cho các ca tương tự..."`)}
+                ${area('Giới hạn và việc còn lại', 'limits', r.limits, `${attrs} rows="3" placeholder="Các việc cần theo dõi thêm hoặc chưa xử lý triệt để..."`)}
+              </div>
+            </div>
+
+            ${r.correctionReason ? `
+            <div class="report-correction-box">
+              <div class="correction-head">
+                ${icon('edit')}
+                <strong>Lý do đính chính báo cáo:</strong>
+              </div>
+              <p>${h(r.correctionReason)}</p>
+            </div>` : ''}
+
+            ${c.externalClosureDecision ? `
+            <div class="notice notice-warning report-closure-box">
+              <div class="closure-head">
+                ${icon('alert')}
+                <strong>Kết thúc chưa khắc phục theo quyết định bên ngoài</strong>
+              </div>
+              <p class="closure-ref">Biên bản / Quyết định: <strong>${h(c.externalClosureDecision.reference)}</strong> · Người duyệt: <strong>${h(c.externalClosureDecision.by)}</strong></p>
+              <p class="closure-reason">Lý do: ${h(c.externalClosureDecision.reason)}</p>
+            </div>` : ''}
+
+            ${mayEdit ? `
+            <div class="report-editor-toolbar">
+              <button type="button" class="btn btn-secondary btn-refresh-draft" data-action="case-report-generate" ${cid(c)}>
+                ${icon('refresh')}
+                <span>Cập nhật nháp từ nhật ký</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-request-confirm" data-action="case-report-request" ${cid(c)}>
+                ${icon('users')}
+                <span>Gửi / nhắc chuyên gia xác nhận</span>
+              </button>
+            </div>` : ''}
+
+            ${r.versions?.length ? `
+            <details class="context-details report-versions-accordion">
+              <summary>Lịch sử ${r.versions.length} phiên bản đã lưu trước <span>(đối chiếu revision)</span></summary>
+              <div class="versions-history-stack stack" style="margin-top: 14px;">
+                ${r.versions.map(v => `
+                <div class="source-card version-item-card">
+                  <div class="version-item-header">
+                    <span class="version-badge">Revision ${h(v.revision)}</span>
+                    <span class="version-meta">${icon('clock')} ${h(S.fmtDate(v.savedAt))} · Lưu bởi <strong>${h(S.person(v.savedBy))}</strong></span>
+                  </div>
+                  <p class="version-summary-preview" style="white-space:pre-line">${h(v.summary)}</p>
+                </div>
+                `).join('')}
+              </div>
+            </details>` : ''}
+          </div>
+        </section>
+
+        <!-- Dữ kiện nguồn của báo cáo -->
+        <section class="card report-sources-card">
+          <div class="card-head report-sources-head">
+            <div class="sources-head-title-wrap">
+              <span class="badge-sources-tag">${icon('book')} DỮ LIỆU GỐC HIỆN TRƯỜNG</span>
+              <h2>Dữ kiện nguồn của báo cáo</h2>
+            </div>
+            <span class="badge badge-neutral">${c.rounds.length} đợt ghi nhận</span>
+          </div>
+          <div class="card-body stack">
+            ${c.rounds.map(round => `
+            <details class="context-details round-source-accordion" ${round.state === 'active' ? 'open' : ''}>
+              <summary>
+                <span>Đợt ${round.number} · <strong>${round.events.length} mốc ghi nhận</strong> (${round.state === 'active' ? 'Đang thực hiện' : 'Đã kết thúc'})</span>
+              </summary>
+              <div class="round-source-events-list stack" style="margin-top: 12px;">
+                ${round.events.map(e => `
+                <div class="source-event-mini-card">
+                  <div class="source-event-mini-head">
+                    <span class="badge badge-event-type badge-${{ observation: 'blue', check: 'green', hypothesis: 'purple', action: 'amber', result: 'emerald' }[e.type] || 'neutral'}">${labels.event[e.type] || e.type}</span>
+                    <span class="source-event-id">${h(e.id)}</span>
+                    <span class="source-event-time">${icon('clock')} ${h(S.fmtDate(e.performedAt))}</span>
+                  </div>
+                  <p class="source-event-content">${h(e.content)}</p>
+                  ${e.result ? `<div class="source-event-res"><strong>Kết quả:</strong> ${h(e.result)}</div>` : ''}
+                  <div class="source-event-author">Thực hiện: <strong>${h(S.person(e.performedBy))}</strong></div>
+                </div>
+                `).join('') || '<p class="muted">Chưa có ghi nhận trong đợt này.</p>'}
+              </div>
+            </details>
+            `).join('')}
+          </div>
+        </section>
+      </div>
+
+      <!-- Cột phải (Sidebar 350px) -->
+      <aside class="stack report-sidebar-column">
+        <section class="card report-criteria-card">
+          <div class="card-head report-criteria-head">
+            <div class="criteria-head-title-wrap">
+              <span class="badge-criteria-tag">${icon('checkcircle')} TIÊU CHUẨN ĐÓNG CA</span>
+              <h2>Điều kiện chốt báo cáo</h2>
+            </div>
+          </div>
+          <div class="card-body stack">
+            <div class="report-criteria-list">
+              <div class="criteria-item ${c.workState === 'ended' ? 'is-pass' : 'is-pending'}">
+                <span class="criteria-icon">${c.workState === 'ended' ? icon('check') : icon('clock')}</span>
+                <div class="criteria-info">
+                  <strong>Công việc hiện trường</strong>
+                  <span>${c.workState === 'ended' ? 'Đã kết thúc công việc' : 'Hiện trường còn đang mở'}</span>
+                </div>
+              </div>
+
+              <div class="criteria-item ${!r.sourceChanged ? 'is-pass' : 'is-warning'}">
+                <span class="criteria-icon">${!r.sourceChanged ? icon('check') : icon('alert')}</span>
+                <div class="criteria-info">
+                  <strong>Đối chiếu nhật ký</strong>
+                  <span>${!r.sourceChanged ? 'Nháp đã khớp dữ kiện mới nhất' : 'Nhật ký đã đổi — cần cập nhật nháp'}</span>
+                </div>
+              </div>
+
+              <div class="criteria-item ${!people.length ? 'is-pass' : 'is-pending'}">
+                <span class="criteria-icon">${!people.length ? icon('check') : icon('users')}</span>
+                <div class="criteria-info">
+                  <strong>Xác nhận đóng góp</strong>
+                  <span>${!people.length ? 'Đã đủ xác nhận từ các bên' : 'Chờ xác nhận: ' + people.map(S.person).join(', ')}</span>
+                </div>
+              </div>
+
+              <div class="criteria-machine-status">
+                <span class="criteria-machine-label">Tình trạng máy hiện tại:</span>
+                <div class="criteria-machine-value">
+                  <span class="status-indicator-dot ${c.machineState === 'restored' ? 'dot-restored' : c.machineState === 'unrestored' ? 'dot-unrestored' : 'dot-unverified'}"></span>
+                  <strong>${h(labels.machine[c.machineState])}</strong>
+                </div>
+              </div>
+            </div>
+
+            <p class="field-hint criteria-legal-hint">Báo cáo chờ xác nhận không làm thay đổi tình trạng máy đã được ghi nhận.</p>
+
+            <div class="report-sidebar-actions">
+              ${owner(c) && c.reportState !== 'confirmed' ? `
+              <button type="button" class="btn btn-primary btn-finalize-report" data-action="case-report-finalize" ${cid(c)}>
+                ${icon('check')}
+                <span>Kiểm tra & chốt báo cáo</span>
+              </button>
+              ` : ''}
+
+              ${owner(c) && c.reportState === 'confirmed' ? `
+              <div class="notice notice-success report-confirmed-success-notice">
+                <div class="notice-icon-wrap">${icon('checkcircle')}</div>
+                <div>
+                  <strong>Báo cáo đã xác nhận chính thức</strong>
+                  <p>Được lưu trữ vào lý lịch máy và sẵn sàng trích xuất tri thức.</p>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary btn-propose-knowledge" data-action="case-propose" ${cid(c)}>
+                ${icon('sparkles')}
+                <span>Đề xuất tri thức từ hồ sơ</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-correct-report" data-action="case-report-correct" ${cid(c)}>
+                ${icon('edit')}
+                <span>Đính chính báo cáo</span>
+              </button>
+              <p class="field-hint">Đề xuất tri thức là bản lưu độc lập và cần kiểm duyệt theo quy chuẩn nhà máy.</p>
+              ` : ''}
+
+              ${who().role === 'expert' && c.reportState !== 'confirmed' && reportPeople(c).includes(who().id) ? `
+              <button type="button" class="btn btn-primary btn-expert-confirm-report" data-action="case-report-confirm-open" ${cid(c)}>
+                ${icon('check')}
+                <span>Xác nhận phần của tôi trong báo cáo</span>
+              </button>
+              ` : ''}
+            </div>
+          </div>
+        </section>
+
+        ${groupPanel(c)}
+
+        <section class="card hozendx-tile-card">
+          <div class="card-head hozendx-head">
+            <div class="hozendx-head-left">
+              <span class="badge-hozendx-logo">MES</span>
+              <h2>Tích hợp HozenDX</h2>
+            </div>
+            <span class="badge badge-neutral">Chưa đồng bộ</span>
+          </div>
+          <div class="card-body stack">
+            <p class="hozendx-desc">Báo cáo được lưu cục bộ an toàn trên SmartMaint; chưa mở cổng đẩy trực tiếp lên HozenDX Cloud.</p>
+            <p class="field-hint">Hồ sơ thiết bị hiện là nguồn tham chiếu chuẩn mô phỏng DENSO Manufacturing.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+    `;
   }
   S.inputs['case-report-input']=el=>{const c=get(el.dataset.case);if(!protect(c)||!c.report||c.reportState==='confirmed'||c.report[el.name]===el.value)return;S.commit(()=>{c.report[el.name]=el.value;c.report.manualFields ||= {};c.report.manualFields[el.name]=true;if(c.reportState==='pending')c.reportState='changes';c.updatedAt=stamp();},null,false);};
   S.actions['case-report-generate']=el=>{
     const c=get(el.dataset.case);if(!protect(c)||c.reportState==='confirmed')return;const suggestion=buildReport(c);suggestedReports[c.id]={fields:suggestion,snapshot:sourceSnapshot(c)};
-    S.modal(c.report?'Đối chiếu nháp mới với phần đã sửa':'Nháp tổng kết từ nhật ký',`<form data-form="case-report-apply" ${cid(c)} class="stack">${errorBox()}<div class="notice notice-info">Bản nháp chỉ tổng hợp dữ kiện đã ghi. Chọn phần muốn áp dụng; nội dung đã sửa được giữ nguyên.</div>${[['summary','Diễn biến và kết quả'],['cause','Nguyên nhân'],['lessons','Bài học'],['limits','Giới hạn']].map(([k,label])=>`<section class="source-card stack"><label class="check-line"><input type="checkbox" name="apply" value="${k}" ${!c.report||!c.report.manualFields?.[k]?'checked':''}> Áp dụng: ${label}</label>${c.report?.manualFields?.[k]?`<div class="notice notice-warning">Phần này đã được người dùng chỉnh sửa. Mặc định giữ bản hiện tại.</div><details><summary>Xem bản đang sửa</summary><p style="white-space:pre-line">${h(c.report[k])}</p></details>`:''}<p style="white-space:pre-line">${h(suggestion[k]||'Chưa xác định; cần con người bổ sung căn cứ.')}</p></section>`).join('')}<label class="check-line"><input type="checkbox" name="reviewed" required> Tôi đã đối chiếu nháp với dữ kiện hiện tại; phần không chọn giữ nguyên.</label><button type="submit" class="btn btn-primary">Lưu nháp đã chọn</button></form>`);
+    S.modal(c.report?'Đối chiếu nháp mới với phần đã sửa':'Nháp tổng kết từ nhật ký',`<form data-form="case-report-apply" ${cid(c)} class="stack">${errorBox()}<div class="notice notice-info">Bản nháp chỉ tổng hợp dữ kiện đã ghi. Chọn phần muốn áp dụng; nội dung đã sửa được giữ nguyên.</div>${[['summary','Diễn biến và kết quả'],['cause','Nguyên nhân'],['lessons','Bài học'],['limits','Giới hạn']].map(([k,label])=>`<section class="source-card stack"><label class="check-line"><input type="checkbox" name="apply" value="${k}" ${!c.report||!c.report.manualFields?.[k]?'checked':''}> Áp dụng: ${label}</label>${c.report?.manualFields?.[k]?`<div class="notice notice-warning">Phần này đã được người dùng chỉnh sửa. Mặc định giữ bản hiện tại.</div><details><summary>Xem bản đang sửa</summary><p style="white-space:pre-line">${h(c.report[k])}</p></details>`:''}<p style="white-space:pre-line">${h(suggestion[k]||'Chưa xác định; cần con người bổ sung căn cứ.')}</p></section>`).join('')}<label class="check-line"><input type="checkbox" name="reviewed" required> Tôi đã đối chiếu nháp với dữ kiện hiện tại; phần không chọn giữ nguyên.</label><div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button type="submit" class="btn btn-primary">Lưu nháp đã chọn</button></div></form>`);
   };
   S.forms['case-report-apply']=form=>{
     const c=get(form.dataset.case);if(!protect(c)||c.reportState==='confirmed')return;const suggestion=suggestedReports[c.id],f=new FormData(form);if(!suggestion||!f.has('reviewed'))return canFail(form,'Kiểm tra bản gợi ý và xác nhận đã đối chiếu.');if(suggestion.snapshot!==sourceSnapshot(c))return canFail(form,'Nhật ký đã thay đổi trong lúc xem nháp. Đóng hộp thoại và tạo nháp lại.');
     if(S.commit(()=>{if(!c.report)c.report=makeReport(c,{summary:'',cause:'',causeStatus:'unknown',lessons:'',limits:''});else{c.report.versions.push({revision:c.report.revision,summary:c.report.summary,cause:c.report.cause,causeStatus:c.report.causeStatus,lessons:c.report.lessons,limits:c.report.limits,savedBy:who().id,savedAt:stamp()});c.report.revision++;}f.getAll('apply').forEach(k=>{if(Object.hasOwn(suggestion.fields,k)){c.report[k]=suggestion.fields[k];c.report.manualFields[k]=false;if(k==='cause')c.report.causeStatus='unknown';}});c.report.snapshot=suggestion.snapshot;c.report.sourceChanged=false;c.report.generatedAt=stamp();c.reportState='draft';updated(c,'Lưu nháp báo cáo',`Revision ${c.report.revision}`);},'Đã lưu nháp. Chưa chốt công việc hoặc báo cáo.')){delete suggestedReports[c.id];S.closeModal();}
   };
   S.actions['case-report-request']=el=>{const c=get(el.dataset.case);if(!protect(c)||!c.report||c.reportState==='confirmed')return;const ids=pendingReportPeople(c);if(!ids.length)return S.toast('Không còn xác nhận chuyên gia cần bổ sung. Người phụ trách có thể kiểm tra điều kiện chốt.','info');S.commit(()=>{c.reportState='pending';ids.forEach(id=>S.notice(id,'Báo cáo chờ xác nhận đóng góp',`${c.id}: xem phần ghi nhận và nội dung báo cáo liên quan.`,{page:'case',id:c.id,tab:'report'}));updated(c,'Gửi xác nhận báo cáo');},'Đã gửi yêu cầu. Có thể rời hồ sơ và tiếp tục khi có phản hồi.');};
-  S.actions['case-report-confirm-open']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert'||!reportPeople(c).includes(who().id)||!c.report||c.reportState==='confirmed')return;S.modal('Xác nhận đóng góp trong báo cáo',`<div class="stack"><p>Kiểm tra các ghi nhận của bạn và cách chúng được thể hiện trong báo cáo hiện tại.</p>${expertGroups(c).filter(g=>g.person===who().id).map(g=>`<section class="source-card"><h3>Đợt ${g.round.number}</h3>${g.round.events.filter(e=>e.performedBy===who().id).map(e=>`<p>${h(e.content)}${e.result?` — ${h(e.result)}`:''}</p>`).join('')}</section>`).join('')}<details open><summary>Bản báo cáo cần xác nhận · revision ${c.report.revision}</summary><p style="white-space:pre-line">${h(c.report.summary)}</p><p><strong>Nguyên nhân:</strong> ${h(c.report.cause||'Chưa xác định')}</p><p><strong>Bài học:</strong> ${h(c.report.lessons)}</p><p><strong>Giới hạn:</strong> ${h(c.report.limits)}</p></details><div class="actions">${button('Xác nhận đúng phần đóng góp của tôi','case-report-confirm','primary',cid(c))}${button('Yêu cầu sửa báo cáo','case-report-changes','secondary',cid(c))}</div></div>`);};
+  S.actions['case-report-confirm-open']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert'||!reportPeople(c).includes(who().id)||!c.report||c.reportState==='confirmed')return;S.modal('Xác nhận đóng góp trong báo cáo',`<div class="stack"><p>Kiểm tra các ghi nhận của bạn và cách chúng được thể hiện trong báo cáo hiện tại.</p>${expertGroups(c).filter(g=>g.person===who().id).map(g=>`<section class="source-card"><h3>Đợt ${g.round.number}</h3>${g.round.events.filter(e=>e.performedBy===who().id).map(e=>`<p>${h(e.content)}${e.result?` — ${h(e.result)}`:''}</p>`).join('')}</section>`).join('')}<details open><summary>Bản báo cáo cần xác nhận · revision ${c.report.revision}</summary><p style="white-space:pre-line">${h(c.report.summary)}</p><p><strong>Nguyên nhân:</strong> ${h(c.report.cause||'Chưa xác định')}</p><p><strong>Bài học:</strong> ${h(c.report.lessons)}</p><p><strong>Giới hạn:</strong> ${h(c.report.limits)}</p></details><div class="actions">${button('Xác nhận đúng phần đóng góp của tôi','case-report-confirm','primary',cid(c))}${button('Yêu cầu sửa báo cáo','case-report-changes','secondary',cid(c))}</div></div>`,button('Đóng','close-modal','secondary'));};
   S.actions['case-report-confirm']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert'||!reportPeople(c).includes(who().id)||!c.report||c.reportState==='confirmed')return;if(S.commit(()=>{c.confirmations ||= {};expertGroups(c).filter(g=>g.person===who().id).forEach(g=>{c.confirmations[`${g.round.id}:${who().id}`]={status:'confirmed',signature:g.signature,by:who().id,at:stamp()};});c.report.confirmations ||= {};c.report.confirmations[who().id]={signature:reportSignature(c),at:stamp(),revision:c.report.revision};S.notice(c.ownerId,'Chuyên gia đã xác nhận báo cáo',`${S.person(who().id)} đã xác nhận phần đóng góp trong ${c.id}.`,{page:'case',id:c.id,tab:'report'});updated(c,'Xác nhận đóng góp báo cáo');},'Đã xác nhận phần đóng góp. Người phụ trách sẽ chốt báo cáo.'))S.closeModal();};
-  S.actions['case-report-changes']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert'||!reportPeople(c).includes(who().id)||c.reportState==='confirmed')return;S.modal('Yêu cầu sửa báo cáo',`<form data-form="case-report-feedback" ${cid(c)} class="stack">${errorBox()}${area('Phần cần sửa và lý do','feedback','','required')}<button class="btn btn-primary" type="submit">Gửi phản hồi</button></form>`);};
+  S.actions['case-report-changes']=el=>{const c=get(el.dataset.case);if(!protect(c,'view')||who().role!=='expert'||!reportPeople(c).includes(who().id)||c.reportState==='confirmed')return;S.modal('Yêu cầu sửa báo cáo',`<form data-form="case-report-feedback" ${cid(c)} class="stack">${errorBox()}${area('Phần cần sửa và lý do','feedback','','required')}<div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button class="btn btn-primary" type="submit">Gửi phản hồi</button></div></form>`);};
   S.forms['case-report-feedback']=form=>{const c=get(form.dataset.case);if(!protect(c,'view')||who().role!=='expert'||!reportPeople(c).includes(who().id)||c.reportState==='confirmed')return;const feedback=String(new FormData(form).get('feedback')||'').trim();if(!feedback)return canFail(form,'Ghi rõ phần cần sửa.');if(S.commit(()=>{c.reportState='changes';c.report.feedback={by:who().id,at:stamp(),text:feedback};delete c.report.confirmations[who().id];c.report.manualFields.reviewRequested=true;S.notice(c.ownerId,'Chuyên gia yêu cầu sửa báo cáo',feedback,{page:'case',id:c.id,tab:'report'});updated(c,'Yêu cầu sửa báo cáo',feedback);},'Đã gửi phản hồi cho người phụ trách.'))S.closeModal();};
   S.actions['case-report-finalize']=el=>{
     const c=get(el.dataset.case);if(!protect(c)||!c.report||c.reportState==='confirmed')return;const pending=pendingReportPeople(c);
@@ -697,10 +1847,10 @@
     if(!c.report.summary.trim())return S.toast('Báo cáo chưa có diễn biến và kết quả.','warning');
     if(c.report.causeStatus==='confirmed'&&!c.report.cause.trim())return S.toast('Nguyên nhân được xác nhận cần mô tả kèm căn cứ.','warning');
     if(pending.length){S.toast(`Chờ xác nhận của ${pending.map(S.person).join(', ')}. Bạn có thể gửi nhắc và lưu chờ.`,'warning');return;}
-    S.modal('Xác nhận lưu báo cáo cuối',`<form data-form="case-report-close" ${cid(c)} class="stack">${errorBox()}<p><strong>${h(c.report.id)} · revision ${c.report.revision}</strong></p><p>Máy: ${h(labels.machine[c.machineState])}. Công việc: ${h(labels.work[c.workState])}.</p><p>Báo cáo được giữ trong lịch sử. Đề xuất tri thức là bước riêng và cần người duyệt độc lập.</p><label class="check-line"><input name="checked" type="checkbox" required> Tôi đã kiểm tra diễn biến, kết quả, căn cứ và các phần đóng góp.</label><button class="btn btn-primary" type="submit">Chốt báo cáo</button></form>`);
+    S.modal('Xác nhận lưu báo cáo cuối',`<form data-form="case-report-close" ${cid(c)} class="stack">${errorBox()}<p><strong>${h(c.report.id)} · revision ${c.report.revision}</strong></p><p>Máy: ${h(labels.machine[c.machineState])}. Công việc: ${h(labels.work[c.workState])}.</p><p>Báo cáo được giữ trong lịch sử. Đề xuất tri thức là bước riêng và cần người duyệt độc lập.</p><label class="check-line"><input name="checked" type="checkbox" required> Tôi đã kiểm tra diễn biến, kết quả, căn cứ và các phần đóng góp.</label><div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button class="btn btn-primary" type="submit">Chốt báo cáo</button></div></form>`);
   };
   S.forms['case-report-close']=form=>{const c=get(form.dataset.case);if(!protect(c)||!c.report||c.reportState==='confirmed')return;if(c.workState!=='ended'||c.report.sourceChanged||pendingReportPeople(c).length)return canFail(form,'Điều kiện chốt đã thay đổi. Kiểm tra lại báo cáo và các xác nhận.');if(!new FormData(form).has('checked'))return canFail(form,'Cần xác nhận đã kiểm tra nội dung.');if(S.commit(()=>{c.reportState='confirmed';c.report.confirmedAt=stamp();c.report.confirmedBy=who().id;c.report.confirmedSnapshot=structuredClone({summary:c.report.summary,cause:c.report.cause,causeStatus:c.report.causeStatus,lessons:c.report.lessons,limits:c.report.limits});updated(c,'Chốt báo cáo',`${c.report.id} revision ${c.report.revision}`);},'Đã xác nhận báo cáo và giữ trong lịch sử máy.'))S.closeModal();};
-  S.actions['case-report-correct']=el=>{const c=get(el.dataset.case);if(!protect(c)||c.reportState!=='confirmed')return;S.modal('Tạo bản đính chính báo cáo',`<form data-form="case-report-correction" ${cid(c)} class="stack">${errorBox()}${area('Lý do đính chính','reason','','required')}<p class="field-hint">Bản đã xác nhận sẽ được giữ lại. Bản sửa cần kiểm tra và xác nhận lại phần thay đổi.</p><button class="btn btn-primary" type="submit">Tạo bản đính chính</button></form>`);};
+  S.actions['case-report-correct']=el=>{const c=get(el.dataset.case);if(!protect(c)||c.reportState!=='confirmed')return;S.modal('Tạo bản đính chính báo cáo',`<form data-form="case-report-correction" ${cid(c)} class="stack">${errorBox()}${area('Lý do đính chính','reason','','required')}<p class="field-hint">Bản đã xác nhận sẽ được giữ lại. Bản sửa cần kiểm tra và xác nhận lại phần thay đổi.</p><div class="modal-form-actions"><button type="button" class="btn btn-secondary" data-action="close-modal">Hủy bỏ</button><button class="btn btn-primary" type="submit">Tạo bản đính chính</button></div></form>`);};
   S.forms['case-report-correction']=form=>{const c=get(form.dataset.case);if(!protect(c)||c.reportState!=='confirmed')return;const reason=String(new FormData(form).get('reason')||'').trim();if(!reason)return canFail(form,'Ghi lý do đính chính.');if(S.commit(()=>{c.report.versions.push({revision:c.report.revision,...c.report.confirmedSnapshot,savedAt:c.report.confirmedAt,savedBy:c.report.confirmedBy,confirmed:true});c.report.revision++;c.report.correctionReason=reason;c.reportState='draft';updated(c,'Mở bản đính chính báo cáo',reason);},'Đã giữ bản chính thức và mở bản đính chính.'))S.closeModal();};
   S.actions['case-propose']=el=>{const c=get(el.dataset.case);if(!protect(c)||c.reportState!=='confirmed')return;if(typeof S.createCaseProposal!=='function')return S.toast('Chức năng đề xuất tri thức chưa sẵn sàng. Báo cáo vẫn được giữ.','warning');S.createCaseProposal(c);};
 })();

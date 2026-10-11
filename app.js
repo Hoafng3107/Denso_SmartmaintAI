@@ -45,7 +45,71 @@
       </div>
     </div>`;
   }
-  function proposalRow(p,review){return `<div class="list-item"><div><div class="case-meta"><span class="mono">${e(p.id)}</span>${badge(proposalLabels[p.status]||p.status,p.status==='changes'?'amber':p.status==='published'?'green':'blue')}</div><h3>${e(p.title||'Đề xuất chưa đặt tên')}</h3><p class="subtext">${e(S.person(p.authorId))} · ${p.origin==='case'?'Từ hồ sơ bảo trì':'Tri thức chuyên gia'}</p></div>${goBtn(review?'Xem xét':'Mở đề xuất',review?'review-detail':'proposal',p.id)}</div>`;}
+  function proposalRow(p, review) {
+    const isPending = p.status === 'pending';
+    const isChanges = p.status === 'changes';
+    const isDraft = p.status === 'draft';
+    const isPublished = p.status === 'published';
+
+    const originLabel = p.origin === 'case'
+      ? (p.caseId ? `Từ hồ sơ ${p.caseId}` : 'Từ hồ sơ bảo trì')
+      : 'Tri thức chuyên gia';
+
+    const familyLabel = p.family || 'Thiết bị';
+    const familyKey = (p.family || '').toLowerCase().replace(/\s+/g, '-');
+
+    const nextAction = review
+      ? 'Đọc bối cảnh & căn cứ, so sánh SOP để duyệt hoặc yêu cầu bổ sung.'
+      : isChanges
+      ? 'Trưởng nhóm đã phản hồi, cần cập nhật bổ sung dữ kiện.'
+      : isDraft
+      ? 'Bản nháp đang lưu cục bộ, tiếp tục hoàn thiện biểu mẫu.'
+      : isPending
+      ? 'Đã gửi, đang trong hàng đợi kiểm duyệt của Trưởng nhóm.'
+      : 'Tri thức đã được phê duyệt và đưa vào kho tra cứu.';
+
+    const modeTag = p.mode === 'update'
+      ? 'Bổ sung tri thức'
+      : p.origin === 'case'
+      ? 'Bài học từ ca'
+      : 'Tri thức mới';
+
+    const statusTone = isChanges ? 'amber' : isPublished ? 'green' : isPending ? 'blue' : 'neutral';
+    const statusText = proposalLabels[p.status] || p.status;
+    const actionText = review ? 'Xem xét' : (isDraft || isChanges ? 'Chỉnh sửa' : 'Mở xem');
+    const targetPage = review ? 'review-detail' : 'proposal';
+    const targetTab = review ? null : (isDraft || isChanges ? 'form' : null);
+
+    return `<div class="case-row proposal-dashboard-row">
+      <div class="case-main">
+        <div class="case-meta">
+          <span class="badge badge-case-id mono">${e(p.id)}</span>
+          ${badge(statusText, statusTone)}
+          <span class="badge badge-family badge-family--${e(familyKey)}">${e(familyLabel)}</span>
+          <span class="badge ${p.origin === 'case' ? 'badge-purple' : 'badge-neutral'}">${e(modeTag)}</span>
+        </div>
+        <h3 class="case-title">
+          <button type="button" class="text-link" data-action="navigate" data-page="${e(targetPage)}" data-id="${e(p.id)}" ${targetTab ? `data-tab="${e(targetTab)}"` : ''}>
+            ${e(p.title || 'Đề xuất chưa đặt tên')}
+          </button>
+        </h3>
+        <p class="subtext">
+          <span class="author-label">${icon('user')} ${e(S.person(p.authorId))}</span>
+          <span class="meta-sep">·</span>
+          <span>${e(originLabel)}</span>
+          <span class="meta-sep">·</span>
+          <span>Cập nhật: ${e(S.fmtDate(p.updatedAt || p.createdAt, false))}</span>
+        </p>
+        <span class="next-action-label">${icon('alert')} ${e(nextAction)}</span>
+      </div>
+      <div class="case-side">
+        <div class="case-report-tag">
+          ${badge(`Bản ${e(p.version || 1)}`, 'neutral')}
+        </div>
+        ${goBtn(actionText, targetPage, p.id, review ? 'primary' : 'secondary', targetTab)}
+      </div>
+    </div>`;
+  }
   const metrics=items=>`<div class="stat-grid">${items.map(([label,val,caption,i,target])=>{const card=`<div class="row-between"><span class="metric-label">${e(label)}</span><span class="stat-icon">${icon(i)}</span></div><div class="metric-value">${val}</div><p class="source-meta">${e(caption)}</p>`;return target?`<button type="button" class="stat-card stat-card-action" data-action="navigate" data-page="${e(target.page)}" ${target.tab?`data-tab="${e(target.tab)}"`:''} aria-label="${e(label)}: ${val}. ${e(caption)}">${card}</button>`:`<article class="stat-card">${card}</article>`;}).join('')}</div>`;
   function dashboard(){
     const u=S.user(),mine=currentCases(),proposals=S.db.proposals.filter(p=>p.authorId===u.id),pending=S.db.proposals.filter(p=>p.status==='pending'&&p.authorId!==u.id&&!(p.contributors||[]).includes(u.id)),published=S.db.knowledge.filter(k=>k.status==='published');
@@ -87,7 +151,7 @@
           <span class="kb-item-action-hint">Chi tiết nguồn <span class="kb-arrow-icon" aria-hidden="true">→</span></span>
         </div>
       </article>`).join(''):S.empty('Chưa có tri thức đã duyệt','Nguồn được xuất bản sẽ xuất hiện tại đây.')}</div></section>`;
-    const expertProposals=u.role==='expert'?`<section class="card dashboard-card dashboard-card--half"><div class="card-head"><h2>Đề xuất gần đây</h2>${goBtn('Tất cả đề xuất','proposals')}</div><div class="card-scroll-body card-body stack">${proposals.length?proposals.map(p=>proposalRow(p,false)).join(''):S.empty('Chưa có đề xuất','Các bản nháp và đề xuất đã gửi sẽ xuất hiện tại đây.')}</div></section>`:'';
+    const expertProposals=u.role==='expert'?`<section class="card dashboard-card dashboard-card--half"><div class="card-head"><h2>Đề xuất gần đây</h2>${goBtn('Tất cả đề xuất','proposals')}</div><div class="card-scroll-body">${proposals.length?proposals.map(p=>proposalRow(p,false)).join(''):S.empty('Chưa có đề xuất','Các bản nháp và đề xuất đã gửi sẽ xuất hiện tại đây.')}</div></section>`:'';
     return head(titles[u.role],primary)+metrics(stats)+`<div class="dashboard-grid"><div class="stack">${body}</div><aside class="stack">${expertProposals}${recentKnowledge}</aside></div>`;
   }
   function notifications(){
@@ -121,10 +185,59 @@
   S.pages.notifications={title:'Thông báo',roles:all,render:notifications};
   S.pages.integration={title:'Dữ liệu HozenDX',roles:all,render:integration};
   
-  S.actions['notifications-back']=()=>{const target=S.prevPage&&S.prevPage!=='notifications'?S.prevPage:'dashboard';S.go(target);};
+  S.actions['notifications-back'] = () => {
+    let route = S.prevRoute;
+    if (!route) {
+      try {
+        const saved = sessionStorage.getItem('smartmaint-prev-route');
+        if (saved) route = JSON.parse(saved);
+      } catch (_) {}
+    }
+    try { sessionStorage.removeItem('smartmaint-prev-route'); } catch (_) {}
+    S.prevRoute = null;
+    if (route && route.page && route.page !== 'notifications' && S.allowed(route.page)) {
+      S.go(route.page, route.id || null, route.tab || null);
+    } else {
+      const target = S.prevPage && S.prevPage !== 'notifications' && S.allowed(S.prevPage) ? S.prevPage : 'dashboard';
+      S.go(target);
+    }
+  };
   S.actions['read-all']=()=>S.commit(()=>S.db.notifications.filter(n=>n.userId===S.user().id).forEach(n=>n.read=true),'Đã đánh dấu thông báo là đã đọc.');
   S.actions['open-notification']=el=>{const n=S.db.notifications.find(x=>x.id===el.dataset.id&&x.userId===S.user().id);if(n&&S.commit(()=>n.read=true,'',false)){if(S.allowed(n.route?.page))S.go(n.route.page,n.route.id,n.route.tab);else S.go('notifications');}};
-  S.actions['switch-account']=()=>S.modal('Đổi tài khoản',`<p>Dữ liệu đã lưu được giữ nguyên. Chọn tài khoản để tiếp tục hồ sơ hoặc xử lý đề xuất. Các tài khoản cùng vai trò có hồ sơ riêng.</p><div class="stack">${S.db.users.map(u=>`<button class="role-option" data-action="demo-account" data-id="${e(u.id)}"><span class="avatar">${e(u.initials)}</span><span><strong>${e(u.name)}</strong><span class="source-meta">${e(roles[u.role])}</span></span>${u.id===S.user().id?badge('Đang dùng','blue'):icon('arrow')}</button>`).join('')}</div>`);
+  S.actions['switch-account']=()=>{
+    const currentId = S.user().id;
+    const bodyHtml = `
+      <div class="account-switch-banner">
+        ${icon('users')}
+        <div>Dữ liệu và tiến độ đã lưu được bảo toàn trên trình duyệt. Chọn tài khoản để chuyển đổi ngữ cảnh làm việc và hồ sơ phân quyền tương ứng.</div>
+      </div>
+      <div class="account-switch-list">
+        ${S.db.users.map(u => {
+          const isActive = u.id === currentId;
+          const roleClass = u.role === 'maintenance' ? 'role--maintenance' : u.role === 'expert' ? 'role--expert' : 'role--lead';
+          const roleBadgeColor = u.role === 'maintenance' ? 'blue' : u.role === 'expert' ? 'amber' : 'purple';
+          return `
+            <button type="button" class="account-switch-card ${roleClass} ${isActive ? 'is-active' : ''}" data-action="demo-account" data-id="${e(u.id)}">
+              <div class="account-switch-user">
+                <span class="account-switch-avatar">${e(u.initials)}</span>
+                <div class="account-switch-details">
+                  <div class="account-switch-name-row">
+                    <strong class="account-switch-name">${e(u.name)}</strong>
+                    ${S.badge(roles[u.role] || u.role, roleBadgeColor)}
+                  </div>
+                  <span class="account-switch-meta">Mã nhân sự: ${e(u.id)} · ${u.role === 'maintenance' ? 'Tổ Bảo trì Hiện trường' : u.role === 'expert' ? 'Chuyên gia Cơ điện / Tự động hoá' : 'Quản lý Duyệt Tri thức'}</span>
+                </div>
+              </div>
+              <div class="account-switch-status">
+                ${isActive ? `${icon('check')} <span>Đang dùng</span>` : `${icon('arrow')}`}
+              </div>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `;
+    S.modal('Đổi tài khoản sử dụng', bodyHtml, S.button('Đóng', 'close-modal', 'secondary'));
+  };
   S.actions['demo-account']=el=>S.login(el.dataset.id);
   S.actions['sidebar-collapse']=()=>{
     sidebarCollapsed=!sidebarCollapsed;
@@ -134,7 +247,20 @@
     if(toggle){const label=sidebarCollapsed?'Mở rộng menu':'Thu gọn menu';toggle.setAttribute('aria-label',label);toggle.setAttribute('title',label);toggle.setAttribute('aria-pressed',String(sidebarCollapsed));}
   };
   S.actions['export-demo']=()=>S.exportData();
-  S.actions['reset-demo']=()=>S.modal('Khởi tạo lại dữ liệu demo?','<p>Nội dung bạn nhập sẽ được thay bằng bộ mẫu ban đầu trên trình duyệt này. Bạn có thể xuất dữ liệu trước khi tiếp tục.</p>',S.button('Xuất dữ liệu','export-demo')+S.button('Giữ dữ liệu','close-modal')+S.button('Khởi tạo lại','confirm-reset','danger'));
+  S.actions['reset-demo']=()=>{
+    const bodyHtml = `
+      <div class="stack">
+        <div class="notice notice-warning">
+          ${icon('alert')}
+          <div><strong>Lưu ý quan trọng:</strong> Hành động này sẽ hoàn tác tất cả các ca xử lý, bản ghi nhật ký, đề xuất tri thức và cài đặt bạn đã tạo hoặc sửa đổi về trạng thái xuất xưởng demo ban đầu.</div>
+        </div>
+        <p>Nếu bạn muốn lưu lại các dữ liệu đã nhập trên trình duyệt này, hãy chọn <strong>Xuất dữ liệu dự phòng</strong> trước khi tiếp tục.</p>
+        <p class="field-hint">Dữ liệu sau khi khởi tạo lại không thể khôi phục tự động.</p>
+      </div>
+    `;
+    const footerHtml = S.button('Xuất dữ liệu dự phòng', 'export-demo', 'secondary') + S.button('Hủy bỏ', 'close-modal', 'secondary') + S.button('Khởi tạo lại ngay', 'confirm-reset', 'danger');
+    S.modal('Khởi tạo lại dữ liệu demo?', bodyHtml, footerHtml);
+  };
   S.actions['confirm-reset']=()=>S.resetDemo();
   S.inputs['integration-asset']=(el,event)=>{if(event.type==='change'){S.ui.integrationAsset=el.value;S.render();}};
   S.forms['demo-login']=form=>{const id=new FormData(form).get('account');if(!id)return S.error(form,'Chọn tài khoản để đăng nhập.');S.login(id);};
@@ -142,7 +268,28 @@
   const loginBars='<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="10" width="4" height="11" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></svg>';
   const loginHeadset='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13v-2a8 8 0 0 1 16 0v2M4 12h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2ZM19 19c0 2-2 3-5 3h-2"/></svg>';
   function login(){return `<main class="login-page" id="main-content"><section class="login-aside"><div class="brand"><img class="login-brand-logo" src="logotachnen.png" alt="DENSO"><span class="brand-copy">SmartMaint<span>TRI THỨC & BẢO TRÌ</span></span></div><div class="login-story"><span class="eyebrow">Tri thức hôm nay. Năng lực ngày mai.</span><h1>Kinh nghiệm ở lại.<br>Đội ngũ <em>tiến xa.</em></h1><p>Từ kinh nghiệm chuyên gia đến bài học hiện trường, SmartMaint ghi nhận, chắt lọc, lưu giữ và chia sẻ tri thức để cả đội ngũ cùng áp dụng.</p></div><div class="login-stats"><div class="login-stat"><span class="login-stat-icon">${icon('book')}</span><span><strong>01</strong><span>Kho tri thức chung</span></span></div><div class="login-stat"><span class="login-stat-icon">${icon('users')}</span><span><strong>02</strong><span>Luồng đóng góp</span></span></div><div class="login-stat"><span class="login-stat-icon">${loginBars}</span><span><strong>03</strong><span>Vai trò phối hợp</span></span></div></div></section><section class="login-main"><div class="login-card"><header class="login-card-head"><h2>Chọn tài khoản</h2><p>Đăng nhập nhanh theo vai trò sử dụng</p></header><form data-form="demo-login"><fieldset class="role-options"><legend class="sr-only">Vai trò sử dụng</legend>${accountIds.map((id,i)=>{const u=S.db.users.find(x=>x.id===id);return `<label class="role-option role-option--${e(u.role)}"><input class="login-role-radio" type="radio" name="account" value="${e(u.id)}" ${i===0?'checked':''}><span class="login-avatar" aria-hidden="true">${e(u.initials)}</span><span class="login-role-copy"><strong>${e(roles[u.role])}</strong><span class="source-meta">${e(u.name)} · ${['BT-001','CG-001','PD-001'][i]}</span></span>${icon('chevron')}</label>`;}).join('')}</fieldset><button type="submit" class="btn btn-primary login-submit">Đăng nhập ${icon('arrow')}</button></form><div class="login-help">${loginHeadset}<span>Cần hỗ trợ? <button type="button" data-action="login-support">Liên hệ quản trị hệ thống</button></span></div>${S.storageProblem?`<div class="notice notice-danger">${e(S.storageProblem)}${S.button('Khởi tạo dữ liệu demo','reset-demo','danger')}</div>`:''}</div></section></main>`;}
-  S.actions['login-support']=()=>S.modal('Hỗ trợ đăng nhập','<p>Vui lòng liên hệ quản trị hệ thống tại nhà máy để được hỗ trợ tài khoản. Thông tin liên hệ hiện chưa được cấu hình.</p>');
+  S.actions['login-support']=()=>{
+    const bodyHtml = `
+      <div class="stack">
+        <div class="notice notice-info">
+          ${icon('info')}
+          <div>Hệ thống <strong>DENSO SmartMaint</strong> đang chạy trong môi trường Plant MES Demo mô phỏng sản xuất.</div>
+        </div>
+        <dl class="kv-list">
+          <dt>Đơn vị phụ trách</dt>
+          <dd>Phòng CNTT & Chuyển đổi số Nhà máy (DX Plant Center)</dd>
+          <dt>Hotline nội bộ</dt>
+          <dd>Ext: <strong>8421</strong> (Hỗ trợ trực ca 24/7)</dd>
+          <dt>Email hỗ trợ</dt>
+          <dd>smartmaint-support@denso.com.vn</dd>
+          <dt>Văn phòng kỹ thuật</dt>
+          <dd>Tầng 2, Nhà điều hành Xưởng A — KCN Thăng Long</dd>
+        </dl>
+        <p class="field-hint">Để cấp mới tài khoản hoặc đổi quyền truy cập trên hệ thống thực tế, vui lòng gửi phiếu yêu cầu qua cổng dịch vụ nội bộ (IT Service Desk).</p>
+      </div>
+    `;
+    S.modal('Hỗ trợ tài khoản & Đăng nhập', bodyHtml, S.button('Đã hiểu', 'close-modal', 'primary'));
+  };
   S.render=()=>{
     if (S.unsavedChanges && document.querySelector('#app input, #app textarea')) { S.toast('Nội dung chưa lưu vẫn được giữ trên màn hình. Sao chép hoặc xuất trước khi rời trang.', 'warning'); return; }
     const root=document.getElementById('app'),u=S.user();if(!u){root.innerHTML=login();return;}
@@ -180,7 +327,7 @@
   };
   const renderPage = S.render;
   S.render = () => { renderPage(); const heading=document.querySelector('#main-content h1'); if(heading){heading.id='page-title';heading.tabIndex=-1;} };
-  S.startRoute=()=>{if(!S.user()){S.render();return;}let p;try{p=location.hash.slice(1).split('/').map(decodeURIComponent);}catch(_){p=[];}const[page,id,tab]=p;S.ui={...S.ui,page:S.allowed(page)?page:'dashboard',id:id||null,tab:tab||null,menuOpen:false};S.render();};
+  S.startRoute=()=>{if(!S.user()){S.render();return;}let p;try{p=location.hash.slice(1).split('/').map(decodeURIComponent);}catch(_){p=[];}const[page,id,tab]=p;if(S.ui.page&&S.ui.page!=='notifications'&&page==='notifications'){S.prevRoute={page:S.ui.page,id:S.ui.id,tab:S.ui.tab};S.prevPage=S.ui.page;try{sessionStorage.setItem('smartmaint-prev-route',JSON.stringify(S.prevRoute));}catch(_){}}S.ui={...S.ui,page:S.allowed(page)?page:'dashboard',id:id||null,tab:tab||null,menuOpen:false};S.render();};
   S.persistSeed();S.startRoute();
 })();
 
