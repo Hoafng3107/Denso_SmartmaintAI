@@ -280,7 +280,63 @@
 
   function assetPanel(a) {
     if(!a) return '';
-    return `<aside class="card"><div class="card-head"><h2>Thông tin máy</h2>${badge('HozenDX mô phỏng','blue')}</div><div class="card-body stack"><h3>${h(a.id)} · ${h(a.name)}</h3><dl class="kv-list"><dt>Hãng / model máy</dt><dd>${h(a.maker)} / ${h(a.model)}</dd><dt>Khu vực</dt><dd>${h(a.line)}</dd><dt>Năm lắp đặt</dt><dd>${h(a.year)}</dd><dt>Thông số</dt><dd>${h(a.specs)}</dd><dt>Dữ liệu tham chiếu</dt><dd>${h(a.sourceState || 'Chỉ là dữ liệu lưu trước')}</dd><dt>Lấy dữ liệu lúc</dt><dd>${h(sourceTime(a))}</dd></dl><p class="field-hint">Nguồn tham chiếu; tình trạng thực tế do người thực hiện xác nhận.</p>${button('Lịch sử và tài liệu máy','case-reference','secondary',`data-asset="${h(a.id)}"`)}</div></aside>`;
+    return `<aside class="asset-telemetry-panel">
+      <div class="card asset-telemetry-card">
+        <div class="card-head asset-telemetry-head">
+          <div class="asset-telemetry-title">
+            <span class="asset-head-icon">${icon('machine')}</span>
+            <h2>Thông tin máy</h2>
+          </div>
+          <span class="badge badge-blue asset-system-tag">
+            <span class="status-pulse-dot dot-blue"></span>
+            HozenDX Link
+          </span>
+        </div>
+        <div class="card-body stack asset-telemetry-body">
+          <div class="asset-primary-identity">
+            <div class="asset-code-badge">${h(a.id)}</div>
+            <div class="asset-name-block">
+              <h3 class="asset-machine-name">${h(a.name)}</h3>
+              <div class="asset-line-chip">
+                <span>${h(a.line)}</span>
+                <span class="meta-sep">·</span>
+                <span>Năm ${h(a.year)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="asset-specs-grid">
+            <div class="asset-spec-item">
+              <span class="spec-label">Hãng & Model</span>
+              <strong class="spec-val">${h(a.maker)} / ${h(a.model)}</strong>
+            </div>
+            <div class="asset-spec-item">
+              <span class="spec-label">Trạng thái dữ liệu</span>
+              <strong class="spec-val">${h(a.sourceState || 'Dữ liệu lưu trước')}</strong>
+            </div>
+            <div class="asset-spec-item span-2">
+              <span class="spec-label">Thông số kỹ thuật</span>
+              <p class="spec-desc">${h(a.specs)}</p>
+            </div>
+          </div>
+
+          <div class="asset-sync-strip">
+            <div class="sync-dot-label">
+              <span class="status-indicator-dot dot-green"></span>
+              <span>Lấy dữ liệu lúc: <strong>${h(sourceTime(a))}</strong></span>
+            </div>
+            <span class="sync-hint">Nguồn tham chiếu; tình trạng thực tế do người thực hiện xác nhận.</span>
+          </div>
+
+          <div class="asset-action-box">
+            <button type="button" class="btn btn-secondary btn-block asset-doc-btn" data-action="case-reference" data-asset="${h(a.id)}">
+              ${icon('book')}
+              <span>Lịch sử và tài liệu máy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>`;
   }
   S.pages['new-case'] = { title:'Tạo ca mới',roles:['maintenance'],render:() => {
     const d = S.db.drafts[`new-case:${who().id}`] || {assetId:'VIS-01',type:'BM'};
@@ -301,16 +357,184 @@
   };
 
   function header(c) {
-    const a=S.asset(c.assetId),tab=S.ui.tab||(c.workState==='ended'?'report':'work');
-    const linePart=a?.line ? ` · ${h(a.line).toUpperCase()}` : '';
-    return `<div class="page-head"><div><div class="eyebrow">${h(c.id)} · ${h(c.type)}${linePart}</div><h1 id="page-title">${h(c.title)}</h1><p class="subtext">${h(c.assetId)} · ${h(a?.name || '')} · Phụ trách: ${h(S.person(c.ownerId))}${c.expertId?` · Chuyên gia: ${h(S.person(c.expertId))}`:''}</p></div><div class="actions">${button('Quay lại ca bảo trì','case-list','ghost')}</div></div><div class="status-strip case-status">${badge(`Máy: ${labels.machine[c.machineState]}`,c.machineState==='restored'?'green':c.machineState==='unrestored'?'amber':'neutral')}${badge(`Công việc: ${labels.work[c.workState]}`,c.workState==='ended'?'green':'blue')}${badge(`Báo cáo: ${labels.report[c.reportState]}`,c.reportState==='confirmed'?'green':'neutral')}<span class="muted">${c.rounds.length} đợt · ${events(c).length} ghi nhận</span></div><nav class="case-workflow" aria-label="Quy trình 4 bước của hồ sơ">${[['context','1','Bối cảnh & máy'],['sources','2','Tra cứu & căn cứ'],['work','3','Xử lý & nhật ký'],['report','4','Báo cáo tổng kết']].map(([k,n,t])=>`<button type="button" class="case-workflow-step ${tab===k?'is-current':''}" ${tab===k?'aria-current="step"':''} data-action="case-tab" ${cid(c)} data-tab="${k}"><span>${n}</span><strong>${t}</strong></button>`).join('')}</nav>`;
+    const a = S.asset(c.assetId), tab = S.ui.tab || (c.workState === 'ended' ? 'report' : 'work');
+    const typeLabel = c.type === 'PM' ? 'PM · Định kỳ' : 'BM · Sự cố';
+    const typeTone = c.type === 'PM' ? 'badge-pm' : 'badge-bm';
+
+    const machineConfig = {
+      restored: { text: labels.machine.restored, tone: 'tone-success', dot: 'dot-green' },
+      unrestored: { text: labels.machine.unrestored, tone: 'tone-warning', dot: 'dot-amber' },
+      unverified: { text: labels.machine.unverified, tone: 'tone-neutral', dot: 'dot-neutral' }
+    }[c.machineState] || { text: labels.machine[c.machineState] || c.machineState, tone: 'tone-neutral', dot: 'dot-neutral' };
+
+    const workConfig = {
+      active: { text: labels.work.active, tone: 'tone-active', dot: 'dot-blue-pulse' },
+      waiting: { text: labels.work.waiting, tone: 'tone-warning', dot: 'dot-amber-pulse' },
+      ended: { text: labels.work.ended, tone: 'tone-success', dot: 'dot-green' }
+    }[c.workState] || { text: labels.work[c.workState] || c.workState, tone: 'tone-neutral', dot: 'dot-neutral' };
+
+    const reportConfig = {
+      draft: { text: labels.report.draft, tone: 'tone-neutral', dot: 'dot-neutral' },
+      pending: { text: labels.report.pending, tone: 'tone-warning', dot: 'dot-amber-pulse' },
+      changes: { text: labels.report.changes, tone: 'tone-purple', dot: 'dot-purple' },
+      confirmed: { text: labels.report.confirmed, tone: 'tone-success', dot: 'dot-green' }
+    }[c.reportState] || { text: labels.report[c.reportState] || c.reportState, tone: 'tone-neutral', dot: 'dot-neutral' };
+
+    const totalEvents = events(c).length;
+
+    const steps = [
+      { key: 'context', num: '1', title: 'Bối cảnh & máy', phase: 'GIAI ĐOẠN 1' },
+      { key: 'sources', num: '2', title: 'Tra cứu & căn cứ', phase: 'GIAI ĐOẠN 2' },
+      { key: 'work', num: '3', title: 'Xử lý & nhật ký', phase: 'GIAI ĐOẠN 3' },
+      { key: 'report', num: '4', title: 'Báo cáo tổng kết', phase: 'GIAI ĐOẠN 4' }
+    ];
+
+    return `
+    <header class="case-detail-header">
+      <div class="case-header-main">
+        <div class="case-header-eyebrow">
+          <span class="badge-case-id">${h(c.id)}</span>
+          <span class="badge-case-type ${typeTone}">${h(typeLabel)}</span>
+          ${a?.line ? `<span class="badge-case-line">${h(a.line).toUpperCase()}</span>` : ''}
+        </div>
+        <h1 id="page-title" class="case-header-title">${h(c.title)}</h1>
+        <div class="case-header-meta">
+          <span class="meta-item meta-asset" title="Thiết bị liên quan">
+            ${icon('machine')}
+            <strong>${h(c.assetId)}</strong>
+            <span>${h(a?.name || '')}</span>
+          </span>
+          <span class="meta-sep">·</span>
+          <span class="meta-item meta-owner" title="Người phụ trách">
+            ${icon('user')}
+            <span>Phụ trách: <strong>${h(S.person(c.ownerId))}</strong></span>
+          </span>
+          ${c.expertId ? `
+          <span class="meta-sep">·</span>
+          <span class="meta-item meta-expert" title="Chuyên gia phối hợp">
+            ${icon('users')}
+            <span>Chuyên gia: <strong>${h(S.person(c.expertId))}</strong></span>
+          </span>` : ''}
+        </div>
+      </div>
+      <div class="case-header-actions">
+        <button type="button" class="btn btn-ghost case-back-btn" data-action="case-list">
+          ${icon('back')}
+          <span>Quay lại ca bảo trì</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="case-status-kpi-bar" role="region" aria-label="Chỉ số trạng thái ca bảo trì">
+      <div class="case-kpi-item ${machineConfig.tone}">
+        <div class="case-kpi-label">
+          <span>Tình trạng máy</span>
+          <span class="kpi-dot ${machineConfig.dot}"></span>
+        </div>
+        <div class="case-kpi-value">${h(machineConfig.text)}</div>
+      </div>
+      <div class="case-kpi-item ${workConfig.tone}">
+        <div class="case-kpi-label">
+          <span>Công việc hiện trường</span>
+          <span class="kpi-dot ${workConfig.dot}"></span>
+        </div>
+        <div class="case-kpi-value">${h(workConfig.text)}</div>
+      </div>
+      <div class="case-kpi-item ${reportConfig.tone}">
+        <div class="case-kpi-label">
+          <span>Hồ sơ báo cáo</span>
+          <span class="kpi-dot ${reportConfig.dot}"></span>
+        </div>
+        <div class="case-kpi-value">${h(reportConfig.text)}</div>
+      </div>
+      <div class="case-kpi-item tone-progress">
+        <div class="case-kpi-label">
+          <span>Tiến trình nhật ký</span>
+          ${icon('clock')}
+        </div>
+        <div class="case-kpi-value">
+          <strong>${c.rounds.length}</strong> đợt <span class="kpi-sep">·</span> <strong>${totalEvents}</strong> ghi nhận
+        </div>
+      </div>
+    </div>
+
+    <nav class="case-workflow-stepper" aria-label="Quy trình 4 giai đoạn ca bảo trì">
+      ${steps.map(s => {
+        const isCurrent = tab === s.key;
+        return `
+        <button type="button" class="case-workflow-step ${isCurrent ? 'is-current' : ''}" 
+          ${isCurrent ? 'aria-current="step"' : ''} 
+          data-action="case-tab" ${cid(c)} data-tab="${s.key}">
+          <div class="step-num-pill">${s.num}</div>
+          <div class="step-text-wrap">
+            <span class="step-phase-label">${s.phase}</span>
+            <strong class="step-title">${h(s.title)}</strong>
+          </div>
+        </button>
+        `;
+      }).join('')}
+    </nav>
+    `;
   }
   S.pages.case = {title:'Chi tiết ca bảo trì',roles,render:() => {const c=current();if(!viewable(c))return S.empty('Không thể mở ca','Ca không tồn tại hoặc bạn chưa được phân công tham gia.');const tab=S.ui.tab||(c.workState==='ended'?'report':'work');return header(c)+(tab==='context'?renderContext(c):tab==='sources'?renderSources(c):tab==='report'?renderReport(c):renderWork(c));}};
   S.actions['case-tab'] = el => {const c=get(el.dataset.case);if(protect(c,'view'))S.go('case',c.id,el.dataset.tab);};
   function renderContext(c) {
-    const a=S.asset(c.assetId),x=c.context||{},disabled=owner(c)&&c.workState!=='ended'?'':'disabled';
-    const attrs=`data-input="case-context" ${cid(c)} ${disabled}`;
-    return `<div class="split-layout"><section class="card"><div class="card-head"><div><h2>Ghi bối cảnh hiện trường</h2><p class="subtext">Ghi điều đang quan sát được. Chưa rõ thì để trống; chưa cần đoán nguyên nhân.</p></div>${saveLabel()}</div><div class="card-body stack">${c.workState==='ended'?'<div class="notice notice-info">Công việc đã kết thúc. Bối cảnh được giữ trong lịch sử; thông tin bổ sung ghi ở báo cáo.</div>':''}<div class="context-primary-fields">${area('Dấu hiệu / hiện tượng đang thấy','symptom',x.symptom,attrs+' placeholder="Ví dụ: máy dừng ngắt quãng, tín hiệu cảm biến không ổn định"') }<div class="form-grid">${field('Alarm / mã lỗi (nếu có)','alarm',x.alarm,attrs+' placeholder="Không có thì để trống"')}${field('Bộ phận / vị trí liên quan (nếu biết)','component',x.component,attrs+' placeholder="Ví dụ: cảm biến đầu vào"')}</div></div><details class="context-details"><summary>Điều kiện vận hành và thời điểm <span>(không bắt buộc)</span></summary><div class="form-grid">${field('Chế độ vận hành','mode',x.mode,attrs)}${field('Model sản phẩm','productModel',x.productModel,attrs)}${field('Tốc độ / điều kiện chạy','speed',x.speed,attrs)}${field('Ca làm việc','shift',x.shift,attrs)}${field('Thời điểm / tần suất xuất hiện','onset',x.onset,attrs)}${field('Môi trường liên quan','environment',x.environment,attrs)}</div></details><details class="context-details"><summary>Điểm thay đổi trước khi phát sinh lỗi <span>(5M1E · nếu liên quan)</span></summary><p class="field-hint">Chọn “Chưa kiểm tra” nếu chưa xem; “Chưa ghi nhận thay đổi” nếu đã kiểm tra.</p><div class="grid-2">${(x.changes||[]).map((m,i)=>`<div class="stack">${select(m.group,`change_${i}`,m.status,[['unchecked','Chưa kiểm tra'],['none','Chưa ghi nhận thay đổi'],['changed','Có thay đổi']],attrs)}${field('Chi tiết nếu có',`detail_${i}`,m.detail,attrs)}</div>`).join('')}</div></details><div class="actions context-actions">${button('Tiếp tục: tra cứu nguồn','case-tab','primary',`${cid(c)} data-tab="sources"`)}<span class="field-hint">Nội dung được lưu tự động trên trình duyệt này.</span></div></div></section>${assetPanel(a)}</div>`;
+    const a = S.asset(c.assetId), x = c.context || {}, disabled = owner(c) && c.workState !== 'ended' ? '' : 'disabled';
+    const attrs = `data-input="case-context" ${cid(c)} ${disabled}`;
+    return `
+    <div class="split-layout">
+      <section class="card context-form-card">
+        <div class="card-head">
+          <div>
+            <h2>Ghi bối cảnh hiện trường</h2>
+            <p class="subtext">Ghi điều đang quan sát được. Chưa rõ thì để trống; chưa cần đoán nguyên nhân.</p>
+          </div>
+          ${saveLabel()}
+        </div>
+        <div class="card-body stack">
+          ${c.workState === 'ended' ? '<div class="notice notice-info">Công việc đã kết thúc. Bối cảnh được giữ trong lịch sử; thông tin bổ sung ghi ở báo cáo.</div>' : ''}
+          <div class="context-primary-fields">
+            ${area('Dấu hiệu / hiện tượng đang thấy', 'symptom', x.symptom, attrs + ' placeholder="Ví dụ: Máy có tiếng kêu rít bất thường, dừng ngắt quãng..."')}
+            <div class="form-grid">
+              ${field('Alarm / mã lỗi (nếu có)', 'alarm', x.alarm, attrs + ' placeholder="Không có thì để trống"')}
+              ${field('Bộ phận / vị trí liên quan (nếu biết)', 'component', x.component, attrs + ' placeholder="Ví dụ: Cụm camera kiểm tra"')}
+            </div>
+          </div>
+          <details class="context-details">
+            <summary>Điều kiện vận hành và thời điểm <span>(không bắt buộc)</span></summary>
+            <div class="form-grid" style="margin-top: 14px;">
+              ${field('Chế độ vận hành', 'mode', x.mode, attrs)}
+              ${field('Model sản phẩm', 'productModel', x.productModel, attrs)}
+              ${field('Tốc độ / điều kiện chạy', 'speed', x.speed, attrs)}
+              ${field('Ca làm việc', 'shift', x.shift, attrs)}
+              ${field('Thời điểm / tần suất xuất hiện', 'onset', x.onset, attrs)}
+              ${field('Môi trường liên quan', 'environment', x.environment, attrs)}
+            </div>
+          </details>
+          <details class="context-details">
+            <summary>Điểm thay đổi trước khi phát sinh lỗi <span>(5M1E · nếu liên quan)</span></summary>
+            <p class="field-hint" style="margin: 10px 0 12px;">Chọn “Chưa kiểm tra” nếu chưa xem; “Chưa ghi nhận thay đổi” nếu đã kiểm tra.</p>
+            <div class="context-5m1e-grid">
+              ${(x.changes || []).map((m, i) => `
+                <div class="m51e-item">
+                  ${select(m.group, `change_${i}`, m.status, [['unchecked', 'Chưa kiểm tra'], ['none', 'Chưa ghi nhận thay đổi'], ['changed', 'Có thay đổi']], attrs)}
+                  ${field('Chi tiết thay đổi nếu có', `detail_${i}`, m.detail, attrs + ' placeholder="Nêu nội dung thay đổi..."')}
+                </div>
+              `).join('')}
+            </div>
+          </details>
+          <div class="actions context-actions">
+            <button type="button" class="btn btn-primary" data-action="case-tab" ${cid(c)} data-tab="sources">
+              <span>Tiếp tục: tra cứu nguồn</span>
+              ${icon('arrow')}
+            </button>
+            <span class="field-hint">Nội dung được lưu tự động trên trình duyệt này.</span>
+          </div>
+        </div>
+      </section>
+      ${assetPanel(a)}
+    </div>
+    `;
   }
   S.inputs['case-context'] = el => {const c=get(el.dataset.case);if(!protect(c)||c.workState==='ended')return;const index=Number(el.name.split('_')[1]);const old=el.name.startsWith('change_')?c.context.changes[index].status:el.name.startsWith('detail_')?c.context.changes[index].detail:c.context[el.name];if(old===el.value)return;S.commit(()=>{if(el.name.startsWith('change_'))c.context.changes[index].status=el.value;else if(el.name.startsWith('detail_'))c.context.changes[index].detail=el.value;else c.context[el.name]=el.value;if(c.retrieval)c.retrieval.stale=true;dirtyReport(c);c.updatedAt=stamp();},null,false);};
   S.actions['case-reference'] = el => {
