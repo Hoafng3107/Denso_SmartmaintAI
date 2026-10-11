@@ -1,0 +1,12 @@
+.git
+.gitignore
+.ui-check-cdp-profile*
+.presentation-browser
+.presentation-chrome
+docs
+scripts
+*.drawio
+*.pptx
+*.zip
+README.md
+node_modules
