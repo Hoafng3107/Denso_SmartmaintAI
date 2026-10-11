@@ -115,7 +115,7 @@
   intro.forEach(([selector,title,text])=>steps.push({page:'login',selector,title,text,chapter:0}));
   const briefings={
     maintenance:{title:'Kịch bản · Nguyễn Minh, người bảo trì',summary:'Minh phụ trách ca từ lúc nhận việc đến khi chốt báo cáo. Giao diện tách rõ tạo ca BM/PM mới với mở hồ sơ đang xử lý.',items:[
-      'Máy báo sự cố hoặc đến kỳ PM: Minh kiểm tra sơ bộ, vào Hồ sơ công việc. Chọn Tạo ca BM / PM mới hoặc Mở hồ sơ đang xử lý. Với ca mới, chọn loại và mã máy, đọc dữ liệu HozenDX mô phỏng, xác nhận máy tại hiện trường; nếu cùng việc đã có ca thì tiếp tục ca đó.',
+      'Máy báo sự cố hoặc đến kỳ PM: Minh kiểm tra sơ bộ, vào Hồ sơ công việc. Chọn Tạo ca mới hoặc Mở hồ sơ đang xử lý. Với ca mới, chọn loại và mã máy, đọc dữ liệu HozenDX mô phỏng, xác nhận máy tại hiện trường; nếu cùng việc đã có ca thì tiếp tục ca đó.',
       'Ghi dấu hiệu, Alarm nếu có, model sản phẩm, điều kiện vận hành và 5M1E. Với PM, dùng checklist nội bộ; mục Không đạt dẫn vào điều tra trong cùng hồ sơ.',
       'Tra cứu case và tri thức đã duyệt, đọc an toàn cùng giới hạn rồi tự chọn hướng tham khảo. Thiếu căn cứ thì gửi yêu cầu chuyên gia.',
       'Ghi từng mốc, ai làm, ai nhập và kết quả kể cả chưa hiệu quả. Cuối đợt, chọn tiếp tục, chờ, bàn giao hoặc kết thúc theo tình trạng máy thực tế.',
@@ -146,7 +146,7 @@
     {selector:'.notification-button',title:'Thông báo gắn với hồ sơ',text:'Bấm biểu tượng chuông để xem yêu cầu hỗ trợ, phản hồi kiểm duyệt hoặc xác nhận còn chờ. Mỗi thông báo dẫn về hồ sơ liên quan.'},
     {selector:'.topbar-save-state',title:'Trạng thái lưu dữ liệu',text:'Trạng thái này cho biết thay đổi đã được lưu cục bộ hay chưa.',action:'Đọc trạng thái lưu trên thanh trên cùng.'},
     {selector:'.stat-grid',title:'Việc cần chú ý của '+chapters[chapter].toLowerCase(),text:'Các ô số đếm công việc thuộc tài khoản hiện tại và trạng thái cần xử lý. Danh sách công việc bên dưới cho phép mở từng hồ sơ hoặc đề xuất.',action:'Đọc bốn ô tổng quan; số lượng thay đổi theo vai trò và hồ sơ mẫu.'},
-    {selector:'.page-head .actions .btn',title:'Nút bắt đầu công việc chính',text:'Nút đỏ ở đầu trang dẫn tới việc ưu tiên theo vai trò: mở ca, ghi tri thức hoặc mở hàng đợi kiểm duyệt.',action:role==='maintenance'?'Bấm “Tạo ca BM / PM mới”.':role==='expert'?'Bấm “Ghi tri thức”.':'Bấm “Mở hàng đợi duyệt”.'},
+    {selector:'.page-head .actions .btn',title:'Nút bắt đầu công việc chính',text:'Nút đỏ ở đầu trang dẫn tới việc ưu tiên theo vai trò: mở ca, ghi tri thức hoặc mở hàng đợi kiểm duyệt.',action:role==='maintenance'?'Bấm “Tạo ca mới”.':role==='expert'?'Bấm “Ghi tri thức”.':'Bấm “Mở hàng đợi duyệt”.'},
     {selector:'.dashboard-grid .stack .card:first-child',title:'Bắt đầu từ danh sách công việc',text:'Danh sách hiển thị hồ sơ hoặc đề xuất của tài khoản. Mỗi dòng có mã và trạng thái để chọn đúng việc đang cần làm.',action:role==='maintenance'?'Mở hoặc tiếp tục ca cần xử lý trong danh sách.':'Mở công việc hoặc hàng đợi hiện ở trong thẻ này.'},
     {selector:'.dashboard-grid aside .card:last-child',title:'Tri thức mới cập nhật',text:'Nguồn đã duyệt được đặt bên cạnh hàng đợi công việc để tra cứu khi cần.',action:'Mở tên nguồn hoặc vào kho tri thức từ thẻ này.'}
   ].map(s=>({...s,page:'dashboard',role,chapter}));
@@ -159,8 +159,8 @@
   signIn('maintenance',1,'u-minh','Nguyễn Minh');
   steps.push(...shell('maintenance',1));
   steps.push(
-    {chapter:1,role:'maintenance',page:'dashboard',selector:'.page-head .actions [data-page="new-case"]',title:'Tạo ca BM / PM mới từ dashboard',text:'Đây là nút mở biểu mẫu tạo ca mới. Các thẻ bên dưới có nút Tiếp tục hoặc Mở báo cáo cho ca đã tồn tại.',action:'Bấm “Tạo ca BM / PM mới” ở đầu dashboard.'},
-    {chapter:1,role:'maintenance',page:'cases',selector:'[data-action="case-new"]',title:'Tạo mới từ danh sách hồ sơ',text:'Trang Hồ sơ công việc tách rõ nút Tạo ca BM / PM mới với các thẻ hồ sơ sẵn có. BM-26031 là ca đang xử lý, BM-26028 đang chờ, BM-26021 chờ báo cáo.',action:'Trong menu “Hồ sơ công việc”, bấm “Tạo ca BM / PM mới” nếu bắt đầu công việc độc lập.'},
+    {chapter:1,role:'maintenance',page:'dashboard',selector:'.page-head .actions [data-page="new-case"]',title:'Tạo ca mới từ dashboard',text:'Đây là nút mở biểu mẫu tạo ca mới. Các thẻ bên dưới có nút Tiếp tục hoặc Mở báo cáo cho ca đã tồn tại.',action:'Bấm “Tạo ca mới” ở đầu dashboard.'},
+    {chapter:1,role:'maintenance',page:'cases',selector:'[data-action="case-new"]',title:'Tạo mới từ danh sách hồ sơ',text:'Trang Hồ sơ công việc tách rõ nút Tạo ca mới với các thẻ hồ sơ sẵn có. BM-26031 là ca đang xử lý, BM-26028 đang chờ, BM-26021 chờ báo cáo.',action:'Trong menu “Hồ sơ công việc”, bấm “Tạo ca mới” nếu bắt đầu công việc độc lập.'},
     {chapter:1,role:'maintenance',page:'cases',selector:'.grid-2 [data-action="case-open"]',title:'Tiếp tục hồ sơ cũ',text:'Mỗi thẻ có mã ca, tình trạng máy, trạng thái công việc và báo cáo. Bấm Mở hồ sơ để tiếp tục từ đúng bước; hệ thống không tự tạo mã ca mới.',action:'Nếu công việc đã có hồ sơ, bấm “Mở hồ sơ” trên thẻ BM-26031.'}
   );
   steps.push(

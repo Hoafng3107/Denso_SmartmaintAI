@@ -1361,15 +1361,214 @@ body.story-opening::before { content:""; position:fixed; z-index:79; inset:0; ba
   height: 13px;
   color: #94a3b8;
 }
-.case-filters { flex-wrap:nowrap; }
-.case-list-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:22px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:#ffffff; box-shadow:0 1px 3px rgba(15, 23, 42, 0.04); }
-.case-list-summary { display:flex; align-items:center; gap:12px; flex:0 0 220px; min-width:0; }
-.case-list-summary > div { display:grid; gap:2px; min-width:0; }
-.case-list-summary strong { color:var(--ink); font-size:14px; font-weight:700; }
-.case-list-summary span:not(.case-list-total) { color:var(--muted); font-size:12px; line-height:1.4; }
-.case-list-total { display:grid; place-items:center; flex:0 0 38px; height:38px; border-radius:8px; background:var(--blue-soft); color:var(--blue); font-size:17px; font-weight:750; font-variant-numeric:tabular-nums; }
-.case-list-toolbar .case-filters { flex:1 1 600px; min-width:0; margin:0; }
-.case-list-toolbar .tab { min-width:max-content; }
+/* ==========================================================================
+   DENSO SmartMaint · Case List Toolbar & Segmented Filter Control
+   ========================================================================== */
+
+.case-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding: 12px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 6px rgba(15, 23, 42, 0.02);
+}
+
+.case-list-summary {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.case-list-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.case-list-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  color: #64748b;
+}
+
+.case-list-stat-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.case-list-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.case-list-summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.case-list-title {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.case-list-desc {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Professional segmented control pills */
+.case-filters-segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  flex: 0 0 auto;
+}
+
+.case-filter-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--motion);
+}
+
+.case-filter-pill:hover {
+  background: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+}
+
+/* Active filter pill */
+.case-filter-pill.is-active {
+  background: var(--red);
+  color: #ffffff;
+  border-color: var(--red);
+  box-shadow: 0 2px 6px rgba(240, 24, 51, 0.22);
+  font-weight: 700;
+}
+
+/* Status indicator dot on filter pill */
+.filter-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.filter-dot.dot-all {
+  background: #64748b;
+}
+.filter-dot.dot-active {
+  background: #2563eb;
+}
+.filter-dot.dot-waiting {
+  background: #f59e0b;
+}
+.filter-dot.dot-pending {
+  background: #10b981;
+}
+.filter-dot.dot-ended {
+  background: #94a3b8;
+}
+
+.case-filter-pill.is-active .filter-dot {
+  background: #ffffff;
+}
+
+/* Count badge on filter pill */
+.filter-count-pill {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: all var(--motion);
+}
+
+.case-filter-pill:hover .filter-count-pill {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.case-filter-pill.is-active .filter-count-pill {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border: 0;
+}
+
+/* Case new button in page head */
+.case-new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border-radius: 8px;
+}
+.case-new-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 1100px) {
+  .case-list-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .case-filters-segmented {
+    overflow-x: auto;
+    width: 100%;
+  }
+}
 .library-search .card-body { display:grid; gap:14px; }
 .library-search-main { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:14px; }
 .library-search-main > .field, .library-search-filters > .field { margin:0; }
