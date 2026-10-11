@@ -122,7 +122,6 @@
   }
 
   S.seed(function (db) {
-    if (db.seededProposals) return;
     db.proposals = db.proposals || [];
     const source = parseRaw(sample);
     const p = baseProposal('u-hai', 'expert');
@@ -131,7 +130,76 @@
     Object.assign(p2, { id: 'DP-027', title: 'CNC — ghi nhận nhiệt độ trước khi kết luận nguyên nhân', family: 'CNC', rawText: 'Ghi chú demo: Khi nhiệt độ tăng, cần ghi lại điều kiện tải và thời điểm quan sát trước khi suy ra nguyên nhân.', content: { symptom: 'Nhiệt độ cụm trục tăng trong một giai đoạn làm việc (demo).', context: 'Máy CNC-04; chưa xác minh tải, tốc độ và thời gian kể từ khởi động.', checks: 'Đối chiếu số đo với trạng thái tải và điều kiện đo.', solution: 'Ghi đủ điều kiện trước khi trao đổi hướng kiểm tra với chuyên gia.', result: 'Chưa đủ dữ kiện để kết luận hoặc áp dụng hướng xử lý.', cause: 'Chưa xác định.', evidence: 'Ghi chú mô phỏng; chưa có số đo thực tế.', safety: 'Cần xác minh SOP CNC đang có hiệu lực. Không có hướng dẫn thao tác thực tế trong demo.', limits: 'Thiếu dữ liệu tải, thời gian và ngưỡng được phê duyệt; chưa dùng để quyết định sửa chữa.' }, status: 'changes', version: 2, feedback: 'Bổ sung điều kiện tải, nguồn ngưỡng đánh giá và nêu rõ giới hạn khi chưa có số đo. Không kết luận nguyên nhân chỉ từ nhiệt độ.', reviewerId: 'u-anh', createdAt: '2026-10-08T10:00:00+07:00', updatedAt: '2026-10-09T07:30:00+07:00', history: [{ id: 'PHS-2', type: 'changes', actorId: 'u-anh', at: '2026-10-09T07:30:00+07:00', version: 2, detail: 'Yêu cầu bổ sung điều kiện và bằng chứng' }] });
     const p3 = baseProposal('u-hai', 'expert');
     Object.assign(p3, { id: 'DP-028', title: 'Ghi chú buổi trao đổi về Vision', family: 'Vision', rawText: sample, createdAt: '2026-10-09T09:00:00+07:00', updatedAt: '2026-10-09T09:00:00+07:00', history: [{ id: 'PHS-3', type: 'draft', actorId: 'u-hai', at: '2026-10-09T09:00:00+07:00', version: 1, detail: 'Lưu nội dung gốc; chưa gửi kiểm duyệt' }] });
-    db.proposals.push(p, p2, p3);
+    
+    const p4 = baseProposal('u-minh', 'case');
+    Object.assign(p4, {
+      id: 'DP-029',
+      title: 'Vision — Kiểm tra đồng bộ tín hiệu và chiếu sáng sau đổi model',
+      family: 'Vision',
+      caseId: 'BM-26021',
+      rawText: 'Bài học rút ra từ ca BM-26021: Đối chiếu chất lượng ảnh và tín hiệu nhận sản phẩm trước khi can thiệp phần cứng.',
+      content: {
+        symptom: 'Camera không nhận sản phẩm hoặc tỷ lệ NG tăng vọt ngay sau khi đổi model.',
+        context: 'Máy VIS-01, Line A. Lỗi xuất hiện sau khi thay đổi sản phẩm từ model P-A sang P-B.',
+        checks: 'Đối chiếu bộ mẫu tiêu chuẩn và kiểm tra cảm biến định vị trước camera.',
+        solution: 'Căn chỉnh lại độ sáng đèn LED phụ trợ và nạp lại recipe cấu hình đã duyệt.',
+        result: 'Máy đã phục hồi, tỷ lệ nhận diện đạt 100% trong 50 sản phẩm thử nghiệm.',
+        cause: 'Sai lệch góc chiếu sáng LED phụ trợ khi chuyển đồ gá model mới.',
+        evidence: 'Biên bản phục hồi máy ca BM-26021 ngày 09/10/2026.',
+        safety: 'Tuân thủ quy trình an toàn SOP-VIS-01 ngắt nguồn phụ trợ trước khi chỉnh góc đèn.',
+        limits: 'Chỉ áp dụng cho các dòng camera quang học tại Line A.'
+      },
+      status: 'published',
+      version: 1,
+      mode: 'new',
+      feedback: 'Đề xuất rất thực tế và chi tiết. Đã phê duyệt đưa vào kho tri thức chuẩn hóa.',
+      reviewerId: 'u-anh',
+      publishedId: 'KN-024',
+      publishedVersion: 1,
+      authorConfirmed: true,
+      createdAt: '2026-10-09T08:30:00+07:00',
+      updatedAt: '2026-10-09T10:15:00+07:00',
+      history: [
+        { id: 'PHS-4A', type: 'submit', actorId: 'u-minh', at: '2026-10-09T08:30:00+07:00', version: 1, detail: 'Tạo đề xuất từ ca BM-26021' },
+        { id: 'PHS-4B', type: 'approve', actorId: 'u-anh', at: '2026-10-09T10:15:00+07:00', version: 1, detail: 'Phê duyệt đưa vào kho tri thức' }
+      ]
+    });
+
+    const p5 = baseProposal('u-minh', 'case');
+    Object.assign(p5, {
+      id: 'DP-030',
+      title: 'Robot — Kiểm tra gập cáp encoder sau bảo dưỡng định kỳ trục J2',
+      family: 'Robot',
+      caseId: 'PM-26019',
+      rawText: 'Bài học từ bảo dưỡng PM-26019: Cần cố định lại đai cáp theo vạch đánh dấu để tránh gập xoắn khi robot quay góc lớn.',
+      content: {
+        symptom: 'Báo lỗi lệch xung encoder trục J2 sau 3 ca chạy kể từ kỳ bảo dưỡng PM.',
+        context: 'Robot hàn ROB-02, Line B.',
+        checks: 'Kiểm tra đường đi của ruột gà cáp tín hiệu encoder và độ căng dây thít cáp.',
+        solution: 'Thay đai kẹp cao su giảm chấn và chỉnh lại bán kính uốn cong theo tiêu chuẩn R >= 120mm.',
+        result: 'Đã hoàn tất thử nghiệm 100 chu trình không còn phát sinh mã lỗi cảnh báo.',
+        cause: 'Đai kẹp cáp cũ bị lão hóa dẫn đến cáp tín hiệu encoder bị vặn xoắn quá giới hạn uốn.',
+        evidence: 'Biên bản kiểm tra và ảnh chụp cụm khớp J2 ngày 08/10/2026.',
+        safety: 'Khóa nguồn năng lượng cơ cấu chấp hành LOTO trước khi can thiệp vào khoang cáp trục robot.',
+        limits: 'Áp dụng cho robot khớp nối 6 bậc thuộc trạm hàn Line B.'
+      },
+      status: 'changes',
+      version: 1,
+      mode: 'new',
+      feedback: 'Bổ sung ảnh chụp thực tế bán kính uốn cong R >= 120mm và phiếu kiểm tra dây thít trước khi gửi phê duyệt lại.',
+      reviewerId: 'u-anh',
+      authorConfirmed: true,
+      createdAt: '2026-10-08T14:00:00+07:00',
+      updatedAt: '2026-10-09T09:20:00+07:00',
+      history: [
+        { id: 'PHS-5A', type: 'submit', actorId: 'u-minh', at: '2026-10-08T14:00:00+07:00', version: 1, detail: 'Tạo đề xuất từ ca PM-26019' },
+        { id: 'PHS-5B', type: 'changes', actorId: 'u-anh', at: '2026-10-09T09:20:00+07:00', version: 1, detail: 'Yêu cầu bổ sung ảnh chụp bán kính uốn cong' }
+      ]
+    });
+
+    if (!db.proposals.some(x => x.id === 'DP-026')) db.proposals.push(p, p2, p3);
+    if (!db.proposals.some(x => x.id === 'DP-029')) db.proposals.push(p4);
+    if (!db.proposals.some(x => x.id === 'DP-030')) db.proposals.push(p5);
     db.seededProposals = true;
   });
 
@@ -346,14 +414,143 @@
       '<div class="split-layout"><div class="card"><div class="card-body">' + contentView(k.content) + '</div></div><aside class="stack"><div class="card"><div class="card-body stack"><h3 class="section-title">Thông tin nguồn</h3><dl class="kv-list"><dt>Loại máy</dt><dd>' + e(k.family) + '</dd><dt>Nguồn</dt><dd>' + (k.kind === 'case' ? 'Case công việc đã duyệt' : 'Kinh nghiệm chuyên gia') + '</dd><dt>Đóng góp</dt><dd>' + e(contributorIds(k).map(S.person).join(', ') || S.person(k.authorId)) + '</dd><dt>Ngày xuất bản</dt><dd>' + e(S.fmtDate(k.updatedAt)) + '</dd><dt>Nguyên nhân</dt><dd>' + e(({ confirmed: 'Đã xác nhận theo bằng chứng nguồn', hypothesis: 'Giả thuyết', unknown: 'Chưa xác định' })[k.causeStatus] || 'Xem căn cứ trong nội dung') + '</dd></dl></div></div><div class="card"><div class="card-body stack"><h3 class="section-title">Phiên bản</h3>' + versions.map(v => btn('v' + v + (v === currentK.version ? ' · hiện hành' : ' · lịch sử'), 'k-version', v === k.version ? 'primary' : 'secondary', 'data-id="' + e(k.id) + '" data-version="' + v + '"')).join('') + '</div></div><div class="notice notice-info">Đối chiếu điều kiện thực tế và quy trình có hiệu lực trước khi áp dụng.</div></aside></div>';
   } };
 
+  function renderProposalCard(p) {
+    const isEdit = editable(p);
+    const modeLabel = modes[p.mode] || 'Tri thức từ ca';
+    const statusMeta = statuses[p.status] || statuses.draft;
+
+    const feedbackIcon = p.status === 'published' ? icon('checkcircle') : p.status === 'rejected' ? icon('close') : p.status === 'changes' ? icon('clock') : icon('clock');
+    const feedbackTitle = p.status === 'published' ? 'Ý kiến phê duyệt' : p.status === 'changes' ? 'Phản hồi cần bổ sung' : p.status === 'rejected' ? 'Lý do từ chối' : 'Phản hồi cần chú ý';
+
+    return `
+      <article class="proposal-card status-${p.status}" data-id="${e(p.id)}">
+        <div class="proposal-card-body">
+          
+          <div class="proposal-card-head">
+            <div class="proposal-card-badges">
+              <span class="badge-proposal-id">${e(p.id)}</span>
+              <span class="badge-proposal-status ${p.status}">
+                <span class="proposal-status-dot dot-${p.status}"></span>
+                <span>${e(statusMeta[0])}</span>
+              </span>
+              <span class="badge-proposal-family">
+                ${icon('machine')}
+                <span>${e(p.family || 'Chưa phân loại')}</span>
+              </span>
+              <span class="badge-proposal-version">v${e(p.version || 1)}</span>
+            </div>
+            <div class="proposal-card-mode">
+              <span class="badge-proposal-mode">
+                ${icon('spark')}
+                <span>${e(modeLabel)}</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="proposal-card-main">
+            <h3 class="proposal-card-title">${e(p.title || 'Đề xuất tri thức từ ca')}</h3>
+          </div>
+
+          <div class="proposal-source-strip">
+            <span class="source-strip-icon">${icon('file')}</span>
+            <div class="source-strip-content">
+              <span class="source-strip-label">HỒ SƠ NGUỒN:</span>
+              <span class="source-strip-value">${p.caseId ? `Báo cáo ca <strong>${e(p.caseId)}</strong>` : 'Kinh nghiệm chuyên gia'} · ${e(modeLabel)}</span>
+            </div>
+          </div>
+
+          ${p.feedback ? `
+            <div class="proposal-feedback-box feedback-${p.status}">
+              <div class="feedback-box-head">
+                <span class="feedback-icon">${feedbackIcon}</span>
+                <span class="feedback-label">${feedbackTitle}</span>
+              </div>
+              <p class="feedback-text">${e(p.feedback)}</p>
+            </div>
+          ` : ''}
+
+          <div class="proposal-card-meta">
+            <div class="meta-item">
+              ${icon('clock')}
+              <span>Cập nhật: <strong>${e(S.fmtDate(p.updatedAt, false))}</strong></span>
+            </div>
+            ${p.reviewerId ? `
+              <div class="meta-item">
+                ${icon('checkcircle')}
+                <span>Người duyệt: <strong>${e(S.person(p.reviewerId))}</strong></span>
+              </div>
+            ` : `
+              <div class="meta-item">
+                ${icon('user')}
+                <span>Tác giả: <strong>${e(S.person(p.authorId))}</strong></span>
+              </div>
+            `}
+          </div>
+
+          <div class="proposal-card-footer">
+            ${isEdit ? `
+              <button type="button" class="btn btn-primary proposal-action-btn edit-btn" data-action="k-open-proposal" data-id="${e(p.id)}">
+                ${icon('edit')}
+                <span>Tiếp tục hoàn thiện</span>
+                ${icon('arrow')}
+              </button>
+            ` : `
+              <button type="button" class="btn btn-secondary proposal-action-btn view-btn" data-action="k-open-proposal" data-id="${e(p.id)}">
+                <span>Xem đề xuất</span>
+                ${icon('arrow')}
+              </button>
+            `}
+            <span class="proposal-footer-audit">
+              ${icon('shield')}
+              <span>${p.status === 'published' ? 'Đã lưu kho tri thức' : 'Dấu vết tự động'}</span>
+            </span>
+          </div>
+
+        </div>
+      </article>
+    `;
+  }
+
   S.pages.proposals = { get title() { return S.user()?.role === 'maintenance' ? 'Bài học từ ca' : 'Đề xuất của tôi'; }, roles: ['expert', 'maintenance'], render: function () {
     const items = S.db.proposals.filter(p => p.authorId === S.user().id && (proposalFilter === 'all' || p.status === proposalFilter)).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     const maintenance = S.user().role === 'maintenance';
     const states = [['all', 'Tất cả'], ['draft', 'Nháp'], ['pending', 'Chờ duyệt'], ['changes', 'Cần bổ sung'], ['published', 'Đã duyệt'], ['rejected', 'Từ chối'], ['withdrawn', 'Đã lưu trữ']];
     const counts = Object.fromEntries(states.map(([key]) => [key, key === 'all' ? S.db.proposals.filter(p => p.authorId === S.user().id).length : S.db.proposals.filter(p => p.authorId === S.user().id && p.status === key).length]));
-    const list = maintenance ? (items.length ? '<div class="proposal-cards">' + items.map(p => '<article class="card proposal-card"><div class="card-body"><div class="proposal-card-top"><div class="actions">' + status(p) + S.badge(p.family || 'Chưa phân loại', 'neutral') + '</div><span class="mono">' + e(p.id) + '</span></div><h2>' + e(p.title || 'Đề xuất tri thức từ case') + '</h2><p class="subtext">Nguồn: báo cáo công việc ' + e(p.caseId || 'đang cập nhật') + ' · ' + e(modes[p.mode] || 'Tri thức từ case') + '</p><div class="proposal-card-meta"><span>Cập nhật <strong>' + e(S.fmtDate(p.updatedAt, false)) + '</strong></span><span>Phiên bản <strong>' + e(p.version || 1) + '</strong></span></div>' + (p.feedback ? '<div class="proposal-feedback"><strong>Phản hồi cần chú ý</strong><p>' + e(p.feedback) + '</p></div>' : '') + '<div class="actions proposal-card-actions">' + btn(editable(p) ? 'Tiếp tục hoàn thiện' : 'Xem đề xuất', 'k-open-proposal', 'primary', 'data-id="' + e(p.id) + '"') + '</div></div></article>').join('') + '</div>' : S.empty('Chưa có đề xuất ở trạng thái này', 'Mở báo cáo của một ca đã xác nhận để xem có thể đề xuất tri thức hay không.', btn('Mở ca bảo trì', 'navigate', 'secondary', 'data-page="cases"'))) : (items.length ? '<div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Đề xuất</th><th>Nguồn / loại</th><th>Trạng thái</th><th>Cập nhật</th><th>Thao tác</th></tr></thead><tbody>' + items.map(p => '<tr><td><strong>' + e(p.title || 'Tri thức chưa đặt tên') + '</strong><div class="source-meta">' + e(p.id) + ' · bản ' + e(p.version) + ' · ' + e(p.family || 'Chưa chọn máy') + '</div></td><td>' + e(p.origin === 'case' ? 'Case ' + p.caseId : 'Chuyên gia') + '<div class="source-meta">' + e(modes[p.mode]) + '</div></td><td>' + status(p) + '</td><td>' + e(S.fmtDate(p.updatedAt)) + '</td><td>' + btn(editable(p) ? 'Tiếp tục soạn' : 'Xem đề xuất', 'k-open-proposal', 'secondary', 'data-id="' + e(p.id) + '"') + '</td></tr>').join('') + '</tbody></table></div></div>' : S.empty('Chưa có đề xuất', 'Tạo bản nháp đầu tiên hoặc chọn bộ lọc khác.'));
+    
+    const list = maintenance ? (items.length ? '<div class="proposal-cards">' + items.map(renderProposalCard).join('') + '</div>' : S.empty('Chưa có đề xuất ở trạng thái này', 'Mở báo cáo của một ca đã xác nhận để xem có thể đề xuất tri thức hay không.', btn('Mở ca bảo trì', 'navigate', 'secondary', 'data-page="cases"'))) : (items.length ? '<div class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>Đề xuất</th><th>Nguồn / loại</th><th>Trạng thái</th><th>Cập nhật</th><th>Thao tác</th></tr></thead><tbody>' + items.map(p => '<tr><td><strong>' + e(p.title || 'Tri thức chưa đặt tên') + '</strong><div class="source-meta">' + e(p.id) + ' · bản ' + e(p.version) + ' · ' + e(p.family || 'Chưa chọn máy') + '</div></td><td>' + e(p.origin === 'case' ? 'Case ' + p.caseId : 'Chuyên gia') + '<div class="source-meta">' + e(modes[p.mode]) + '</div></td><td>' + status(p) + '</td><td>' + e(S.fmtDate(p.updatedAt)) + '</td><td>' + btn(editable(p) ? 'Tiếp tục soạn' : 'Xem đề xuất', 'k-open-proposal', 'secondary', 'data-id="' + e(p.id) + '"') + '</td></tr>').join('') + '</tbody></table></div></div>' : S.empty('Chưa có đề xuất', 'Tạo bản nháp đầu tiên hoặc chọn bộ lọc khác.'));
+
+    const toolbarHtml = `
+      <div class="case-list-toolbar proposal-list-toolbar">
+        <div class="case-list-summary">
+          <div class="case-list-badge">
+            <span class="case-list-icon">${icon('file')}</span>
+            <span class="case-list-count">${counts.all}</span>
+          </div>
+          <div class="case-list-summary-text">
+            <span class="case-list-title">Đề xuất bài học từ ca</span>
+            <span class="case-list-desc">${items.length} đề xuất theo bộ lọc hiện tại</span>
+          </div>
+        </div>
+
+        <div class="case-filters-segmented proposal-filters-segmented" role="tablist" aria-label="Lọc trạng thái đề xuất">
+          ${states.map(([v, t]) => `
+            <button type="button" 
+                    class="case-filter-pill ${proposalFilter === v ? 'is-active' : ''}" 
+                    data-action="k-proposal-filter" 
+                    data-value="${v}"
+                    role="tab"
+                    aria-selected="${proposalFilter === v}">
+              <span class="filter-dot dot-proposal-${v}"></span>
+              <span>${t}</span>
+              <span class="filter-count-pill">${counts[v]}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
     return S.head(maintenance ? 'Bài học từ ca' : 'Đề xuất của tôi', !maintenance ? btn('Ghi tri thức mới', 'k-new', 'primary') : '') +
-      '<div class="proposal-toolbar"><div class="tabs proposal-filters" role="group" aria-label="Lọc trạng thái đề xuất">' + states.map(([v, t]) => '<button type="button" class="tab' + (proposalFilter === v ? ' active' : '') + '" aria-pressed="' + (proposalFilter === v) + '" data-action="k-proposal-filter" data-value="' + v + '">' + t + '<span class="tab-count">' + counts[v] + '</span></button>').join('') + '</div><p class="proposal-filter-context">' + items.length + ' đề xuất đang hiển thị</p></div>' + list;
+      toolbarHtml + list;
   } };
 
   function proposalForm(p) {
