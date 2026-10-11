@@ -425,35 +425,41 @@
       </div>
     </header>
 
-    <div class="case-status-kpi-bar" role="region" aria-label="Chỉ số trạng thái ca bảo trì">
-      <div class="case-kpi-item ${machineConfig.tone}">
-        <div class="case-kpi-label">
-          <span>Tình trạng máy</span>
-          <span class="kpi-dot ${machineConfig.dot}"></span>
+    <div class="case-status-strip" role="region" aria-label="Thông số trạng thái ca bảo trì (chỉ đọc)">
+      <div class="status-strip-cell">
+        <div class="status-strip-label">Tình trạng máy</div>
+        <div class="status-strip-value">
+          <span class="status-pill status-pill--${machineConfig.tone}">
+            <span class="status-pill-dot ${machineConfig.dot}"></span>
+            <span>${h(machineConfig.text)}</span>
+          </span>
         </div>
-        <div class="case-kpi-value">${h(machineConfig.text)}</div>
       </div>
-      <div class="case-kpi-item ${workConfig.tone}">
-        <div class="case-kpi-label">
-          <span>Công việc hiện trường</span>
-          <span class="kpi-dot ${workConfig.dot}"></span>
+      <div class="status-strip-cell">
+        <div class="status-strip-label">Công việc hiện trường</div>
+        <div class="status-strip-value">
+          <span class="status-pill status-pill--${workConfig.tone}">
+            <span class="status-pill-dot ${workConfig.dot}"></span>
+            <span>${h(workConfig.text)}</span>
+          </span>
         </div>
-        <div class="case-kpi-value">${h(workConfig.text)}</div>
       </div>
-      <div class="case-kpi-item ${reportConfig.tone}">
-        <div class="case-kpi-label">
-          <span>Hồ sơ báo cáo</span>
-          <span class="kpi-dot ${reportConfig.dot}"></span>
+      <div class="status-strip-cell">
+        <div class="status-strip-label">Hồ sơ báo cáo</div>
+        <div class="status-strip-value">
+          <span class="status-pill status-pill--${reportConfig.tone}">
+            <span class="status-pill-dot ${reportConfig.dot}"></span>
+            <span>${h(reportConfig.text)}</span>
+          </span>
         </div>
-        <div class="case-kpi-value">${h(reportConfig.text)}</div>
       </div>
-      <div class="case-kpi-item tone-progress">
-        <div class="case-kpi-label">
-          <span>Tiến trình nhật ký</span>
-          ${icon('clock')}
-        </div>
-        <div class="case-kpi-value">
-          <strong>${c.rounds.length}</strong> đợt <span class="kpi-sep">·</span> <strong>${totalEvents}</strong> ghi nhận
+      <div class="status-strip-cell">
+        <div class="status-strip-label">Tiến trình nhật ký</div>
+        <div class="status-strip-value">
+          <span class="status-pill status-pill--progress">
+            ${icon('clock')}
+            <span><strong>${c.rounds.length}</strong> đợt <span class="pill-sep">·</span> <strong>${totalEvents}</strong> ghi nhận</span>
+          </span>
         </div>
       </div>
     </div>

@@ -951,31 +951,35 @@ body.story-opening::before { content:""; position:fixed; z-index:79; inset:0; ba
   transform: translateX(-2px);
 }
 
-/* 4-KPI Status Strip */
+/* Read-Only Case Telemetry Strip (Thanh dải thông số chỉ đọc, phân biệt hoàn toàn với Stepper Tabs) */
+.case-status-strip,
 .case-status-kpi-bar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   margin-bottom: 18px;
+  overflow: hidden;
+  box-shadow: none;
+  cursor: default;
+  user-select: none;
 }
-.case-kpi-item {
+.status-strip-cell {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 4px;
-  padding: 12px 16px;
-  background: #ffffff;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-  transition: all var(--motion);
+  padding: 10px 16px;
+  border-right: 1px solid #e2e8f0;
+  background: transparent;
+  cursor: default;
 }
-.case-kpi-item:hover {
-  border-color: var(--line-strong);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+.status-strip-cell:last-child {
+  border-right: none;
 }
-.case-kpi-label {
+.status-strip-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -983,77 +987,106 @@ body.story-opening::before { content:""; position:fixed; z-index:79; inset:0; ba
   font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--muted);
+  color: #64748b;
+  line-height: 1.2;
 }
-.case-kpi-label svg {
-  width: 13px;
-  height: 13px;
-  color: var(--muted);
+.status-strip-value {
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
 }
-.case-kpi-value {
-  font-size: 14px;
-  font-weight: 750;
-  color: var(--ink);
+
+/* Status Pill Badge - Read-Only Telemetry Tag */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2.5px 8.5px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 650;
   line-height: 1.35;
+  width: fit-content;
+  border: 1px solid transparent;
+  cursor: default;
 }
-.kpi-dot {
-  width: 8px;
-  height: 8px;
+.status-pill-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.kpi-dot.dot-green {
+.status-pill-dot.dot-green {
   background: #16a34a;
-  box-shadow: 0 0 0 2.5px rgba(22, 163, 74, 0.15);
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
 }
-.kpi-dot.dot-amber {
+.status-pill-dot.dot-amber {
   background: #d97706;
-  box-shadow: 0 0 0 2.5px rgba(217, 119, 6, 0.15);
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
 }
-.kpi-dot.dot-neutral {
+.status-pill-dot.dot-neutral {
   background: #94a3b8;
 }
-.kpi-dot.dot-blue-pulse {
+.status-pill-dot.dot-blue-pulse {
   background: #2563eb;
-  box-shadow: 0 0 0 2.5px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
   animation: pulse-ring 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
 }
-.kpi-dot.dot-amber-pulse {
+.status-pill-dot.dot-amber-pulse {
   background: #d97706;
-  box-shadow: 0 0 0 2.5px rgba(217, 119, 6, 0.2);
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
   animation: pulse-ring 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
 }
-.kpi-sep {
-  color: var(--line-strong);
-  margin: 0 4px;
+.status-pill-dot.dot-purple {
+  background: #9333ea;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
 }
-.case-kpi-item.tone-active {
-  background: #f8fbff;
+
+/* Tone Variants */
+.status-pill--tone-neutral {
+  background: #ffffff;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+.status-pill--tone-active {
+  background: #eff6ff;
+  color: #1d4ed8;
   border-color: #bfdbfe;
 }
-.case-kpi-item.tone-active .case-kpi-value {
-  color: #1d4ed8;
-}
-.case-kpi-item.tone-warning {
-  background: #fffdfa;
-  border-color: #fed7aa;
-}
-.case-kpi-item.tone-warning .case-kpi-value {
+.status-pill--tone-warning {
+  background: #fffbeb;
   color: #b45309;
+  border-color: #fde68a;
 }
-.case-kpi-item.tone-success {
+.status-pill--tone-success {
   background: #f0fdf4;
+  color: #15803d;
   border-color: #bbf7d0;
 }
-.case-kpi-item.tone-success .case-kpi-value {
-  color: #15803d;
-}
-.case-kpi-item.tone-purple {
+.status-pill--tone-purple {
   background: #faf5ff;
+  color: #7e22ce;
   border-color: #e9d5ff;
 }
-.case-kpi-item.tone-purple .case-kpi-value {
-  color: #7e22ce;
+.status-pill--progress {
+  background: #ffffff;
+  color: #1e293b;
+  border-color: #e2e8f0;
+  font-weight: 550;
+}
+.status-pill--progress svg {
+  width: 13px;
+  height: 13px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+.status-pill--progress strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+.status-pill--progress .pill-sep {
+  color: #94a3b8;
+  margin: 0 3px;
 }
 
 @keyframes pulse-ring {
@@ -3195,12 +3228,17 @@ body.story-opening::before { content:""; position:fixed; z-index:79; inset:0; ba
 .context-primary-fields { display:grid; gap:14px; }
 @media(max-width:900px) {
   .case-workflow, .case-workflow-stepper { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .case-status-kpi-bar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .case-status-strip, .case-status-kpi-bar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .case-status-strip .status-strip-cell:nth-child(2) { border-right: none; }
+  .case-status-strip .status-strip-cell:nth-child(1),
+  .case-status-strip .status-strip-cell:nth-child(2) { border-bottom: 1px solid #e2e8f0; }
 }
 @media(max-width:760px) {
   .case-workflow, .case-workflow-stepper { display:flex; overflow-x:auto; padding:2px 1px 8px; margin-right:-4px; overscroll-behavior-inline:contain; }
   .case-workflow-step { flex:0 0 220px; min-height:56px; }
-  .case-status-kpi-bar { grid-template-columns:1fr; }
+  .case-status-strip, .case-status-kpi-bar { grid-template-columns:1fr; }
+  .case-status-strip .status-strip-cell { border-right: none; border-bottom: 1px solid #e2e8f0; }
+  .case-status-strip .status-strip-cell:last-child { border-bottom: none; }
   .case-filters { align-items:stretch; }
   .case-filters .btn { flex:0 0 auto; }
   .case-card-actions { align-items:flex-start; flex-direction:column; }
