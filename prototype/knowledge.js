@@ -118,7 +118,7 @@
     };
     const typeLabels = {
       draft: 'Bản nháp ban đầu',
-      structure: 'Trích xuất AI',
+      structure: 'Sắp xếp mô phỏng',
       edit: 'Cập nhật nội dung',
       compare: 'Đối chiếu tri thức',
       submit: 'Gửi kiểm duyệt',
@@ -258,10 +258,10 @@
                   <table class="data-table compare-table">
                     <thead>
                       <tr>
-                        <th style="width: 190px;">Tiêu chí SOP</th>
+                        <th style="width: 190px;">Mục tri thức</th>
                         <th>Đề xuất của bạn</th>
                         <th>Nguồn đã duyệt (${e(k.id)})</th>
-                        <th style="width: 175px;">Đối chiếu AI</th>
+                        <th style="width: 175px;">Đối chiếu mô phỏng</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -398,7 +398,7 @@
       status: 'published',
       version: 1,
       mode: 'new',
-      feedback: 'Đề xuất rất thực tế và chi tiết. Đã phê duyệt đưa vào kho tri thức chuẩn hóa.',
+      feedback: 'Đề xuất đã được kiểm tra và phê duyệt đưa vào kho tri thức mô phỏng.',
       reviewerId: 'u-anh',
       publishedId: 'KN-024',
       publishedVersion: 1,
@@ -521,7 +521,7 @@
             </button>
             <span class="library-footer-note">
               ${icon('shield')}
-              <span>Đã chuẩn hóa SOP</span>
+              <span>Đã kiểm duyệt</span>
             </span>
           </div>
 
@@ -743,12 +743,12 @@
       <div class="knowledge-status-banner verified">
         <div class="banner-icon-wrap">${icon('checkcircle')}</div>
         <div class="banner-body">
-          <div class="banner-title">Phiên bản tri thức chuẩn hóa đang có hiệu lực (v${e(k.version)})</div>
+          <div class="banner-title">Phiên bản tri thức đã kiểm duyệt đang có hiệu lực (v${e(k.version)})</div>
           <p class="banner-desc">Đã qua quy trình kiểm duyệt chất lượng kỹ thuật của Chuyên gia trưởng. Sẵn sàng tra cứu và tham khảo trong phạm vi điều kiện và giới hạn của nguồn.</p>
         </div>
         <div class="banner-pills">
-          <span class="badge badge-green">${icon('shield')} Đạt chuẩn MES</span>
-          <span class="badge badge-neutral">${k.kind === 'case' ? 'Case thực tế' : 'Kinh nghiệm chuyên gia'}</span>
+          <span class="badge badge-green">${icon('shield')} Đã kiểm duyệt</span>
+          <span class="badge badge-neutral">${k.kind === 'case' ? 'Case đã duyệt' : 'Kinh nghiệm chuyên gia'}</span>
         </div>
       </div>` : `
       <div class="knowledge-status-banner historical">
@@ -796,7 +796,7 @@
             <div class="kd-section-head">
               <div class="kd-section-icon icon-wrench">${icon('wrench')}</div>
               <div>
-                <h2 class="kd-section-title">2. Kiểm tra & Hướng xử lý đã chuẩn hóa</h2>
+                <h2 class="kd-section-title">2. Kiểm tra & Hướng xử lý đã kiểm duyệt</h2>
                 <p class="kd-section-subtitle">Trình tự kiểm tra thực tế, giải pháp kỹ thuật và tiêu chí kiểm chứng nghiệm thu</p>
               </div>
             </div>
@@ -1138,15 +1138,21 @@
   } };
 
   function runAiModal(opts) {
-    const { title, subtitle, badgeText = 'DENSO AI · INDUSTRIAL MES ENGINE', steps = [], duration = 1400, onComplete } = opts;
+    const { title, subtitle, badgeText = 'SmartMaint · Xử lý dữ liệu mô phỏng', steps = [], duration = 1400, onComplete } = opts;
     const oldModal = document.getElementById('proposal-ai-modal');
-    if (oldModal) oldModal.remove();
+    if (oldModal) {
+      if (typeof oldModal.__cleanup === 'function') oldModal.__cleanup(false);
+      else oldModal.remove();
+    }
 
     const overlay = document.createElement('div');
     overlay.id = 'proposal-ai-modal';
     overlay.className = 'proposal-ai-modal-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'proposal-ai-modal-title');
     overlay.innerHTML = `
-      <div class="proposal-ai-modal-card">
+      <div class="proposal-ai-modal-card" tabindex="-1">
         <div class="ai-modal-top">
           <div class="ai-modal-badge">
             <span class="ai-spark-pulse">${icon('spark')}</span>
@@ -1157,7 +1163,7 @@
             <span id="ai-status-text">ĐANG XỬ LÝ</span>
           </div>
         </div>
-        <h3 class="ai-modal-title">${e(title)}</h3>
+        <h3 class="ai-modal-title" id="proposal-ai-modal-title">${e(title)}</h3>
         <p class="ai-modal-desc">${e(subtitle)}</p>
 
         <div class="ai-modal-progress-container">
@@ -1189,13 +1195,39 @@
         <div class="ai-modal-footer">
           <div class="ai-modal-note">
             ${icon('alert')}
-            <span>Bảo toàn 100% dữ kiện gốc. Bạn có thể kiểm tra và chỉnh sửa ở bước tiếp theo.</span>
+            <span>Dữ kiện gốc được giữ lại để kiểm tra ở bước tiếp theo. Vui lòng chờ quá trình hoàn tất.</span>
           </div>
         </div>
       </div>
     `;
 
     document.body.appendChild(overlay);
+
+    const appRoot = document.getElementById('app');
+    const previousFocus = document.activeElement;
+    const dialogCard = overlay.querySelector('.proposal-ai-modal-card');
+    const timers = [];
+    let cleaned = false;
+    if (appRoot) appRoot.inert = true;
+
+    const cleanup = (restoreFocus = true) => {
+      if (cleaned) return;
+      cleaned = true;
+      timers.forEach(timer => clearTimeout(timer));
+      if (appRoot?.isConnected) appRoot.inert = false;
+      overlay.remove();
+      if (restoreFocus && previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    };
+    overlay.__cleanup = cleanup;
+    overlay.addEventListener('keydown', event => {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        dialogCard?.focus({ preventScroll: true });
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+      }
+    });
+    dialogCard?.focus({ preventScroll: true });
 
     const fill = overlay.querySelector('#ai-progress-fill');
     const percentLabel = overlay.querySelector('#ai-percent-label');
@@ -1233,28 +1265,28 @@
       });
     }
 
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       setStep(1, 58, steps[1]?.label);
-    }, 450);
+    }, 450));
 
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       setStep(2, 88, steps[2]?.label);
-    }, 950);
+    }, 950));
 
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       setStep(3, 100, 'Hoàn tất xử lý!');
       if (pill) {
         pill.className = 'ai-modal-status-pill is-success';
         if (statusText) statusText.textContent = 'HOÀN TẤT';
       }
-      setTimeout(() => {
+      timers.push(setTimeout(() => {
         overlay.classList.add('is-fadeout');
-        setTimeout(() => {
-          overlay.remove();
+        timers.push(setTimeout(() => {
+          cleanup(true);
           if (typeof onComplete === 'function') onComplete();
-        }, 220);
-      }, 350);
-    }, duration);
+        }, 220));
+      }, 350));
+    }, duration));
   }
 
   function rawEditor(p) {
@@ -1267,7 +1299,7 @@
           <div class="step-card-head-left">
             <span class="step-tag-pill">MỤC 1 · THU THẬP & GHI CHÉP GỐC</span>
             <h2 class="step-card-title">Nội dung gốc từ hiện trường</h2>
-            <p class="subtext">Ghi chép chuyên gia, nội dung trao đổi hoặc biên bản liên quan. Dữ liệu gốc luôn được bảo toàn độc lập với biểu mẫu chuẩn hóa.</p>
+            <p class="subtext">Ghi chép chuyên gia, nội dung trao đổi hoặc biên bản liên quan. Dữ liệu gốc luôn được bảo toàn độc lập với biểu mẫu tri thức.</p>
           </div>
           <div class="step-card-head-right">
             <span class="char-counter-pill">${charCount} ký tự · ${lineCount} dòng</span>
@@ -1290,7 +1322,7 @@
             <div class="action-buttons-left">
               <button type="button" class="btn btn-primary btn-ai-structure" data-action="k-structure" data-id="${e(p.id)}">
                 ${icon('spark')}
-                <span>AI sắp xếp nội dung</span>
+                <span>Sắp xếp nội dung mô phỏng</span>
               </button>
               <button type="button" class="btn btn-secondary btn-goto-form" data-action="k-tab" data-tab="form">
                 ${icon('file')}
@@ -1311,7 +1343,7 @@
             <div class="guide-box">
               <span class="guide-icon">${icon('shield')}</span>
               <div class="guide-text">
-                <strong>Nguyên tắc bảo toàn dữ kiện Denso:</strong> AI chỉ đóng vai trò phân loại, cấu trúc và trích xuất thông tin. Mọi dữ liệu thiếu sẽ được giữ trống để con người xác nhận, tuyệt đối không tự tạo dữ kiện.
+                <strong>Nguyên tắc bảo toàn dữ kiện:</strong> Chức năng mô phỏng chỉ phân loại và sắp xếp thông tin. Mọi dữ liệu thiếu được giữ trống để con người xác nhận, không tự tạo dữ kiện.
               </div>
             </div>
           </div>
@@ -1328,7 +1360,7 @@
         <div class="card-head proposal-step-card-head">
           <div class="step-card-head-left">
             <span class="step-tag-pill">MỤC 2 · KIỂM TRA & CHUẨN HÓA BIỂU MẪU</span>
-            <h2 class="step-card-title">Biểu mẫu tri thức chuẩn hóa (SOP Denso)</h2>
+            <h2 class="step-card-title">Biểu mẫu ghi nhận tri thức</h2>
             <p class="subtext">Giữ dữ kiện gốc. Mục chưa rõ hoặc không áp dụng cần nêu lý do ngay trong ô.</p>
           </div>
           <div class="step-card-head-right">
@@ -1357,7 +1389,7 @@
             <div class="form-section-title">
               <span class="section-num-badge">B</span>
               <div>
-                <strong>Nội dung kỹ thuật cốt lõi (9 tiêu chuẩn SOP)</strong>
+                <strong>Nội dung kỹ thuật cốt lõi (9 mục)</strong>
                 <p class="subtext">Mỗi mục phản ánh chính xác dữ kiện hiện trường hoặc căn cứ kỹ thuật.</p>
               </div>
             </div>
@@ -1396,7 +1428,7 @@
                   <span class="safety-icon-halo">${icon('alert')}</span>
                   <div>
                     <strong>An toàn và quy trình tham chiếu (Bắt buộc tuân thủ)</strong>
-                    <span class="safety-mini-badge">SOP MANDATORY</span>
+                    <span class="safety-mini-badge">CẦN XÁC MINH QUY TRÌNH</span>
                   </div>
                 </div>
                 ${area('', 'content.safety', p.content.safety, p, 'Nêu mã/phiên bản quy trình phù hợp cần xác minh trước thao tác.')}
@@ -1460,7 +1492,7 @@
           <div class="step-card-head-left">
             <span class="step-tag-pill">QUYẾT ĐỊNH XUẤT BẢN</span>
             <h2 class="step-card-title">Chọn hướng ghi nhận & Gửi kiểm duyệt</h2>
-            <p class="subtext">Xác định cách thức tích hợp bài học này vào kho tri thức chuẩn hóa Denso.</p>
+            <p class="subtext">Xác định cách thức ghi nhận bài học này vào kho tri thức đã kiểm duyệt.</p>
           </div>
         </div>
 
@@ -1617,7 +1649,7 @@
         <nav class="proposal-steps-nav" aria-label="Các bước ghi nhận tri thức">
           ${[
             ['raw', '1', 'Nội dung gốc', 'Dữ kiện ban đầu'],
-            ['form', '2', 'Kiểm tra biểu mẫu', 'Chuẩn hóa SOP'],
+            ['form', '2', 'Kiểm tra biểu mẫu', 'Hoàn thiện biểu mẫu'],
             ['compare', '3', 'Đối chiếu & gửi', 'So sánh & quyết định']
           ].map(([v, num, label, sub]) => `
             <button type="button" 
@@ -1660,7 +1692,7 @@
       '<details><summary>Đề nghị sửa một mục chuyên môn</summary><div class="stack"><label class="field"><span class="field-label">Mục cần sửa</span><select class="select" name="suggestField"><option value="">Không đề nghị bản thay thế</option>' + fields.map(([key, label]) => '<option value="' + key + '">' + e(label) + '</option>').join('') + '</select></label>' + S.area('Nội dung đề nghị', 'suggestText', '', { rows: 4, hint: 'Chọn “Yêu cầu bổ sung”; tác giả phải đọc, chỉnh hoặc chấp nhận và gửi lại.' }) + '</div></details><details><summary>Sửa biên tập tiêu đề</summary><div class="stack">' + S.field('Tiêu đề sau sửa', 'editorialTitle', p.title, { hint: 'Chỉ chính tả/diễn đạt; thay đổi chuyên môn cần trả về tác giả.' }) + S.area('Ghi chú chỉnh biên tập', 'editorialNote', '', { rows: 2 }) + '</div></details><label class="check-line"><input type="checkbox" name="reviewConfirmed" required> Tôi đã xem nguồn, điều kiện áp dụng và nội dung an toàn; quyết định đúng phạm vi chuyên môn được giao.</label><div class="error-summary" hidden tabindex="-1"></div><button type="submit" class="btn btn-primary">Xem lại quyết định</button></div></form>' : '<div class="notice notice-info">' + (p.status === 'changes' ? 'Đề xuất đang chờ tác giả bổ sung. Chỉ duyệt tiếp sau khi tác giả gửi lại.' : 'Đề xuất đã có quyết định hoặc chưa đủ quyền để duyệt.') + (p.feedback ? preserved(p.feedback) : '') + '</div>') + '</main><aside class="stack">' + metaCard(p) + '</aside></div>';
   } };
 
-  function err(text) { const target = document.querySelector('[data-k-error]')?.parentElement || document.querySelector('.page-content') || document.body; S.error(target, text); S.toast(text, 'danger'); }
+  function err(text) { const target = document.querySelector('[data-k-error]')?.parentElement || document.getElementById('main-content'); S.error(target, text); S.toast(text, 'danger'); }
   function ownership(p) { if (!editable(p)) { S.toast('Bạn không có quyền sửa bản này hoặc bản đã được gửi.', 'error'); return false; } return true; }
   function updateSaveStatus(p, stale) {
     if (stale) {
@@ -1791,11 +1823,11 @@
     runAiModal({
       title: 'Đang cấu trúc hóa ghi chép hiện trường...',
       subtitle: 'Tự động bóc tách thực thể kỹ thuật & phân loại 5M1E từ nội dung gốc',
-      badgeText: 'DENSO AI · KNOWLEDGE EXTRACTION',
+      badgeText: 'SmartMaint · Sắp xếp nội dung mô phỏng',
       steps: [
         { label: 'Phân tách khối văn bản hiện trường', desc: 'Nhận diện các chủ đề và ranh giới ghi chép (---)' },
         { label: 'Nhận diện thực thể kỹ thuật & 5M1E', desc: 'Trích xuất triệu chứng, điều kiện và nguyên nhân máy' },
-        { label: 'Chuẩn hóa cấu trúc SOP Denso 9 tiêu chuẩn', desc: 'Lập bản xem trước và phát hiện các mục còn thiếu' }
+        { label: 'Sắp xếp theo biểu mẫu tri thức gồm 9 mục', desc: 'Lập bản xem trước và phát hiện các mục còn thiếu' }
       ],
       duration: 1350,
       onComplete: () => {
@@ -1823,12 +1855,12 @@
     S.closeModal();
 
     runAiModal({
-      title: 'Đang điền dữ liệu vào biểu mẫu SOP...',
-      subtitle: 'Tự động áp dụng dữ kiện vào 9 tiêu chuẩn SOP Denso và hoàn thiện bản nháp',
-      badgeText: 'DENSO AI · AUTO-FILL SOP FORM',
+      title: 'Đang điền dữ liệu vào biểu mẫu tri thức...',
+      subtitle: 'Áp dụng dữ kiện mô phỏng vào biểu mẫu tri thức gồm 9 mục và hoàn thiện bản nháp',
+      badgeText: 'SmartMaint · Điền biểu mẫu mô phỏng',
       steps: [
         { label: 'Xác thực các chủ đề đã chọn', desc: 'Đồng bộ hóa ' + selected.length + ' khối dữ kiện hiện trường' },
-        { label: 'Điền 9 trường kỹ thuật SOP', desc: 'Áp dụng vào Dấu hiệu, Điều kiện, Cách xử lý, An toàn...' },
+        { label: 'Điền 9 mục tri thức kỹ thuật', desc: 'Áp dụng vào Dấu hiệu, Điều kiện, Cách xử lý, An toàn...' },
         { label: 'Cập nhật bản nháp & chuyển trang', desc: 'Lưu thay đổi vào bộ nhớ cục bộ và mở biểu mẫu' }
       ],
       duration: 1300,
@@ -1844,7 +1876,7 @@
             stamp(dest, 'Áp dụng phần trích xuất có nhãn từ nội dung gốc; cần tác giả kiểm tra');
           });
           S.log('proposal.structure', p.id, selected.length + ' chủ đề được áp dụng');
-        }, selected.length > 1 ? 'Đã tạo các nháp riêng. Mở từng nháp tại Đề xuất của tôi để hoàn thiện.' : 'Đã điền các mục vào biểu mẫu SOP; hãy kiểm tra trước khi đối chiếu.', false);
+        }, selected.length > 1 ? 'Đã tạo các nháp riêng. Mở từng nháp tại Đề xuất của tôi để hoàn thiện.' : 'Đã điền các mục vào biểu mẫu tri thức; hãy kiểm tra trước khi đối chiếu.', false);
 
         if (ok) {
           S.go('proposal', p.id, 'form');
@@ -1863,10 +1895,10 @@
 
     runAiModal({
       title: 'Đang đối chiếu tri thức tương đồng...',
-      subtitle: 'So khớp vector ngữ nghĩa (Semantic Matching) với cơ sở tri thức đã ban hành',
-      badgeText: 'DENSO AI · SEMANTIC VECTOR RETRIEVAL',
+      subtitle: 'Đối chiếu nội dung mô phỏng theo nhóm máy và từ khóa với kho tri thức đã kiểm duyệt',
+      badgeText: 'SmartMaint · Đối chiếu dữ liệu mô phỏng',
       steps: [
-        { label: 'Trích xuất đặc trưng & từ khóa SOP', desc: 'Phân tích tiêu đề, triệu chứng và giải pháp kỹ thuật' },
+        { label: 'Trích xuất đặc trưng và từ khóa kỹ thuật', desc: 'Phân tích tiêu đề, triệu chứng và giải pháp kỹ thuật' },
         { label: 'Tìm kiếm nguồn bài học tương đồng', desc: 'Đối chiếu trong họ máy ' + (p.family || 'tương ứng') + ' đã được phê duyệt' },
         { label: 'Xây dựng ma trận sai khác & hoàn tất', desc: 'Đánh giá điểm tương đồng, bổ sung và lệch cách ghi' }
       ],

@@ -1,6 +1,6 @@
 # Shared implementation contract — 09/10/2026
 
-Offline vanilla HTML/CSS/JS prototype. No third-party dependency. Root index.html loads prototype/core.js, prototype/data.js, prototype/knowledge.js, prototype/cases.js, app.js (in that order). app.js starts after all registrations. No modules/import/fetch: works with file:// and local server. All AI, accounts and HozenDX data are explicitly simulated. Do not run/add tests unless requested.
+Offline vanilla HTML/CSS/JS prototype. No third-party dependency. Root index.html loads prototype/core.js, prototype/data.js, prototype/knowledge.js, prototype/cases.js, app.js and prototype/demo-guide.js (in that order). app.js starts after all business registrations; the guide then wraps render to observe real navigation. No modules/import/fetch: works with file:// and local server. All AI, accounts and HozenDX data are explicitly simulated.
 
 ## Global API: window.SM
 

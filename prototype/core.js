@@ -1,8 +1,12 @@
 /* Local interactive prototype. All accounts, AI and integration data are simulated. */
 (function () {
   'use strict';
-  const KEY = 'denso.smartmaint.prototype.v3';
-  const SESSION = 'denso.smartmaint.session.v3';
+  const KEY = 'denso.smartmaint.prototype.v4';
+  const SESSION = 'denso.smartmaint.session.v4';
+  try {
+    localStorage.removeItem('denso.smartmaint.prototype.v3');
+    sessionStorage.removeItem('denso.smartmaint.session.v3');
+  } catch (_) { /* Continue with in-memory data when browser storage is unavailable. */ }
   const clone = value => JSON.parse(JSON.stringify(value));
   const emptyDB = () => ({ schema: 3, revision: 0, users: [], assets: [], knowledge: [], cases: [], proposals: [], notifications: [], audit: [], drafts: {} });
   let db = emptyDB(), storageProblem = '', storedRevision = null;
@@ -230,9 +234,21 @@
     }
     if (lastFocus?.isConnected) lastFocus.focus();
   };
+  SM.clearErrors = () => {
+    document.querySelectorAll('body > .error-summary').forEach(el => el.remove());
+    const toast = document.getElementById('toast');
+    if (toast?.classList.contains('toast-danger')) {
+      clearTimeout(toastTimer);
+      toast.classList.remove('show');
+    }
+  };
   SM.error = (parent, text) => {
-    let el = parent?.querySelector('.error-summary');
-    if (!el && parent) { el = document.createElement('div'); el.className = 'error-summary notice notice-danger'; el.tabIndex = -1; el.setAttribute('role', 'alert'); parent.prepend(el); }
+    SM.clearErrors();
+    const target = parent && parent !== document.body
+      ? parent
+      : document.querySelector('#modal[open] .modal-body') || document.getElementById('main-content');
+    let el = target?.querySelector('.error-summary');
+    if (!el && target) { el = document.createElement('div'); el.className = 'error-summary notice notice-danger'; el.tabIndex = -1; el.setAttribute('role', 'alert'); target.prepend(el); }
     if (el) { el.textContent = text; el.hidden = false; el.tabIndex = -1; el.setAttribute('role', 'alert'); el.focus(); el.scrollIntoView({ block: 'nearest' }); }
     else SM.toast(text, 'danger');
   };
@@ -260,6 +276,7 @@
   SM.go = (page, id = null, tab = null) => {
     if (!SM.allowed(page)) { SM.toast('Tài khoản này không có quyền mở chức năng đó.', 'warning'); return; }
     if (!SM.guardLeave(() => SM.go(page, id, tab))) return;
+    SM.clearErrors();
     SM.closeModal();
     if (SM.ui.page && SM.ui.page !== 'notifications') {
       SM.prevRoute = { page: SM.ui.page, id: SM.ui.id, tab: SM.ui.tab };
@@ -284,7 +301,7 @@
   };
   SM.logout = () => {
     if (!SM.guardLeave(() => SM.logout())) return;
-    SM.closeModal(); SM.session.userId = null;
+    SM.clearErrors(); SM.closeModal(); SM.session.userId = null;
     try { sessionStorage.removeItem(SESSION); } catch (_) { /* No persistent session. */ }
     SM.ui = { page: 'dashboard', id: null, tab: null };
     history.replaceState(null, '', '#login'); SM.render();
@@ -301,7 +318,7 @@
   SM.actions['open-source'] = el => SM.go('knowledge-detail', el.dataset.id);
   SM.persistSeed = () => { if (!SM.storageProblem && SM.seedChanged) { SM.commit(() => {}, '', false); SM.seedChanged = false; } };
   SM.resetDemo = () => {
-    try { localStorage.removeItem(KEY); sessionStorage.removeItem(SESSION); location.hash = ''; location.reload(); }
+    try { localStorage.removeItem(KEY); localStorage.removeItem('denso.smartmaint.guide.v1'); localStorage.removeItem('denso.smartmaint.guide.v2'); sessionStorage.removeItem(SESSION); location.hash = ''; location.reload(); }
     catch (_) { SM.toast('Trình duyệt đang chặn bộ nhớ. Chưa thể khởi tạo lại.', 'danger'); }
   };
   SM.exportData = () => {

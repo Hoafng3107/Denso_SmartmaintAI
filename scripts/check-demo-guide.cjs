@@ -1,0 +1,62 @@
+(async () => {
+  const targets = await (await fetch('http://127.0.0.1:9334/json')).json();
+  const target = targets.find(item => item.type === 'page');
+  if (!target) throw new Error('Không tìm thấy tab Chrome CDP tại cổng 9334.');
+  const ws = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise(resolve => ws.addEventListener('open', resolve, { once: true }));
+  let seq = 0;
+  const pending = new Map();
+  ws.onmessage = event => { const message = JSON.parse(event.data); if (message.id) { pending.get(message.id)?.(message); pending.delete(message.id); } };
+  const send = (method, params = {}) => new Promise(resolve => { const id = ++seq; pending.set(id, resolve); ws.send(JSON.stringify({ id, method, params })); });
+  const evaluate = async expression => {
+    const response = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
+    if (response.result?.exceptionDetails) throw new Error(response.result.exceptionDetails.exception?.description || response.result.exceptionDetails.text);
+    return response.result?.result?.value;
+  };
+  await send('Page.enable');
+  await send('Page.navigate', { url: 'file:///D:/DENSO_SMARTMAINTAI/index.html' });
+  await new Promise(resolve => setTimeout(resolve, 700));
+  const result = await evaluate(`(async()=>{
+    const wait=(ms=100)=>new Promise(r=>setTimeout(r,ms));
+    const click=selector=>{const el=document.querySelector(selector);if(!el)throw new Error('Thiếu '+selector);el.click();};
+    const progress=()=>document.querySelector('[data-guide-progress]')?.textContent||'';
+    SM.login('u-minh'); await wait();
+    click('[data-action="guide-open"]'); await wait();
+    const numbered=[...document.querySelectorAll('.guide-flow-number')].map(el=>el.textContent.trim());
+    click('[data-flow="maintenance-new-case"]'); await wait(); click('[data-action="guide-start"]'); await wait();
+    click('[data-action="close-modal"]'); await wait();
+    let type=document.querySelector('[data-form="case-create"] [name="type"]'); type.value='PM'; type.dispatchEvent(new Event('change',{bubbles:true})); await wait();
+    const form=document.querySelector('[data-form="case-create"]');
+    form.querySelector('[name="newReason"]').value='Ca PM độc lập để kiểm thử roadmap';
+    form.querySelector('[name="machineConfirmed"]').checked=true;
+    form.requestSubmit(); await wait(250);
+    const pmCaseId=SM.ui.id, pmType=SM.db.cases.find(c=>c.id===pmCaseId)?.type;
+    click('[data-action="guide-open"]'); await wait();
+    const pmStepVisible=document.body.innerText.includes('Hoàn thành checklist PM');
+    const pmInitial=progress();
+    click('[data-action="guide-go"]'); await wait();
+    click('[data-action="case-search"]'); await wait(2400);
+    click('[data-action="guide-open"]'); await wait(); click('[data-action="guide-go"]'); await wait();
+    let guard=0;
+    while(guard++<10){
+      const input=[...document.querySelectorAll('[data-input="case-pm"][name="status"]')].find(el=>el.value==='unperformed');
+      if(!input)break; input.value='pass'; input.dispatchEvent(new Event('change',{bubbles:true})); await wait(120);
+    }
+    const afterChecklist=progress();
+    const beforeWrong=progress();
+    SM.guide.evaluate({type:'form',name:'case-note',form:{dataset:{case:'BM-26031'}}}); await wait();
+    const afterWrong=progress();
+    click('[data-action="guide-open"]'); await wait();
+    const restartVisible=!!document.querySelector('[data-action="guide-restart"]');
+    click('[data-action="guide-restart"]'); await wait();
+    const restartConfirmation=!!document.querySelector('[data-action="guide-start"]');
+    return {numbered,pmCaseId,pmType,pmStepVisible,pmInitial,afterChecklist,beforeWrong,afterWrong,restartVisible,restartConfirmation};
+  })()`);
+  await send('Page.reload', { ignoreCache: true });
+  await new Promise(resolve => setTimeout(resolve, 700));
+  const reload = await evaluate(`(()=>{SM.login('u-minh');SM.actions['guide-open']();return {badgeHidden:document.querySelector('[data-guide-progress]')?.hidden,active:!!document.querySelector('.guide-active-summary'),completed:[...document.querySelectorAll('.guide-flow-card .source-meta')].some(el=>el.textContent.includes('Đã hoàn thành'))};})()`);
+  const ok = JSON.stringify(result.numbered) === JSON.stringify(['1','2','3','4']) && result.pmType === 'PM' && result.pmStepVisible && result.pmInitial === '3/12' && result.afterChecklist === '7/12' && result.beforeWrong === result.afterWrong && result.restartVisible && result.restartConfirmation && reload.badgeHidden && !reload.active && !reload.completed;
+  console.log(JSON.stringify({ ok, result, reload }, null, 2));
+  ws.close();
+  if (!ok) process.exitCode = 1;
+})().catch(error => { console.error(error); process.exit(1); });

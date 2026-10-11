@@ -289,7 +289,7 @@
           </div>
           <span class="badge badge-blue asset-system-tag">
             <span class="status-pulse-dot dot-blue"></span>
-            HozenDX Link
+            HozenDX · Dữ liệu mô phỏng
           </span>
         </div>
         <div class="card-body stack asset-telemetry-body">
@@ -632,7 +632,7 @@
           <div class="sources-hub-header">
             <div class="sources-hub-left">
               <div class="sources-badge-eyebrow">
-                <span class="badge-ai-intel">${icon('spark')} Trợ lý AI tra cứu & căn cứ</span>
+                <span class="badge-ai-intel">${icon('spark')} Trợ lý tra cứu mô phỏng & căn cứ</span>
                 <span class="hub-family-tag">Nhóm máy: <strong>${h(a?.family || 'Chung')}</strong></span>
               </div>
               <h2 class="sources-hub-title">Tra cứu căn cứ & tri thức đề xuất</h2>
@@ -692,7 +692,7 @@
           <div class="ai-loading-title-wrap">
             <div class="ai-chip-pill">
               <span class="ai-chip-dot"></span>
-              <span>SMARTMAINT AI ENGINE</span>
+              <span>SMARTMAINT · TRA CỨU MÔ PHỎNG</span>
             </div>
             <h3 class="ai-loading-title">Đang đối chiếu dữ kiện & quét kho tri thức...</h3>
             <p class="ai-loading-subtitle">
@@ -728,26 +728,14 @@
             <div class="step-marker">3</div>
             <div class="step-info">
               <strong>Tổng hợp khuyến nghị & quy chuẩn an toàn</strong>
-              <span>Lập lộ trình hành động 3 cấp độ và SOP an toàn</span>
+              <span>Lập lộ trình hành động 3 cấp độ và tài liệu an toàn tham chiếu</span>
             </div>
           </div>
         </div>
       </section>
       ` : ''}
 
-      ${!c.retrieval && !c._isSearching ? `
-      <div class="empty-state ai-welcome-empty">
-        <div class="empty-icon-halo">${icon('spark')}</div>
-        <h3>Bắt đầu tra cứu căn cứ từ tri thức đã duyệt</h3>
-        <p>Hệ thống AI sẽ phân tích triệu chứng hiện trường và đề xuất các bài học từ ca, quy trình kiểm tra đã được phê duyệt cho nhóm máy <strong>${h(a?.family || 'thiết bị')}</strong>.</p>
-        ${can ? `
-        <button type="button" class="btn btn-primary" data-action="case-search" ${cid(c)}>
-          ${icon('spark')}
-          <span>Khởi chạy AI tra cứu</span>
-        </button>
-        ` : ''}
-      </div>
-      ` : !list.length && !c._isSearching ? `
+      ${!c.retrieval && !c._isSearching ? '' : c.retrieval && !list.length && !c._isSearching ? `
       <div class="notice notice-warning sources-not-found-notice">
         <div class="notice-icon-wrap">${icon('alert')}</div>
         <div class="notice-body-wrap">
@@ -841,11 +829,11 @@
       <section class="card decision-support-card">
         <div class="card-head decision-head">
           <div class="decision-head-title-wrap">
-            <span class="decision-badge-spark">${icon('spark')} Trợ lý AI tổng hợp</span>
+            <span class="decision-badge-spark">${icon('spark')} Trợ lý tổng hợp mô phỏng</span>
             <h2>Tóm tắt hỗ trợ quyết định</h2>
             <p class="subtext">Phân tích đa chiều dựa trên các bài học tương đồng và dữ kiện hiện trường đã ghi nhận.</p>
           </div>
-          <span class="badge badge-ai-mode">AI phân tích</span>
+          <span class="badge badge-ai-mode">Phân tích mô phỏng</span>
         </div>
         <div class="card-body stack">
           ${renderSourceExtracts(c, list)}
@@ -915,7 +903,7 @@
             <div class="safety-gate-content">
               <div class="safety-gate-title">
                 <strong>An toàn trước thao tác (Bắt buộc tuân thủ)</strong>
-                <span class="safety-badge">SOP MANDATORY</span>
+                <span class="safety-badge">CẦN XÁC MINH QUY TRÌNH</span>
               </div>
               <p class="safety-text">${h(list[0]?.content?.safety || 'Chưa có quy trình an toàn phù hợp được xác minh.')}</p>
               <p class="safety-subtext">Mở quy trình theo máy và xác minh hiệu lực trước khi thực hiện. Chọn nguồn không đồng nghĩa được phép vận hành.</p>
@@ -956,19 +944,32 @@
     c._searchProgress = 20;
     S.render();
 
-    setTimeout(() => {
+    const updateSearchProgress = progress => {
       if (!c._isSearching) return;
-      c._searchProgress = 65;
-      S.render();
+      c._searchProgress = progress;
+      const card = document.querySelector('.ai-search-loading-card');
+      if (!card) return;
+      const bar = card.querySelector('.ai-progress-bar');
+      if (bar) bar.style.width = `${progress}%`;
+      card.querySelectorAll('.ai-pipeline-step').forEach((item, index) => {
+        const activeAt = [15, 60, 90][index], doneAt = [60, 90, 101][index];
+        item.classList.toggle('is-active', progress >= activeAt);
+        item.classList.toggle('is-done', progress >= doneAt);
+        const marker = item.querySelector('.step-marker');
+        if (marker && progress >= doneAt) marker.innerHTML = icon('check');
+      });
+    };
+
+    setTimeout(() => {
+      updateSearchProgress(65);
     }, 450);
 
     setTimeout(() => {
-      if (!c._isSearching) return;
-      c._searchProgress = 90;
-      S.render();
+      updateSearchProgress(90);
     }, 950);
 
     setTimeout(() => {
+      const scrollTop = document.querySelector('.content')?.scrollTop || 0;
       c._isSearching = false;
       delete c._searchProgress;
       S.commit(() => {
@@ -979,7 +980,11 @@
           contextSnapshot: JSON.stringify(c.context)
         };
         updated(c, 'Tra cứu nguồn đã duyệt', family);
-      }, 'Đã cập nhật kết quả tra cứu AI theo nhóm máy.');
+      }, 'Đã cập nhật kết quả tra cứu mô phỏng theo nhóm máy.');
+      requestAnimationFrame(() => {
+        const content = document.querySelector('.content');
+        if (content) content.scrollTop = scrollTop;
+      });
     }, 1500);
   };
   S.actions['case-more-sources'] = el => {const c=get(el.dataset.case);if(protect(c,'view'))S.commit(()=>{c.retrieval.showAll=true;});};
@@ -1818,7 +1823,7 @@
             <span class="badge badge-neutral">Chưa đồng bộ</span>
           </div>
           <div class="card-body stack">
-            <p class="hozendx-desc">Báo cáo được lưu cục bộ an toàn trên SmartMaint; chưa mở cổng đẩy trực tiếp lên HozenDX Cloud.</p>
+            <p class="hozendx-desc">Báo cáo được lưu cục bộ trên SmartMaint. Bản prototype chưa có kết nối hoặc quyền ghi thực tế lên HozenDX.</p>
             <p class="field-hint">Hồ sơ thiết bị hiện là nguồn tham chiếu chuẩn mô phỏng DENSO Manufacturing.</p>
           </div>
         </section>

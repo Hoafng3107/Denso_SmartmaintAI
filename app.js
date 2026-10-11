@@ -59,7 +59,7 @@
     const familyKey = (p.family || '').toLowerCase().replace(/\s+/g, '-');
 
     const nextAction = review
-      ? 'Đọc bối cảnh & căn cứ, so sánh SOP để duyệt hoặc yêu cầu bổ sung.'
+      ? 'Đọc bối cảnh, căn cứ và nội dung tri thức để duyệt hoặc yêu cầu bổ sung.'
       : isChanges
       ? 'Trưởng nhóm đã phản hồi, cần cập nhật bổ sung dữ kiện.'
       : isDraft
@@ -276,16 +276,12 @@
           <div>Hệ thống <strong>DENSO SmartMaint</strong> đang chạy trong môi trường Plant MES Demo mô phỏng sản xuất.</div>
         </div>
         <dl class="kv-list">
-          <dt>Đơn vị phụ trách</dt>
-          <dd>Phòng CNTT & Chuyển đổi số Nhà máy (DX Plant Center)</dd>
-          <dt>Hotline nội bộ</dt>
-          <dd>Ext: <strong>8421</strong> (Hỗ trợ trực ca 24/7)</dd>
-          <dt>Email hỗ trợ</dt>
-          <dd>smartmaint-support@denso.com.vn</dd>
-          <dt>Văn phòng kỹ thuật</dt>
-          <dd>Tầng 2, Nhà điều hành Xưởng A — KCN Thăng Long</dd>
+          <dt>Trạng thái hỗ trợ</dt>
+          <dd>Thông tin quản trị hệ thống chưa được cấu hình trong bản prototype.</dd>
+          <dt>Hướng liên hệ</dt>
+          <dd>Vui lòng liên hệ người phụ trách bản demo.</dd>
         </dl>
-        <p class="field-hint">Để cấp mới tài khoản hoặc đổi quyền truy cập trên hệ thống thực tế, vui lòng gửi phiếu yêu cầu qua cổng dịch vụ nội bộ (IT Service Desk).</p>
+        <p class="field-hint">Bản prototype không cung cấp số điện thoại, email hoặc địa chỉ hỗ trợ thực tế.</p>
       </div>
     `;
     S.modal('Hỗ trợ tài khoản & Đăng nhập', bodyHtml, S.button('Đã hiểu', 'close-modal', 'primary'));
@@ -322,12 +318,12 @@
           </div>
         </div>
       </aside>
-      <div class="app-main"><header class="topbar"><div class="breadcrumbs"><button class="icon-btn mobile-menu" data-action="menu" aria-label="Mở menu" aria-expanded="${!!S.ui.menuOpen}">${icon('menu')}</button></div><div class="topbar-actions"><span class="save-state topbar-save-state" data-save-state aria-label="Trạng thái lưu dữ liệu">${S.storageOK?'Đã lưu cục bộ':'Chưa lưu được'}</span><button class="icon-btn notification-button" data-action="navigate" data-page="notifications" aria-label="Thông báo${unread?', '+unread+' chưa đọc':''}">${icon('bell')}${unread?`<span class="notification-count">${unread}</span>`:''}</button></div></header><main id="main-content" class="content">${S.storageProblem?`<div class="notice notice-danger">${e(S.storageProblem)}</div>`:''}${page.render()}</main></div>
+      <div class="app-main"><header class="topbar"><div class="breadcrumbs"><button class="icon-btn mobile-menu" data-action="menu" aria-label="Mở menu" aria-expanded="${!!S.ui.menuOpen}">${icon('menu')}</button></div><div class="topbar-actions"><span class="save-state topbar-save-state" data-save-state aria-label="Trạng thái lưu dữ liệu">${S.storageOK?'Đã lưu cục bộ':'Chưa lưu được'}</span><button class="icon-btn guide-button" data-action="guide-open" aria-label="Hướng dẫn demo" title="Hướng dẫn demo">${icon('help')}<span class="guide-progress-badge" data-guide-progress hidden></span></button><button class="icon-btn notification-button" data-action="navigate" data-page="notifications" aria-label="Thông báo${unread?', '+unread+' chưa đọc':''}">${icon('bell')}${unread?`<span class="notification-count">${unread}</span>`:''}</button></div></header><main id="main-content" class="content">${S.storageProblem?`<div class="notice notice-danger">${e(S.storageProblem)}</div>`:''}${page.render()}</main></div>
     </div>`;
   };
   const renderPage = S.render;
   S.render = () => { renderPage(); const heading=document.querySelector('#main-content h1'); if(heading){heading.id='page-title';heading.tabIndex=-1;} };
-  S.startRoute=()=>{if(!S.user()){S.render();return;}let p;try{p=location.hash.slice(1).split('/').map(decodeURIComponent);}catch(_){p=[];}const[page,id,tab]=p;if(S.ui.page&&S.ui.page!=='notifications'&&page==='notifications'){S.prevRoute={page:S.ui.page,id:S.ui.id,tab:S.ui.tab};S.prevPage=S.ui.page;try{sessionStorage.setItem('smartmaint-prev-route',JSON.stringify(S.prevRoute));}catch(_){}}S.ui={...S.ui,page:S.allowed(page)?page:'dashboard',id:id||null,tab:tab||null,menuOpen:false};S.render();};
+  S.startRoute=()=>{S.clearErrors?.();if(!S.user()){S.render();return;}let p;try{p=location.hash.slice(1).split('/').map(decodeURIComponent);}catch(_){p=[];}const[page,id,tab]=p;if(S.ui.page&&S.ui.page!=='notifications'&&page==='notifications'){S.prevRoute={page:S.ui.page,id:S.ui.id,tab:S.ui.tab};S.prevPage=S.ui.page;try{sessionStorage.setItem('smartmaint-prev-route',JSON.stringify(S.prevRoute));}catch(_){}}S.ui={...S.ui,page:S.allowed(page)?page:'dashboard',id:id||null,tab:tab||null,menuOpen:false};S.render();};
   S.persistSeed();S.startRoute();
 })();
 

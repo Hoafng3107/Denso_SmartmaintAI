@@ -1,9 +1,0 @@
-{
-  "next": true,
-  "previous": true,
-  "jump": true,
-  "spotlight": true,
-  "escape": true,
-  "noInertLeft": true,
-  "dialogClosed": true
-}

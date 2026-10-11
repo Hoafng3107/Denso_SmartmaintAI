@@ -40,4 +40,4 @@ node scripts/build-sequences.cjs
 
 Nguồn: `scripts/build-optimized-workflows.cjs` và renderer `scripts/bpmn-diagram.cjs`. Trang tri thức giữ nội dung, vị trí và thao tác hủy trùng từ bản BPMN người dùng hoàn thiện; các trang công việc được bố trí lại cho luồng tối ưu.
 
-Bản trước chỉnh sửa nằm ở `docs/diagram-archive/2026-10-08-before-optimization/`. File `denso-maintenance-workflows.drawio` và script `build-workflows.cjs` là bản cũ, không phải đầu ra hiện hành. Nếu chỉnh tay bản mới trong draw.io, cập nhật nguồn tương ứng trước khi chạy lệnh tạo lại để giữ thay đổi.
+Bản trước chỉnh sửa nằm ở `docs/diagram-archive/2026-10-08-before-optimization/` và vẫn được giữ vì script tạo bản tối ưu dùng làm nguồn. Nếu chỉnh tay bản mới trong draw.io, cập nhật nguồn tương ứng trước khi chạy lệnh tạo lại để giữ thay đổi.

@@ -12,7 +12,7 @@ Mở `index.html` bằng Edge/Chrome hoặc Live Server. Không cần cài packa
 
 ## Bố cục giao diện nghiệp vụ
 
-Ba vai trò dùng chung một cấu trúc: menu theo vai trò, thanh thông báo và trạng thái lưu, tiêu đề màn hình, khu vực công việc chính và thông tin liên quan. Menu có thể thu gọn thành cột biểu tượng; logo DENSO luôn giữ kích thước và đưa về Tổng quan khi bấm. Trang tổng quan ưu tiên các chỉ số có thể mở trực tiếp, danh sách cần xử lý và tri thức đã duyệt. Các nội dung hướng dẫn từng bước không xuất hiện trong không gian làm việc.
+Ba vai trò dùng chung một cấu trúc: menu theo vai trò, thanh thông báo và trạng thái lưu, tiêu đề màn hình, khu vực công việc chính và thông tin liên quan. Menu có thể thu gọn thành cột biểu tượng; logo DENSO luôn giữ kích thước và đưa về Tổng quan khi bấm. Trang tổng quan ưu tiên các chỉ số có thể mở trực tiếp, danh sách cần xử lý và tri thức đã duyệt. Nút Hướng dẫn demo trên topbar mở roadmap riêng theo vai trò; người dùng có thể đóng cửa sổ và mở lại mà không mất tiến trình trong phiên trang hiện tại. Tiến trình và danh sách luồng đã hoàn thành được xóa khi tải lại trang; nút “Làm lại từ đầu” khởi tạo lại dữ liệu và roadmap của luồng đang chọn.
 
 Các nhánh công việc vẫn được giữ trong hồ sơ và biểu mẫu:
 
@@ -49,7 +49,7 @@ Người dùng chuyển vai trò qua tài khoản ở cuối menu. Trạng thái
 
 | Tệp | Vai trò |
 | --- | --- |
-| `prototype/scenario-mode.js` | Dữ liệu và nhánh kịch bản mô phỏng phục vụ phát triển |
+| `prototype/demo-guide.js` | Roadmap demo theo vai trò, dữ liệu khởi tạo và tiến trình checklist |
 | `prototype/cases.js` | Màn hình và nghiệp vụ hồ sơ BM/PM |
 | `prototype/knowledge.js` | Ghi tri thức, đối chiếu, kiểm duyệt và xuất bản |
 | `app.js` | Trang đăng nhập, khung giao diện, tổng quan và menu |
@@ -57,4 +57,4 @@ Người dùng chuyển vai trò qua tài khoản ở cuối menu. Trạng thái
 
 ## Kiểm tra kịch bản
 
-`node scripts/check-presentation.cjs` chạy nhánh BM qua chuyên gia và kiểm duyệt, nhánh PM có bất thường, trường hợp chờ linh kiện rồi tiếp tục cùng hồ sơ. Script cần Chrome đang mở CDP tại cổng `9334`. Kết quả chạy và ảnh mở đầu được lưu ở `docs/prototype/checks/`.
+Kiểm tra roadmap gồm: mở danh sách luồng của từng vai trò, bắt đầu với dữ liệu sạch, tự đánh dấu sau thao tác hợp lệ, đóng/mở lại cửa sổ, tải lại trang và đổi tài khoản. Các kiểm tra nghiệp vụ hiện có tiếp tục bao phủ nhánh BM qua chuyên gia và kiểm duyệt, nhánh PM có bất thường và trường hợp chờ rồi tiếp tục cùng hồ sơ.
