@@ -1581,7 +1581,6 @@ body.story-opening::before { content:""; position:fixed; z-index:79; inset:0; ba
 .library-search-panel {
   background: #ffffff;
   border: 1px solid var(--line);
-  border-top: 3px solid var(--navy);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
   margin-bottom: 24px;
@@ -1884,13 +1883,331 @@ body.story-opening::before { content:""; position:fixed; z-index:79; inset:0; ba
 .library-results-head .subtext { margin:0; color:var(--muted); }
 .library-result-count { display:flex; align-items:baseline; gap:7px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:#ffffff; color:var(--ink); font-size:18px; font-weight:750; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .library-result-count span { color:var(--muted); font-size:12px; font-weight:550; }
-.library-card { height:100%; border:1px solid var(--line); border-radius:10px; background:#ffffff; transition:border-color var(--motion),box-shadow var(--motion),transform var(--motion); }
-.library-card:hover { border-color:var(--line-strong); box-shadow:0 6px 20px rgba(15, 23, 42, 0.06); transform:translateY(-1px); }
-.library-card h3 { margin:7px 0 0; line-height:1.35; color:var(--ink); }
-.library-card .card-body { height:100%; }
-.library-attribution { display:flex; flex-wrap:wrap; gap:7px 18px; color:var(--muted); font-size:13px; }
-.library-attribution strong { color:var(--ink-secondary); font-weight:600; }
-.library-card-actions { margin-top:auto; padding-top:13px; border-top:1px solid var(--line); }
+/* Modern MES Knowledge Record Cards */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 1024px) {
+  .library-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.library-card {
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.library-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 6px 12px -3px rgba(15, 23, 42, 0.04);
+  transform: translateY(-2px);
+}
+
+/* Left accent border by kind */
+.library-card.kind-expert {
+  border-left: 4px solid var(--blue);
+}
+
+.library-card.kind-case {
+  border-left: 4px solid var(--purple);
+}
+
+.library-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px 18px;
+  height: 100%;
+}
+
+/* 1. Header Row */
+.library-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.library-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Monospace ID Badge */
+.badge-knowledge-id {
+  display: inline-flex;
+  align-items: center;
+  padding: 3.5px 8.5px;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+}
+
+/* Kind Badges: Expert vs Case */
+.badge-knowledge-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-knowledge-kind.expert {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-knowledge-kind.case {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
+.kind-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.badge-knowledge-kind.expert .kind-bullet {
+  background: #2563eb;
+}
+
+.badge-knowledge-kind.case .kind-bullet {
+  background: #7c3aed;
+}
+
+/* Machine family tag */
+.badge-knowledge-family {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8.5px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  color: #334155;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.badge-knowledge-family svg {
+  width: 12px;
+  height: 12px;
+  color: #64748b;
+}
+
+/* Version badge */
+.badge-knowledge-version {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px 7px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status badge */
+.badge-knowledge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.badge-knowledge-status svg {
+  width: 13px;
+  height: 13px;
+  color: #16a34a;
+}
+
+/* 2. Title */
+.library-card-main {
+  margin-top: 2px;
+}
+
+.library-card-title {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 750;
+  color: var(--ink);
+  line-height: 1.38;
+  letter-spacing: -0.015em;
+  transition: color 0.15s ease;
+}
+
+.library-card:hover .library-card-title {
+  color: var(--navy);
+}
+
+/* 3. Symptom Snippet Box */
+.library-card-snippet {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 11px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.library-card-snippet .snippet-label {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.library-card-snippet .snippet-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* 4. Tags chip list */
+.library-card-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.library-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px 8.5px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* 5. Metadata Row */
+.library-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 11px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.library-card-meta .meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.library-card-meta .meta-item svg {
+  width: 13px;
+  height: 13px;
+  color: #64748b;
+}
+
+.library-card-meta .meta-item strong {
+  color: #1e293b;
+  font-weight: 650;
+}
+
+/* 6. Footer & Action */
+.library-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 13px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.library-action-btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  transition: all 0.15s ease;
+}
+
+.library-action-btn svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.15s ease;
+}
+
+.library-action-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: var(--navy);
+}
+
+.library-action-btn:hover svg {
+  transform: translateX(3px);
+}
+
+.library-footer-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.library-footer-note svg {
+  width: 13px;
+  height: 13px;
+  color: #059669;
+}
+
 .proposal-toolbar { margin-bottom:18px; }
 .proposal-filters { margin-bottom:7px; }
 .proposal-filters .tab { display:flex; align-items:center; justify-content:center; gap:8px; }

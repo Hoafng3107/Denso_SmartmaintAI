@@ -135,6 +135,87 @@
     db.seededProposals = true;
   });
 
+  function renderLibraryCard(k) {
+    const isCase = k.kind === 'case';
+    const kindLabel = isCase ? 'Case đã duyệt' : 'Kinh nghiệm chuyên gia';
+    const kindClass = isCase ? 'kind-case' : 'kind-expert';
+    const symptom = (k.content?.symptom || '').trim();
+    const excerpt = symptom.length > 220 ? symptom.slice(0, 217) + '…' : (symptom || 'Chưa có thông tin dấu hiệu tóm tắt.');
+    const assetTag = (k.assetIds && k.assetIds.length) ? k.assetIds[0] : null;
+
+    return `
+      <article class="library-card ${kindClass}" data-id="${e(k.id)}">
+        <div class="library-card-body">
+          
+          <div class="library-card-head">
+            <div class="library-card-badges">
+              <span class="badge-knowledge-id">${e(k.id)}</span>
+              <span class="badge-knowledge-kind ${isCase ? 'case' : 'expert'}">
+                <span class="kind-bullet"></span>
+                <span>${e(kindLabel)}</span>
+              </span>
+              <span class="badge-knowledge-family">
+                ${icon('machine')}
+                <span>${e(k.family)}</span>
+              </span>
+              <span class="badge-knowledge-version">v${e(k.version)}</span>
+            </div>
+            <div class="library-card-status">
+              <span class="badge-knowledge-status">
+                ${icon('checkcircle')}
+                <span>Đã kiểm duyệt</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="library-card-main">
+            <h3 class="library-card-title">${e(k.title)}</h3>
+          </div>
+
+          <div class="library-card-snippet">
+            <div class="snippet-label">DẤU HIỆU / BỐI CẢNH</div>
+            <p class="snippet-text">${e(excerpt)}</p>
+          </div>
+
+          ${k.tags && k.tags.length ? `
+            <div class="library-card-tags">
+              ${k.tags.map(t => `<span class="library-tag-chip">#${e(t)}</span>`).join('')}
+            </div>
+          ` : ''}
+
+          <div class="library-card-meta">
+            <div class="meta-item">
+              ${icon('user')}
+              <span>Tác giả: <strong>${e(S.person(k.authorId))}</strong></span>
+            </div>
+            <div class="meta-item">
+              ${icon('clock')}
+              <span>Duyệt: <strong>${e(S.fmtDate(k.updatedAt, false))}</strong></span>
+            </div>
+            ${assetTag ? `
+              <div class="meta-item asset-tag">
+                ${icon('machine')}
+                <span>Máy: <strong>${e(assetTag)}</strong></span>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="library-card-footer">
+            <button type="button" class="btn btn-secondary library-action-btn" data-action="k-open" data-id="${e(k.id)}">
+              <span>Đọc tri thức</span>
+              ${icon('arrow')}
+            </button>
+            <span class="library-footer-note">
+              ${icon('shield')}
+              <span>Đã chuẩn hóa SOP</span>
+            </span>
+          </div>
+
+        </div>
+      </article>
+    `;
+  }
+
   S.pages.library = { title: 'Kho tri thức', roles: ['maintenance', 'expert', 'lead'], render: function () {
     const q = normalize(libraryFilter.query);
     const items = S.db.knowledge.filter(k => k.status === 'published' && (libraryFilter.family === 'all' || k.family === libraryFilter.family) && (libraryFilter.kind === 'all' || k.kind === libraryFilter.kind) && (!q || normalize([k.id, k.title, k.family, ...Object.values(k.content || {})].join(' ')).includes(q)));
@@ -205,10 +286,7 @@
             </div>
 
             <div class="library-quick-tags-wrap">
-              <span class="quick-tags-label">
-                ${icon('spark')}
-                <span>Gợi ý:</span>
-              </span>
+              <span class="quick-tags-label">Gợi ý:</span>
               <div class="quick-tags-list">
                 ${['Camera', 'Rung trục chính', 'Đổi model', 'Recipe'].map(tag => `
                   <button type="button" 
@@ -229,7 +307,7 @@
 
     return S.head('Kho tri thức', S.user().role === 'expert' ? btn('Ghi tri thức mới', 'k-new', 'primary') : '') +
       searchBarHtml +
-      '<section class="library-results" aria-live="polite"><div class="library-results-head"><div><h2>Nguồn có thể tham khảo</h2><p class="subtext">Nguồn đã qua kiểm duyệt, kèm điều kiện áp dụng và phiên bản.</p></div><span class="library-result-count">' + items.length + '<span>nguồn</span></span></div>' + (items.length ? '<div class="grid-2 library-grid">' + items.map(k => '<article class="card library-card"><div class="card-body stack"><div class="actions">' + S.badge(k.kind === 'case' ? 'Case đã duyệt' : 'Kinh nghiệm chuyên gia', k.kind === 'case' ? 'purple' : 'blue') + S.badge(k.family) + '</div><div><div class="source-meta">' + e(k.id) + ' · Phiên bản ' + e(k.version) + '</div><h3>' + e(k.title) + '</h3></div><p>' + e((k.content.symptom || '').slice(0, 230)) + '</p><div class="library-attribution"><span>Tác giả <strong>' + e(S.person(k.authorId)) + '</strong></span><span>Được duyệt <strong>' + e(S.fmtDate(k.updatedAt, false)) + '</strong></span></div><div class="actions library-card-actions">' + btn('Đọc tri thức', 'k-open', 'secondary', 'data-id="' + e(k.id) + '"') + '</div></div></article>').join('') + '</div>' : S.empty('Chưa có nguồn phù hợp', 'Thử từ khóa hoặc loại máy khác.')) + '</section>';
+      '<section class="library-results" aria-live="polite"><div class="library-results-head"><div><h2>Nguồn có thể tham khảo</h2><p class="subtext">Nguồn đã qua kiểm duyệt, kèm điều kiện áp dụng và phiên bản.</p></div><span class="library-result-count">' + items.length + '<span>nguồn</span></span></div>' + (items.length ? '<div class="library-grid">' + items.map(renderLibraryCard).join('') + '</div>' : S.empty('Chưa có nguồn phù hợp', 'Thử từ khóa hoặc loại máy khác.')) + '</section>';
   } };
   S.pages['knowledge-detail'] = { title: 'Chi tiết tri thức', roles: ['maintenance', 'expert', 'lead'], render: function () {
     const currentK = S.db.knowledge.find(k => k.id === S.ui.id && k.status === 'published');
