@@ -151,7 +151,7 @@
     const expertId = c.expertId || c.support?.expertId;
 
     return `
-    <article class="case-card ${c.workState === 'waiting' ? 'is-waiting' : ''}" ${cid(c)}>
+    <article class="case-card state-${c.workState} ${c.workState === 'waiting' ? 'is-waiting' : ''}" ${cid(c)}>
       <div class="case-card-body">
         
         <div class="case-card-head">

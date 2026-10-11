@@ -2,6 +2,7 @@
   'use strict';
   const S = window.SM;
   const e = S.escape;
+  const icon = S.icon;
   const clone = value => JSON.parse(JSON.stringify(value));
   const statuses = { draft: ['Nháp', 'neutral'], pending: ['Chờ kiểm duyệt', 'amber'], changes: ['Cần bổ sung', 'amber'], rejected: ['Đã từ chối', 'red'], published: ['Đã duyệt · Có thể tra cứu', 'green'], withdrawn: ['Đã lưu trữ do trùng', 'neutral'] };
   const modes = { new: 'Tri thức mới', update: 'Bổ sung phiên bản đã có', link: 'Liên kết case với tri thức đã có' };
@@ -137,8 +138,97 @@
   S.pages.library = { title: 'Kho tri thức', roles: ['maintenance', 'expert', 'lead'], render: function () {
     const q = normalize(libraryFilter.query);
     const items = S.db.knowledge.filter(k => k.status === 'published' && (libraryFilter.family === 'all' || k.family === libraryFilter.family) && (libraryFilter.kind === 'all' || k.kind === libraryFilter.kind) && (!q || normalize([k.id, k.title, k.family, ...Object.values(k.content || {})].join(' ')).includes(q)));
+    const hasFilter = Boolean(libraryFilter.query || libraryFilter.family !== 'all' || libraryFilter.kind !== 'all');
+
+    const searchBarHtml = `
+      <form data-form="k-search" class="card library-search-panel">
+        <div class="library-search-inner">
+          
+          <div class="library-search-bar-row">
+            <div class="library-search-input-box">
+              <span class="search-box-icon" aria-hidden="true">${icon('search')}</span>
+              <input class="search-main-input" 
+                     name="query" 
+                     type="text" 
+                     value="${e(libraryFilter.query)}" 
+                     placeholder="Nhập từ khóa tra cứu (ví dụ: camera, rung trục chính, model máy, mã lỗi...)" 
+                     autocomplete="off"
+                     aria-label="Từ khóa tìm kiếm">
+              ${libraryFilter.query ? `
+                <button type="button" class="search-clear-btn" data-action="k-clear-query" title="Xóa từ khóa">
+                  ${icon('close')}
+                </button>
+              ` : ''}
+            </div>
+            <div class="library-search-actions">
+              <button class="btn btn-primary search-submit-btn" type="submit">
+                ${icon('search')}
+                <span>Tìm trong kho</span>
+              </button>
+              ${hasFilter ? `
+                <button type="button" class="btn btn-secondary search-reset-btn" data-action="k-reset-search" title="Đặt lại bộ lọc về mặc định">
+                  ${icon('refresh')}
+                  <span>Đặt lại</span>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="library-search-meta-row">
+            <div class="library-select-group">
+              
+              <div class="library-filter-item">
+                <label class="library-filter-label" for="library-filter-family">
+                  ${icon('machine')}
+                  <span>Loại máy</span>
+                </label>
+                <div class="library-select-wrap">
+                  <select id="library-filter-family" class="select library-select" name="family" data-input="k-filter-auto">
+                    <option value="all">Tất cả loại máy</option>
+                    ${familyOptions.map(f => `<option value="${e(f)}"${libraryFilter.family === f ? ' selected' : ''}>${e(f)}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <div class="library-filter-item">
+                <label class="library-filter-label" for="library-filter-kind">
+                  ${icon('book')}
+                  <span>Loại nguồn</span>
+                </label>
+                <div class="library-select-wrap">
+                  <select id="library-filter-kind" class="select library-select" name="kind" data-input="k-filter-auto">
+                    ${[['all', 'Tất cả nguồn'], ['expert', 'Tri thức chuyên gia'], ['case', 'Case công việc']].map(([v, t]) => `<option value="${v}"${libraryFilter.kind === v ? ' selected' : ''}>${t}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="library-quick-tags-wrap">
+              <span class="quick-tags-label">
+                ${icon('spark')}
+                <span>Gợi ý:</span>
+              </span>
+              <div class="quick-tags-list">
+                ${['Camera', 'Rung trục chính', 'Đổi model', 'Recipe'].map(tag => `
+                  <button type="button" 
+                          class="quick-tag-chip ${libraryFilter.query === tag ? 'is-active' : ''}" 
+                          data-action="k-quick-search" 
+                          data-tag="${e(tag)}">
+                    ${e(tag)}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </form>
+    `;
+
     return S.head('Kho tri thức', S.user().role === 'expert' ? btn('Ghi tri thức mới', 'k-new', 'primary') : '') +
-      '<form data-form="k-search" class="card library-search"><div class="card-body"><div class="library-search-main">' + S.field('Từ khóa', 'query', libraryFilter.query, { placeholder: 'Ví dụ: camera, rung trục chính, mã nguồn…' }) + '<div class="actions"><button class="btn btn-primary" type="submit">Tìm trong kho</button>' + btn('Đặt lại', 'k-reset-search', 'ghost') + '</div></div><div class="library-search-filters"><label class="field"><span class="field-label">Loại máy</span><select class="select" name="family"><option value="all">Tất cả loại máy</option>' + familyOptions.map(f => '<option' + (libraryFilter.family === f ? ' selected' : '') + '>' + e(f) + '</option>').join('') + '</select></label><label class="field"><span class="field-label">Loại nguồn</span><select class="select" name="kind">' + [['all', 'Tất cả nguồn'], ['expert', 'Tri thức chuyên gia'], ['case', 'Case công việc']].map(([v, t]) => '<option value="' + v + '"' + (libraryFilter.kind === v ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label></div></div></form>' +
+      searchBarHtml +
       '<section class="library-results" aria-live="polite"><div class="library-results-head"><div><h2>Nguồn có thể tham khảo</h2><p class="subtext">Nguồn đã qua kiểm duyệt, kèm điều kiện áp dụng và phiên bản.</p></div><span class="library-result-count">' + items.length + '<span>nguồn</span></span></div>' + (items.length ? '<div class="grid-2 library-grid">' + items.map(k => '<article class="card library-card"><div class="card-body stack"><div class="actions">' + S.badge(k.kind === 'case' ? 'Case đã duyệt' : 'Kinh nghiệm chuyên gia', k.kind === 'case' ? 'purple' : 'blue') + S.badge(k.family) + '</div><div><div class="source-meta">' + e(k.id) + ' · Phiên bản ' + e(k.version) + '</div><h3>' + e(k.title) + '</h3></div><p>' + e((k.content.symptom || '').slice(0, 230)) + '</p><div class="library-attribution"><span>Tác giả <strong>' + e(S.person(k.authorId)) + '</strong></span><span>Được duyệt <strong>' + e(S.fmtDate(k.updatedAt, false)) + '</strong></span></div><div class="actions library-card-actions">' + btn('Đọc tri thức', 'k-open', 'secondary', 'data-id="' + e(k.id) + '"') + '</div></div></article>').join('') + '</div>' : S.empty('Chưa có nguồn phù hợp', 'Thử từ khóa hoặc loại máy khác.')) + '</section>';
   } };
   S.pages['knowledge-detail'] = { title: 'Chi tiết tri thức', roles: ['maintenance', 'expert', 'lead'], render: function () {
@@ -245,8 +335,11 @@
     if (ownership(p)) S.commit(() => { p.authorConfirmed = el.checked; p.updatedAt = S.now(); }, null, false);
   };
   S.inputs['k-update-complete'] = el => { const p = S.db.proposals.find(x => x.id === el.dataset.id); if (ownership(p) && p.updateCompleteConfirmed !== el.checked) S.commit(() => { p.updateCompleteConfirmed = el.checked; }, null, false); };
-  S.forms['k-search'] = function (form) { const fd = new FormData(form); libraryFilter = { query: String(fd.get('query') || ''), family: String(fd.get('family')), kind: String(fd.get('kind')) }; S.render(); };
+  S.forms['k-search'] = function (form) { const fd = new FormData(form); libraryFilter = { query: String(fd.get('query') || '').trim(), family: String(fd.get('family') || 'all'), kind: String(fd.get('kind') || 'all') }; S.render(); };
   S.actions['k-reset-search'] = () => { libraryFilter = { query: '', family: 'all', kind: 'all' }; S.render(); };
+  S.actions['k-clear-query'] = () => { libraryFilter.query = ''; S.render(); };
+  S.actions['k-quick-search'] = el => { libraryFilter.query = el.dataset.tag; S.render(); };
+  S.inputs['k-filter-auto'] = el => { const form = el.closest('form'); if (form) S.forms['k-search'](form); };
   S.actions['k-library'] = () => S.go('library');
   S.actions['k-proposals'] = () => S.go('proposals');
   S.actions['k-review'] = () => S.go('review');
